@@ -23,6 +23,7 @@ use App\Http\Controllers\RequestsAudienceController;
 use App\Http\Controllers\RequestsDisciplineController;
 
 use App\Http\Controllers\AllUserSapController;
+use App\Http\Controllers\RequestEmployeeController;
 
 use App\Http\Controllers\MatrixCourseController;
 use App\Http\Controllers\MatrixDpoController;
@@ -150,10 +151,29 @@ Route::resource('all-users-sap', AllUserSapController::class)->parameters([
 ]);
 
 
+
+
      // Заявки
     Route::resource('requests', RequestController::class);
     Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
-    
+
+// Маршруты для сотрудников заявки
+Route::prefix('request-employees')->name('request-employees.')->group(function () {
+    Route::get('{requestId}', [RequestEmployeeController::class, 'index'])->name('index');
+    Route::post('{requestId}', [RequestEmployeeController::class, 'store'])->name('store');
+    Route::post('{requestId}/bulk', [RequestEmployeeController::class, 'storeBulk'])->name('store-bulk'); // Добавить
+    Route::put('{requestId}/{employeeId}', [RequestEmployeeController::class, 'update'])->name('update');
+    Route::delete('{requestId}/{employeeId}', [RequestEmployeeController::class, 'destroy'])->name('destroy');
+});
+/*Route::prefix('requests')->name('requests.')->group(function () {
+    Route::prefix('{requestId}/employees')->name('employees.')->group(function () {
+        Route::get('/', [RequestEmployeeController::class, 'index'])->name('index');
+        Route::post('/', [RequestEmployeeController::class, 'store'])->name('store');
+        Route::put('{employeeId}', [RequestEmployeeController::class, 'update'])->name('update');
+        Route::delete('{employeeId}', [RequestEmployeeController::class, 'destroy'])->name('destroy');
+    });
+});
+*/
     // Протоколы
     Route::resource('protocols', ProtocolController::class);
     

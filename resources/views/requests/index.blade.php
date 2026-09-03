@@ -55,16 +55,36 @@
                                 <td class="px-1 py-4 text-sm text-gray-500" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $request->provider->name ?? '' }}">{{ Str::limit($request->provider->name ?? '—', 40) }}</td>
                                 <td class="px-1 py-4 whitespace-nowrap text-sm text-gray-500" style="overflow: hidden; text-overflow: ellipsis;" title="{{ $request->user->name ?? '' }}">{{ $request->user->name ?? '—' }}</td>
                                 <td class="px-1 py-4 whitespace-nowrap text-sm text-gray-500">{{ $request->created_at->format('d.m.Y') }}</td>
-                                <td class="px-1 py-4 whitespace-nowrap text-sm font-medium" style="white-space: nowrap;">
-                                    <a href="{{ route('requests.show', $request) }}" class="text-blue-600 hover:text-blue-900" title="Просмотр">👁️</a>
-                                    <a href="{{ route('requests.edit', $request) }}" class="text-indigo-600 hover:text-indigo-900" title="Редактировать">✏️</a>
-                                    <form action="{{ route('requests.destroy', $request) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-900" title="Удалить"
-                                                onclick="return confirm('Удалить заявку #{{ $request->id }}?')">🗑️</button>
-                                    </form>
-                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+    <div class="flex items-center space-x-2">
+        
+        <!-- Кнопка "Посмотреть" -->
+        <a href="{{ route('requests.show', $request) }}" class="text-indigo-600 hover:text-indigo-900 mr-2" title="Посмотреть">👁️</a>
+        
+        <!-- Кнопка "Редактировать" -->
+        <a href="{{ route('requests.edit', $request) }}" class="text-indigo-600 hover:text-indigo-900 mr-2" title="Редактировать">✏️</a>
+
+        <!-- Кнопка "Сотрудники" -->
+<a href="{{ route('request-employees.index', $request->id) }}" 
+   class="text-green-600 hover:text-green-900 mr-2 relative" 
+   title="Сотрудники">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+    </svg>
+    @if($request->employees_count > 0)
+        <span class="absolute -top-2 -right-2 bg-green-500 text-white text-xs rounded-full px-1.5 py-0.5">
+            {{ $request->employees_count }}
+        </span>
+    @endif
+</a>        
+        <!-- Кнопка "Удалить" -->
+        <form action="{{ route('requests.destroy', $request) }}" method="POST" class="inline">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="text-red-600 hover:text-red-900" title="Удалить" onclick="return confirm('Удалить?')">🗑️</button>
+        </form>
+    </div>
+</td>
                             </tr>
                             @empty
                             <tr>

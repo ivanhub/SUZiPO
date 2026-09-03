@@ -21,11 +21,14 @@ use Illuminate\View\View;
 
 class RequestController extends Controller
 {
-    public function index(): View
-    {
-        $requests = Request::with(['user', 'provider', 'course', 'city'])->paginate(15);
-        return view('requests.index', compact('requests'));
-    }
+   public function index(): View
+{
+    $requests = Request::with(['user', 'provider', 'course', 'city'])
+        ->withCount('employees') // Добавляем количество сотрудников для каждой заявки
+        ->paginate(15);
+    
+    return view('requests.index', compact('requests'));
+}
 
     public function create(): View
     {

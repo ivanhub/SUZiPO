@@ -55,7 +55,8 @@ class Request extends Model
 
     public function course(): BelongsTo
     {
-        return $this->belongsTo(RequestsCourse::class);
+     //   return $this->belongsTo(RequestsCourse::class);
+        return $this->belongsTo(RequestsCourse::class, 'course_id');
     }
 
     public function city(): BelongsTo
@@ -107,4 +108,12 @@ class Request extends Model
     {
         return $this->belongsTo(RequestsCurator::class);
     }
-}
+
+    /**
+     * Сотрудники заявки
+     */
+    public function employees(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(RequestEmployee::class);
+    }
+ }

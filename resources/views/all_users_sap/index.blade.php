@@ -145,50 +145,52 @@
         }
     });
 
-    function uploadFile(file) {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('_token', '{{ csrf_token() }}');
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('_token', '{{ csrf_token() }}');
 
-        // Показываем загрузку
-        dropZone.innerHTML = `
-            <div class="flex items-center justify-center">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <p class="ml-3 text-sm text-gray-600">Загрузка файла...</p>
-            </div>
-        `;
+    dropZone.innerHTML = `
+        <div class="flex items-center justify-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <p class="ml-3 text-sm text-gray-600">Загрузка файла...</p>
+        </div>
+    `;
 
-        fetch('{{ route('all-users-sap.import') }}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+    fetch('{{ route('all-users-sap.import') }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        return response.json().then(data => ({
+            ok: response.ok,
+            data: data
+        }));
+    })
+    .then(({ok, data}) => {
+        if (ok && data.success) {
+            let message = `Успешно импортировано: ${data.count} записей.`;
+            if (data.errors && data.errors.length > 0) {
+                message += ` Ошибок: ${data.errors.length}. Первые ошибки: ${data.errors.slice(0, 3).join('; ')}`;
             }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Ошибка сервера');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                let message = `Успешно импортировано: ${data.count} записей.`;
-                if (data.errors && data.errors.length > 0) {
-                    message += ` Ошибок: ${data.errors.length}. Первые ошибки: ${data.errors.slice(0, 3).join('; ')}`;
-                }
-                alert(message);
-            } else {
-                alert(data.message || 'Ошибка при загрузке файла');
-            }
-            window.location.reload();
-        })
-        .catch(error => {
-            console.error('Ошибка:', error);
-            alert('Ошибка при загрузке файла. Пожалуйста, проверьте формат файла.');
-            window.location.reload();
-        });
-    }
+            console.log('Информация о файле:', data.file_info);
+            alert(message);
+        } else {
+            console.error('Ошибка сервера:', data);
+            alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
+        }
+        window.location.reload();
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Ошибка при загрузке файла: ' + error.message);
+        window.location.reload();
+    });
+}
 
     // Поиск с автоотправкой
     let searchTimeout;

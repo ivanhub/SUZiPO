@@ -103,6 +103,9 @@ class AllUserSapController extends Controller
 
 public function import(Request $request)
 {
+    set_time_limit(300);
+    ini_set('memory_limit', '512M');
+    
     $request->validate([
         'file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
     ]);
@@ -111,48 +114,61 @@ public function import(Request $request)
         $file = $request->file('file');
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
         $worksheet = $spreadsheet->getActiveSheet();
-        $rows = $worksheet->toArray();
+        $rows = $worksheet->toArray(null, true, true, true);
 
-        // Пропускаем заголовки (первая строка)
         $count = 0;
         $errors = [];
+        $chunkSize = 500;
+        $data = [];
 
         foreach ($rows as $key => $row) {
-            if ($key == 0) continue; // Пропускаем заголовки
+            if ($key == 1) continue;
 
-            // Пропускаем пустые строки
-            if (empty($row[0]) && empty($row[1]) && empty($row[2])) continue;
+            if (empty($row['A']) && empty($row['B']) && empty($row['C'])) continue;
 
             try {
-                // Конвертация даты из Excel (число) в формат Y-m-d
                 $birthDate = null;
-                if (!empty($row[4]) && is_numeric($row[4])) {
-                    $birthDate = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((int)$row[4])->format('Y-m-d');
+                if (!empty($row['E']) && is_numeric($row['E'])) {
+                    $birthDate = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((int)$row['E'])->format('Y-m-d');
                 }
 
-                AllUserSap::create([
-                    'tab_number' => !empty($row[0]) ? (int)$row[0] : null,
-                    'last_name' => $row[1] ?? null,
-                    'first_name' => $row[2] ?? null,
-                    'middle_name' => $row[3] ?? null,
+                $data[] = [
+                    'tab_number' => !empty($row['A']) ? (int)$row['A'] : null,
+                    'last_name' => $row['B'] ?? null,
+                    'first_name' => $row['C'] ?? null,
+                    'middle_name' => $row['D'] ?? null,
                     'birth_date' => $birthDate,
-                    'gender' => $row[5] ?? null,
-                    'gender_key' => $row[6] ?? null,
-                    'pfr_certificate' => $row[7] ?? null,
-                    'position' => $row[8] ?? null,
-                    'rank' => !empty($row[9]) ? (string)$row[9] : null,
-                    'level_4_name' => $row[10] ?? null,
-                    'level_3_name' => $row[11] ?? null,
-                    'duv_b' => $row[12] ?? null,
-                    'mvz' => $row[13] ?? null,
-                    'employee_category' => $row[14] ?? null,
-                ]);
+                    'gender' => $row['F'] ?? null,
+                    'gender_key' => $row['G'] ?? null,
+                    'pfr_certificate' => $row['H'] ?? null,
+                    'position' => $row['I'] ?? null,
+                    'rank' => !empty($row['J']) ? (string)$row['J'] : null,
+                    'level_4_name' => $row['K'] ?? null,
+                    'level_3_name' => $row['L'] ?? null,
+                    'duv_b' => $row['M'] ?? null,
+                    'mvz' => $row['N'] ?? null,
+                    'employee_category' => $row['O'] ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
 
                 $count++;
+
+                if (count($data) >= $chunkSize) {
+                    AllUserSap::insert($data);
+                    $data = [];
+                }
+
             } catch (\Exception $e) {
                 $errors[] = "Ошибка в строке " . ($key + 1) . ": " . $e->getMessage();
             }
         }
+
+        if (count($data) > 0) {
+            AllUserSap::insert($data);
+        }
+
+        unset($rows, $data, $spreadsheet);
 
         return response()->json([
             'success' => true,
@@ -167,4 +183,5 @@ public function import(Request $request)
         ], 500);
     }
 }
+
 }
