@@ -63,7 +63,7 @@
             <div class="flex items-end">
                 <button type="submit" 
                         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
-                    Добавить всех сотрудников
+                    Добавить сотрудников
                 </button>
             </div>
         </div>
@@ -130,8 +130,10 @@
     @if(!$employee->userSap)
         <span class="ml-1 px-1 py-0.5 bg-purple-100 text-purple-800 rounded text-xs">нет в SAP</span>
     @endif
-</td>                                <td class="px-2 py-4 text-sm text-gray-500" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $employee->position }}">{{ $employee->position ?? '—' }}</td>
-                                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->absence_start_date ? $employee->absence_start_date->format('d.m.Y') : '—' }}</td>
+    @if($employee->warning_message)
+        <div class="text-xs text-red-600 mt-1">{{ $employee->warning_message }}</div>
+    @endif
+</td>                                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->absence_start_date ? $employee->absence_start_date->format('d.m.Y') : '—' }}</td>
                                 <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->absence_end_date ? $employee->absence_end_date->format('d.m.Y') : '—' }}</td>
                                 <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->absence_type ?? '—' }}</td>
                                 <td class="px-2 py-4 whitespace-nowrap text-sm">

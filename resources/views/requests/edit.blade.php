@@ -342,10 +342,20 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-end space-x-2 mt-8">
-                        <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Отмена</a>
-                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Сохранить изменения</button>
-                    </div>
+<div class="flex justify-end space-x-2 mt-8">
+    <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Отмена</a>
+    
+    <!-- Кнопка "Сохранить и добавить сотрудников" -->
+    <button type="submit" name="action" value="save_and_employees" 
+            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+        Сохранить и добавить сотрудников
+    </button>
+    
+    <button type="submit" name="action" value="save" 
+            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
+        Сохранить и закрыть
+    </button>
+</div>
                 </form>
             </div>
         </div>

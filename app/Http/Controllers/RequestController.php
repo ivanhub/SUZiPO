@@ -52,50 +52,45 @@ class RequestController extends Controller
         ));
     }
 
-    public function store(HttpRequest $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'one_time' => 'boolean',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'issue_date' => 'nullable|date',
-            'education_form' => 'nullable|string|max:100',
-            'employee_type' => 'nullable|string|max:50',
-            'production_break' => 'nullable|string|max:200',
-            'provider_id' => 'nullable|exists:requests_providers,id',
-            'course_id' => 'nullable|exists:requests_courses,id',
-            'country' => 'nullable|string|max:255',
-            'city_id' => 'nullable|exists:requests_cities,id',
-            'profession_id' => 'nullable|exists:requests_professions,id',
-            'learn_reason_id' => 'nullable|exists:requests_learn_reasons,id',
-            'learning_resource_id' => 'nullable|exists:requests_learning_resources,id',
-            'learning_type_id' => 'nullable|exists:requests_learning_types,id',
-            'event_type_id' => 'nullable|exists:requests_events_types,id',
-            'discipline_id' => 'nullable|exists:requests_disciplines,id',
-            'cost_profit' => 'nullable|string|max:50',
-	    'course_id' => 'nullable|exists:requests_courses,id',
-            'new_course_name' => 'nullable|string|max:500',
-	    'city_id' => 'nullable|exists:requests_cities,id',
-            'new_city_name' => 'nullable|string|max:255',
-            'provider_id' => 'nullable|exists:requests_providers,id',
-            'new_provider_name' => 'nullable|string|max:500',
-	    'profession_id' => 'nullable|exists:requests_professions,id',
-            'new_profession_name' => 'nullable|string|max:500',
-        ]);
+public function store(HttpRequest $request): RedirectResponse
+{
+    $validated = $request->validate([
+        'one_time' => 'boolean',
+        'start_date' => 'nullable|date',
+        'end_date' => 'nullable|date|after_or_equal:start_date',
+        'issue_date' => 'nullable|date',
+        'education_form' => 'nullable|string|max:100',
+        'employee_type' => 'nullable|string|max:50',
+        'production_break' => 'nullable|string|max:200',
+        'provider_id' => 'nullable|exists:requests_providers,id',
+        'course_id' => 'nullable|exists:requests_courses,id',
+        'country' => 'nullable|string|max:255',
+        'city_id' => 'nullable|exists:requests_cities,id',
+        'profession_id' => 'nullable|exists:requests_professions,id',
+        'learn_reason_id' => 'nullable|exists:requests_learn_reasons,id',
+        'learning_resource_id' => 'nullable|exists:requests_learning_resources,id',
+        'learning_type_id' => 'nullable|exists:requests_learning_types,id',
+        'event_type_id' => 'nullable|exists:requests_events_types,id',
+        'discipline_id' => 'nullable|exists:requests_disciplines,id',
+        'cost_profit' => 'nullable|string|max:50',
+        'new_course_name' => 'nullable|string|max:500',
+        'new_city_name' => 'nullable|string|max:255',
+        'new_provider_name' => 'nullable|string|max:500',
+        'new_profession_name' => 'nullable|string|max:500',
+    ]);
 
-
-            // Создание нового курса
-if (!empty($validated['new_course_name'])) {
+    // Создание нового курса
+    if (!empty($validated['new_course_name'])) {
         $newCourse = RequestsCourse::firstOrCreate(
             ['course' => $validated['new_course_name']],
             ['course' => $validated['new_course_name']]
         );
         $validated['course_id'] = $newCourse->id;
     }
-    
     unset($validated['new_course_name']);
-          // Создание нового города
- if (!empty($validated['new_city_name'])) {
+
+    // Создание нового города
+    if (!empty($validated['new_city_name'])) {
         $new = RequestsCity::firstOrCreate(
             ['city' => $validated['new_city_name']],
             ['city' => $validated['new_city_name']]
@@ -104,7 +99,7 @@ if (!empty($validated['new_course_name'])) {
     }
     unset($validated['new_city_name']);
 
-  // Создание нового провайдера
+    // Создание нового провайдера
     if (!empty($validated['new_provider_name'])) {
         $new = RequestsProvider::firstOrCreate(
             ['name' => $validated['new_provider_name']],
@@ -114,7 +109,7 @@ if (!empty($validated['new_course_name'])) {
     }
     unset($validated['new_provider_name']);
 
-          // Создание новой профессии
+    // Создание новой профессии
     if (!empty($validated['new_profession_name'])) {
         $new = RequestsProfession::firstOrCreate(
             ['name' => $validated['new_profession_name']],
@@ -123,26 +118,32 @@ if (!empty($validated['new_course_name'])) {
         $validated['profession_id'] = $new->id;
     }
     unset($validated['new_profession_name']);
-        // Установка города по умолчанию "Нефтеюганск"
-//    $defaultCity = RequestsCity::where('city', 'LIKE', '%Нефтеюганск%')->first();
-//    $defaultCityId = $defaultCity ? $defaultCity->id : null;
 
-        if (empty($validated['city_id'])) {
-            $defaultCity = RequestsCity::where('city', 'LIKE', '%Нефтеюганск%')->first();
-            if ($defaultCity) {
-                $validated['city_id'] = $defaultCity->id;
-            }
+    // Установка города по умолчанию "Нефтеюганск"
+    if (empty($validated['city_id'])) {
+        $defaultCity = RequestsCity::where('city', 'LIKE', '%Нефтеюганск%')->first();
+        if ($defaultCity) {
+            $validated['city_id'] = $defaultCity->id;
         }
-
-        $validated['user_id'] = auth()->id();
-        $validated['status'] = 'draft';
-        $validated['country'] = $validated['country'] ?? 'Россия';
-
-        Request::create($validated);
-
-        return redirect()->route('requests.index')
-            ->with('success', 'Заявка создана успешно.');
     }
+
+    $validated['user_id'] = auth()->id();
+    $validated['status'] = 'Создана';
+    $validated['country'] = $validated['country'] ?? 'Россия';
+
+    // ВАЖНО: сохраняем созданную заявку в переменную
+    $trainingRequest = Request::create($validated);
+    
+    if ($request->input('action') === 'save_and_employees') {
+        return redirect()
+            ->route('request-employees.index', $trainingRequest->id)
+            ->with('success', 'Заявка создана. Добавьте сотрудников.');
+    }
+    
+    return redirect()->route('requests.index')
+        ->with('success', 'Заявка создана успешно.')
+        ->with('request_id', $trainingRequest->id);
+}
 
     public function show(Request $request): View
     {
@@ -223,6 +224,13 @@ if (!empty($validated['new_course_name'])) {
 
 
     $request->update($validated);
+    
+  // Если нажата кнопка "Сохранить и добавить сотрудников"
+    if ($httpRequest->input('action') === 'save_and_employees') {
+        return redirect()
+            ->route('request-employees.index', $request->id)
+            ->with('success', 'Заявка сохранена. Добавьте сотрудников.');
+    }
     
     return redirect()->route('requests.index')
         ->with('success', 'Заявка обновлена успешно.'); 
