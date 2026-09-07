@@ -35,6 +35,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ErrorController;
 use App\Http\Controllers\Admin\UserController; 
 
+use App\Models\Booking;
+
 // Импорты для аутентификации
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -142,6 +144,34 @@ Route::middleware('auth')->group(function () {
     // ==========================================
     // ВАШИ МАРШРУТЫ
     // ==========================================
+
+
+// Получение занятых аудиторий на дату
+Route::get('/api/available-audiences', function (Illuminate\Http\Request $request) {
+    $date = $request->get('date');
+    $excludeBookingId = $request->get('booking_id');
+    
+    $query = Booking::whereDate('date', $date);
+    if ($excludeBookingId) {
+        $query->where('id', '!=', $excludeBookingId);
+    }
+    
+    return $query->pluck('audience_id');
+});
+
+// Получение занятых преподавателей на дату
+Route::get('/api/available-teachers', function (Illuminate\Http\Request $request) {
+    $date = $request->get('date');
+    $excludeBookingId = $request->get('booking_id');
+    
+    $query = Booking::whereDate('date', $date);
+    if ($excludeBookingId) {
+        $query->where('id', '!=', $excludeBookingId);
+    }
+    
+    return $query->pluck('teacher_id');
+});
+
        //Маршруты загрузки из SAP (xls)
 Route::post('all-users-sap/import', [AllUserSapController::class, 'import'])->name('all-users-sap.import');
 Route::delete('all-users-sap/{allUserSap}/delete', [AllUserSapController::class, 'destroy'])->name('all-users-sap.delete');
@@ -149,6 +179,7 @@ Route::delete('all-users-sap/{allUserSap}/delete', [AllUserSapController::class,
 Route::resource('all-users-sap', AllUserSapController::class)->parameters([
     'all-users-sap' => 'allUserSap'
 ]);
+
 
 
 

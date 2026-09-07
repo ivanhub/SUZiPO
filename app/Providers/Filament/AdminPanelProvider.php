@@ -10,6 +10,8 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Assets\Js;
+use Filament\Support\Facades\FilamentAsset;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -18,11 +20,21 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use App\Filament\Widgets\BookingCalendar;
 
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+ // Регистрируем скрипты глобально
+        FilamentAsset::register([
+            Js::make('fullcalendar-core', asset('vendor/fullcalendar/core.global.min.js')),
+            Js::make('fullcalendar-daygrid', asset('vendor/fullcalendar/daygrid.global.min.js')),
+            Js::make('fullcalendar-interaction', asset('vendor/fullcalendar/interaction.global.min.js')),
+            Js::make('booking-calendar', asset('vendor/fullcalendar/booking-calendar.js')),
+        ]);
+
+
         return $panel
             ->default()
             ->id('admin')
@@ -40,6 +52,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
                 FilamentInfoWidget::class,
+		BookingCalendar::class,
             ])
             ->middleware([
                 EncryptCookies::class,

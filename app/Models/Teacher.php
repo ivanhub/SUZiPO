@@ -9,7 +9,9 @@ class Teacher extends Model
 {
 
     protected $table = 'requests_teachers';
+    protected $primaryKey = 'id';
     protected $fillable = ['fio', 'profession', 'division1', 'division2', 'division3'];
+    public $timestamps = true;
 
     public function bookings(): HasMany
     {

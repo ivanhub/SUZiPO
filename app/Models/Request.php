@@ -10,6 +10,7 @@ class Request extends Model
 {
     use HasFactory;
 
+    protected $table = 'requests'; 
     protected $fillable = [
         'user_id',
         'status',
@@ -96,12 +97,12 @@ class Request extends Model
 
     public function audience(): BelongsTo
     {
-        return $this->belongsTo(RequestsAudience::class);
+        return $this->belongsTo(Audience::class, 'audience_id');
     }
 
     public function teacher(): BelongsTo
     {
-        return $this->belongsTo(RequestsTeachers::class);
+        return $this->belongsTo(Teacher::class, 'teacher_id');
     }
 
     public function curator(): BelongsTo

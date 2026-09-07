@@ -20,7 +20,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 
 class BookingResource extends Resource
 {
@@ -35,68 +34,54 @@ class BookingResource extends Resource
     {
         return $schema
             ->schema([
-                DatePicker::make('date')
-                    ->label('Дата')
+                // Дата начала
+                DatePicker::make('start_date')
+                    ->label('Дата начала')
                     ->required()
                     ->displayFormat('d.m.Y')
                     ->native(false)
+                    ->reactive()
                     ->afterStateUpdated(function (callable $get, callable $set) {
-                        // Сбрасываем выбор аудитории и преподавателя при смене даты
-                        $set('audience_id', null);
+                        $set('teacher_id', null);
+                        $endDate = $get('end_date');
+                        $startDate = $get('start_date');
+                        if ($endDate && $startDate && $endDate < $startDate) {
+                            $set('end_date', $startDate);
+                        }
+                    }),
+
+                // Дата окончания
+                DatePicker::make('end_date')
+                    ->label('Дата окончания')
+                    ->required()
+                    ->displayFormat('d.m.Y')
+                    ->native(false)
+                    ->afterStateUpdated(function (callable $set) {
                         $set('teacher_id', null);
                     }),
 
+                // Аудитория
                 Select::make('audience_id')
                     ->label('Аудитория')
-                    ->options(function (callable $get) {
-                        $date = $get('date');
-                        
-                        // Если дата не выбрана, возвращаем пустую коллекцию
-                        if (!$date) {
-                            return Collection::empty();
-                        }
-
-                        return Audience::whereDoesntHave('bookings', function ($query) use ($date) {
-                            $query->whereDate('date', $date);
-                        })->pluck('number', 'id');
-                    })
+                    ->relationship('audience', 'number')
                     ->searchable()
                     ->preload()
                     ->required()
-                    ->live()
-                    ->dehydrated(),
+                    ->reactive()
+                    ->afterStateUpdated(function (callable $set) {
+                        $set('teacher_id', null);
+                    }),
 
+                // Преподаватель
                 Select::make('teacher_id')
                     ->label('Преподаватель')
-                    ->options(function (callable $get) {
-                        $date = $get('date');
-                        $audienceId = $get('audience_id');
-                        
-                        // Если дата не выбрана, возвращаем пустую коллекцию
-                        if (!$date) {
-                            return Collection::empty();
-                        }
-
-                        $query = Teacher::whereDoesntHave('bookings', function ($query) use ($date) {
-                            $query->whereDate('date', $date);
-                        });
-
-                        // Если выбрана аудитория, исключаем преподавателей, которые уже заняты в этой аудитории
-                        if ($audienceId) {
-                            $query->whereDoesntHave('bookings', function ($query) use ($date, $audienceId) {
-                                $query->whereDate('date', $date)
-                                      ->where('audience_id', $audienceId);
-                            });
-                        }
-
-                        return $query->pluck('fio', 'id');
-                    })
+                    ->relationship('teacher', 'fio')
                     ->searchable()
                     ->preload()
                     ->required()
-                    ->live()
-                    ->dehydrated(),
+                    ->reactive(),
 
+                // Статус
                 Select::make('status')
                     ->label('Статус')
                     ->options([
@@ -105,8 +90,7 @@ class BookingResource extends Resource
                         'completed' => 'Завершено',
                     ])
                     ->default('active')
-                    ->required()
-                    ->dehydrated(),
+                    ->required(),
 
                 Textarea::make('notes')
                     ->label('Примечание')
@@ -118,8 +102,12 @@ class BookingResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('date')
-                    ->label('Дата')
+                TextColumn::make('start_date')
+                    ->label('Дата начала')
+                    ->date('d.m.Y')
+                    ->sortable(),
+                TextColumn::make('end_date')
+                    ->label('Дата окончания')
                     ->date('d.m.Y')
                     ->sortable(),
                 TextColumn::make('audience.number')
@@ -163,7 +151,7 @@ class BookingResource extends Resource
                         'completed' => 'Завершено',
                     ]),
             ])
-            ->defaultSort('date', 'desc')
+            ->defaultSort('start_date', 'desc')
             ->actions([
                 EditAction::make(),
                 DeleteAction::make(),

@@ -312,25 +312,59 @@
                     <div class="mt-8 pt-6 border-t border-gray-200">
                         <h3 class="text-md font-semibold text-gray-900 mb-4">Назначенные ресурсы (только для просмотра и редактирования)</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div>
-                                <label for="audience_id" class="block text-sm font-medium text-gray-700 mb-1">Аудитория</label>
-                                <select name="audience_id" id="audience_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                    <option value="">---</option>
-                                    @foreach($audiences as $audience)
-                                        <option value="{{ $audience->id }}" {{ old('audience_id', $request->audience_id) == $audience->id ? 'selected' : '' }}>{{ $audience->number }} ({{ $audience->location }})</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label for="teacher_id" class="block text-sm font-medium text-gray-700 mb-1">ФИО преподавателя</label>
-                                <select name="teacher_id" id="teacher_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                    <option value="">---</option>
-                                    @foreach($teachers as $teacher)
-                                        <option value="{{ $teacher->id }}" {{ old('teacher_id', $request->teacher_id) == $teacher->id ? 'selected' : '' }}>{{ $teacher->fio }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
+<!-- Аудитория -->
+<div>
+    <label for="audience_id" class="block text-sm font-medium text-gray-700 mb-1">Аудитория</label>
+    <select name="audience_id" id="audience_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        <option value="">---</option>
+        @foreach($audiences as $audience)
+            @php
+                $isBusy = false;
+                if ($request->start_date) {
+                    $isBusy = \App\Models\Booking::where('audience_id', $audience->id)
+                        ->whereDate('date', $request->start_date)
+                        ->where('id', '!=', $request->booking_id ?? null)
+                        ->exists();
+                }
+            @endphp
+            <option value="{{ $audience->id }}" 
+                {{ old('audience_id', $request->audience_id) == $audience->id ? 'selected' : '' }}
+                {{ $isBusy ? 'disabled class="text-red-500"' : '' }}>
+                {{ $audience->number }} ({{ $audience->location }})
+                @if($isBusy) - ЗАНЯТА @endif
+            </option>
+        @endforeach
+    </select>
+    @if(isset($isBusy) && $isBusy)
+        <p class="text-red-500 text-xs mt-1">Эта аудитория уже занята на выбранную дату</p>
+    @endif
+</div>
+<div>
+    <label for="teacher_id" class="block text-sm font-medium text-gray-700 mb-1">ФИО преподавателя</label>
+    <select name="teacher_id" id="teacher_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        <option value="">---</option>
+        @foreach($teachers as $teacher)
+            @php
+                $isBusy = false;
+                if ($request->start_date) {
+                    $isBusy = \App\Models\Booking::where('teacher_id', $teacher->id)
+                        ->whereDate('date', $request->start_date)
+                        ->where('id', '!=', $request->booking_id ?? null)
+                        ->exists();
+                }
+            @endphp
+            <option value="{{ $teacher->id }}" 
+                {{ old('teacher_id', $request->teacher_id) == $teacher->id ? 'selected' : '' }}
+                {{ $isBusy ? 'disabled class="text-red-500"' : '' }}>
+                {{ $teacher->fio }}
+                @if($isBusy) - ЗАНЯТ @endif
+            </option>
+        @endforeach
+    </select>
+    @if(isset($isBusy) && $isBusy)
+        <p class="text-red-500 text-xs mt-1">Этот преподаватель уже занят на выбранную дату</p>
+    @endif
+</div>                            <div>
                                 <label for="curator_id" class="block text-sm font-medium text-gray-700 mb-1">Куратор группы</label>
                                 <select name="curator_id" id="curator_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                                     <option value="">---</option>
@@ -545,5 +579,91 @@
             }
         }
     }
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startDateInput = document.getElementById('start_date');
+    const audienceSelect = document.getElementById('audience_id');
+    const teacherSelect = document.getElementById('teacher_id');
+    const selectedAudience = audienceSelect.value;
+    const selectedTeacher = teacherSelect.value;
+
+    // Функция для обновления доступных аудиторий
+    async function updateAudiences() {
+        const date = startDateInput.value;
+        if (!date) return;
+
+        const response = await fetch(`/api/available-audiences?date=${date}`);
+        const bookedAudienceIds = await response.json();
+
+        // Сохраняем выбранное значение
+        const currentValue = audienceSelect.value;
+
+        // Перебираем все опции
+        Array.from(audienceSelect.options).forEach(option => {
+            const audienceId = option.value;
+            if (audienceId && bookedAudienceIds.includes(parseInt(audienceId))) {
+                option.disabled = true;
+                option.textContent = option.textContent + ' - ЗАНЯТА';
+                option.classList.add('text-red-500');
+            } else {
+                option.disabled = false;
+                // Убираем пометку "ЗАНЯТА"
+                option.textContent = option.textContent.replace(' - ЗАНЯТА', '');
+                option.classList.remove('text-red-500');
+            }
+        });
+
+        // Восстанавливаем выбранное значение, если оно доступно
+        if (currentValue && !bookedAudienceIds.includes(parseInt(currentValue))) {
+            audienceSelect.value = currentValue;
+        }
+    }
+
+    // Функция для обновления доступных преподавателей
+    async function updateTeachers() {
+        const date = startDateInput.value;
+        if (!date) return;
+
+        const response = await fetch(`/api/available-teachers?date=${date}`);
+        const bookedTeacherIds = await response.json();
+
+        // Сохраняем выбранное значение
+        const currentValue = teacherSelect.value;
+
+        // Перебираем все опции
+        Array.from(teacherSelect.options).forEach(option => {
+            const teacherId = option.value;
+            if (teacherId && bookedTeacherIds.includes(parseInt(teacherId))) {
+                option.disabled = true;
+                option.textContent = option.textContent + ' - ЗАНЯТ';
+                option.classList.add('text-red-500');
+            } else {
+                option.disabled = false;
+                // Убираем пометку "ЗАНЯТ"
+                option.textContent = option.textContent.replace(' - ЗАНЯТ', '');
+                option.classList.remove('text-red-500');
+            }
+        });
+
+        // Восстанавливаем выбранное значение, если оно доступно
+        if (currentValue && !bookedTeacherIds.includes(parseInt(currentValue))) {
+            teacherSelect.value = currentValue;
+        }
+    }
+
+    // Слушаем изменения даты
+    startDateInput.addEventListener('change', function() {
+        updateAudiences();
+        updateTeachers();
+    });
+
+    // Обновляем при загрузке страницы
+    if (startDateInput.value) {
+        updateAudiences();
+        updateTeachers();
+    }
+});
 </script>
 </x-layouts.app-with-sidebar>

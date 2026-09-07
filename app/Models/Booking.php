@@ -7,13 +7,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Booking extends Model
 {
-    protected $fillable = ['audience_id', 'teacher_id', 'date', 'status', 'notes'];
-
-    protected $casts = [
-        'date' => 'date',
+    protected $table = 'bookings';
+    protected $fillable = [
+        'audience_id', 
+        'teacher_id', 
+        'start_date',
+        'end_date', 
+        'status', 
+        'notes',
+        'request_id'
     ];
 
-  public function audience(): BelongsTo
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+    ];
+
+    public function audience(): BelongsTo
     {
         return $this->belongsTo(Audience::class, 'audience_id');
     }
@@ -21,5 +31,10 @@ class Booking extends Model
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(Teacher::class, 'teacher_id');
+    }
+
+    public function request(): BelongsTo
+    {
+        return $this->belongsTo(Request::class, 'request_id');
     }
 }
