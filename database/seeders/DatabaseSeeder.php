@@ -9,7 +9,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call(RoleSeeder::class);
+        $this->call([RoleSeeder::class,
+//	    MatrixPoSeeder::class,
+//            MatrixCourseSeeder::class,
+            CourseExceptionSeeder::class]);
         
         // Создаём админа
         $admin = User::factory()->create([

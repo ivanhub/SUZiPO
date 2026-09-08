@@ -30,6 +30,10 @@ use App\Http\Controllers\MatrixDpoController;
 use App\Http\Controllers\MatrixOtController;
 use App\Http\Controllers\MatrixPoController;
 
+
+use App\Http\Controllers\CourseExceptionController;
+
+
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ErrorController;
@@ -144,7 +148,12 @@ Route::middleware('auth')->group(function () {
     // ==========================================
     // ВАШИ МАРШРУТЫ
     // ==========================================
+Route::resource('course-exceptions', CourseExceptionController::class);
 
+Route::get('/api/request-employees-count/{requestId}', function ($requestId) {
+    $count = \App\Models\RequestEmployee::where('request_id', $requestId)->count();
+    return response()->json(['count' => $count]);
+});
 
 // Получение занятых аудиторий на дату
 Route::get('/api/available-audiences', function (Illuminate\Http\Request $request) {

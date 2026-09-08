@@ -35,6 +35,7 @@ class Request extends Model
         'audience_id',
         'teacher_id',
         'curator_id',
+	'reserve',
     ];
 
     protected $casts = [

@@ -4,10 +4,11 @@
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-semibold text-gray-900">Просмотр заявки #{{ $request->id }}</h2>
-                    <div class="flex space-x-2">
-                        <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
-                        <a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
-                    </div>
+<div class="flex space-x-2">
+    <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
+    <a href="{{ route('request-employees.index', $request->id) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Сотрудники</a>
+    <a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
+</div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -153,13 +154,23 @@
                             <h3 class="text-sm font-medium text-gray-500">Куратор группы</h3>
                             <p class="mt-1 text-sm text-gray-900">{{ $request->curator->fio ?? '—' }}</p>
                         </div>
-                    </div>
+<div>
+    <h3 class="text-sm font-medium text-gray-500">Резерв</h3>
+    <p class="mt-1 text-sm text-gray-900">
+        @if(isset($reserve) && $reserve !== null)
+            {{ $reserve }}
+        @else
+            —
+        @endif
+    </p>
+</div>
                 </div>
 
-                <div class="mt-6 flex justify-end space-x-2">
-                    <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
-                    <a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
-                </div>
+<div class="mt-6 flex justify-end space-x-2">
+    <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
+    <a href="{{ route('request-employees.index', $request->id) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Сотрудники</a>
+    <a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
+</div>
             </div>
         </div>
     </div>

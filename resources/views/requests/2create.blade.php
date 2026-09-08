@@ -19,31 +19,48 @@
                         </div>
 
 <!-- Дата начала обучения -->
-<div class="relative">
+<div>
     <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Дата начала обучения</label>
-    <input type="date" name="start_date" id="start_date" value="{{ old('start_date') }}"
-           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent date-input">
-    <span class="absolute left-3 top-[36px] text-gray-400 pointer-events-none date-placeholder">ДД.ММ.ГГГГ</span>
+    <input type="{{ old('start_date') ? 'date' : 'text' }}" 
+           name="start_date" 
+           id="start_date" 
+           value="{{ old('start_date') }}"
+           placeholder="дд.мм.гггг"
+           onfocus="this.type='date'; this.classList.remove('text-gray-200'); try { this.showPicker(); } catch(e) {}" 
+           onblur="if(!this.value) { this.type='text'; this.classList.add('text-gray-200'); }"
+           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder-gray-200 {{ old('start_date') ? 'text-gray-900' : 'text-gray-200' }}">
     @error('start_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
 </div>
 
 <!-- Дата окончания обучения -->
-<div class="relative">
+<div>
     <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Дата окончания обучения</label>
-    <input type="date" name="end_date" id="end_date" value="{{ old('end_date') }}"
-           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent date-input">
-    <span class="absolute left-3 top-[36px] text-gray-400 pointer-events-none date-placeholder">ДД.ММ.ГГГГ</span>
+    <input type="{{ old('end_date') ? 'date' : 'text' }}" 
+           name="end_date" 
+           id="end_date" 
+           value="{{ old('end_date') }}"
+           placeholder="дд.мм.гггг"
+           onfocus="this.type='date'; this.classList.remove('text-gray-200'); try { this.showPicker(); } catch(e) {}" 
+           onblur="if(!this.value) { this.type='text'; this.classList.add('text-gray-200'); }"
+           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder-gray-200 {{ old('end_date') ? 'text-gray-900' : 'text-gray-200' }}">
     @error('end_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
 </div>
 
 <!-- Дата оформления -->
-<div class="relative">
+<div>
     <label for="issue_date" class="block text-sm font-medium text-gray-700 mb-1">Дата оформления</label>
-    <input type="date" name="issue_date" id="issue_date" value="{{ old('issue_date') }}"
-           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent date-input">
-    <span class="absolute left-3 top-[36px] text-gray-400 pointer-events-none date-placeholder">ДД.ММ.ГГГГ</span>
+    <input type="{{ old('issue_date') ? 'date' : 'text' }}" 
+           name="issue_date" 
+           id="issue_date" 
+           value="{{ old('issue_date') }}"
+           placeholder="дд.мм.гггг"
+           onfocus="this.type='date'; this.classList.remove('text-gray-200'); try { this.showPicker(); } catch(e) {}" 
+           onblur="if(!this.value) { this.type='text'; this.classList.add('text-gray-200'); }"
+           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder-gray-200 {{ old('issue_date') ? 'text-gray-900' : 'text-gray-200' }}">
     @error('issue_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
 </div>
+
+
 
                         <!-- Форма образования -->
                         <div>
@@ -624,39 +641,4 @@
     </div>
 
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Находим все input[type="date"] с классом date-input
-        document.querySelectorAll('.date-input').forEach(function(input) {
-            // Находим соответствующий span (следующий элемент после input)
-            const span = input.nextElementSibling;
-            
-            if (!span) return;
-            
-            // При фокусе - скрываем placeholder
-            input.addEventListener('focus', function() {
-                span.classList.add('hidden');
-            });
-            
-            // При потере фокуса - если поле пустое, показываем placeholder
-            input.addEventListener('blur', function() {
-                if (!input.value) {
-                    span.classList.remove('hidden');
-                }
-            });
-            
-            // При выборе даты - скрываем placeholder навсегда
-            input.addEventListener('change', function() {
-                if (input.value) {
-                    span.classList.add('hidden');
-                }
-            });
-            
-            // При загрузке страницы, если значение уже есть (для edit)
-            if (input.value) {
-                span.classList.add('hidden');
-            }
-        });
-    });
-</script>
 </x-layouts.app-with-sidebar>

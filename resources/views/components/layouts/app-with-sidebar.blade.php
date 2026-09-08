@@ -12,6 +12,9 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+   <!-- Подключение main.css -->
+    <link href="{{ asset('css/main.css') }}" rel="stylesheet">
+
     
     @stack('styles')
 </head>

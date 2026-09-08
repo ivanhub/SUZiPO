@@ -14,10 +14,7 @@
                         {{ session('error') }}
                     </div>
                 @endif
-                 <!-- Ссылка назад -->
-<div class="mb-4">
-    <a href="{{ route('requests.show', $trainingRequest->id) }}" class="text-indigo-600 hover:text-indigo-900">← Назад к заявке</a>
-</div>
+
                 <!-- Заголовок -->
                 <div class="mb-6">
                     <h2 class="text-lg font-semibold text-gray-900">Сотрудники заявки #{{ $trainingRequest->id }}</h2>
@@ -105,121 +102,93 @@
     </form>
 </div>
 
-<!-- Список сотрудников -->
-<div class="overflow-x-auto">
-    <table class="min-w-full divide-y divide-gray-200" style="table-layout: fixed;">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 60px;">Таб.№</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 150px;">ФИО</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 80px;">Дата рожд.</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 60px;">Пол</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Свид. ПФР</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 200px;">Должность</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 60px;">Разряд</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 200px;">Уровень 4</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 200px;">Уровень 3</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 80px;">ДУвБ</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">МВЗ</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Категория</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Дата нач.</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Дата окон.</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Форма</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 80px;">Статус</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Дата док.</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Периодичн.</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Действия</th>
-            </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-            @forelse($employees as $employee)
-<tr class="hover:bg-gray-50 border-red-200
-    {{ $employee->status == 'blocked' ? 'bg-red-50' : '' }} 
-    {{ $employee->status == 'warning' ? 'bg-yellow-50' : '' }} 
-    {{ $employee->status == 'expired' ? 'bg-red-100' : '' }} 
-    {{ $employee->status == 'dismissed' ? 'bg-gray-100' : '' }}
-    {{ !$employee->user_sap_id ? 'bg-red-100 border-2 border-red-300' : '' }}">
-                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{{ $employee->tab_number ?? '—' }}</td>
-                <td class="px-2 py-4 text-sm text-gray-900" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $employee->full_name }}">
-                    {{ $employee->full_name ?? '—' }}
-                    @if(!$employee->user_sap_id)
-                        <span class="ml-1 px-1 py-0.5 bg-purple-100 text-red-600 rounded text-xs font-bold">нет в SAP</span>
-                    @endif
-                    @if($employee->warning_message)
-                        <div class="text-xs text-red-600 mt-1">{{ $employee->warning_message }}</div>
-                    @endif
-                </td>
-                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->birth_date ? $employee->birth_date->format('d.m.Y') : '—' }}</td>
-<td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
-    @if($employee->gender == '1')
-        муж.
-    @elseif($employee->gender == '2')
-        жен.
-    @else
-        —
-    @endif
-</td>
+                <!-- Список сотрудников -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200" style="table-layout: fixed;">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 60px;">Таб.№</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 150px;">ФИО</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 200px;">Должность</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Дата начала</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Дата окончания</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Форма</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 80px;">Статус</th>
+				<th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Дата выдачи документа</th>
+				<th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Периодичность</th>
 
-                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $employee->pfr_certificate }}">{{ $employee->pfr_certificate ?? '—' }}</td>
-                <td class="px-2 py-4 text-sm text-gray-500" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $employee->position }}">{{ $employee->position ?? '—' }}</td>
-                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->rank ?? '—' }}</td>
-                <td class="px-2 py-4 text-sm text-gray-500" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $employee->level_4_name }}">{{ $employee->level_4_name ?? '—' }}</td>
-                <td class="px-2 py-4 text-sm text-gray-500" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $employee->level_3_name }}">{{ $employee->level_3_name ?? '—' }}</td>
-                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->duv_b ?? '—' }}</td>
-                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->mvz ?? '—' }}</td>
-                <td class="px-2 py-4 text-sm text-gray-500" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $employee->employee_category }}">{{ $employee->employee_category ?? '—' }}</td>
-                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->absence_start_date ? $employee->absence_start_date->format('d.m.Y') : '—' }}</td>
-                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->absence_end_date ? $employee->absence_end_date->format('d.m.Y') : '—' }}</td>
-                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->absence_type ?? '—' }}</td>
-                <td class="px-2 py-4 whitespace-nowrap text-sm">
-                    @if($employee->status == 'active')
-                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Активен</span>
-                    @elseif($employee->status == 'blocked')
-                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Заблокирован</span>
-                    @elseif($employee->status == 'warning')
-                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Внимание</span>
-                    @elseif($employee->status == 'expired')
-                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Просрочено</span>
-                    @elseif($employee->status == 'dismissed')
-                        <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">Уволен</span>
-                    @else
-                        <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{{ $employee->status }}</span>
-                    @endif
-                </td>
-                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->document_issue_date ? $employee->document_issue_date->format('d.m.Y') : '—' }}</td>
-                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->reissue_period ?? '—' }}</td>
-                <td class="px-2 py-4 whitespace-nowrap text-sm font-medium">
-                    <!-- Кнопка редактирования -->
-                    <button type="button" 
-                            class="text-indigo-600 hover:text-indigo-900 mr-2 edit-btn"
-                            data-id="{{ $employee->id }}"
-                            data-request-id="{{ $trainingRequest->id }}"
-                            data-start="{{ $employee->absence_start_date ? $employee->absence_start_date->format('Y-m-d') : '' }}"
-                            data-end="{{ $employee->absence_end_date ? $employee->absence_end_date->format('Y-m-d') : '' }}"
-                            data-type="{{ $employee->absence_type }}"
-                            data-distance="{{ $employee->distance_learning_date ? $employee->distance_learning_date->format('Y-m-d') : '' }}"
-                            data-fulltime="{{ $employee->fulltime_learning_date ? $employee->fulltime_learning_date->format('Y-m-d') : '' }}"
-                            data-note="{{ $employee->note }}"
-                            data-doc-date="{{ $employee->document_issue_date ? $employee->document_issue_date->format('Y-m-d') : '' }}"
-                            data-period="{{ $employee->reissue_period }}"
-                            onclick="openEditModal(this)">✏️</button>
-                    
-                    <!-- Кнопка удаления -->
-                    <button type="button" 
-                            class="text-red-600 hover:text-red-900 delete-btn"
-                            data-id="{{ $employee->id }}"
-                            data-request-id="{{ $trainingRequest->id }}"
-                            onclick="deleteEmployee(this)">🗑️</button>
-                </td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="19" class="px-2 py-4 text-center text-sm text-gray-500">Сотрудники не добавлены</td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
-</div>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Действия</th>
+
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($employees as $employee)
+                            <tr class="hover:bg-gray-50 {{ $employee->status == 'blocked' ? 'bg-red-50' : '' }} {{ $employee->status == 'warning' ? 'bg-yellow-50' : '' }} {{ $employee->status == 'expired' ? 'bg-red-100' : '' }} {{ $employee->status == 'dismissed' ? 'bg-gray-100' : '' }}">
+                                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{{ $employee->tab_number ?? '—' }}</td>
+<td class="px-2 py-4 text-sm text-gray-900" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $employee->full_name }}">
+    {{ $employee->full_name ?? '—' }}
+    @if(!$employee->userSap)
+        <span class="ml-1 px-1 py-0.5 bg-purple-100 text-purple-800 rounded text-xs">нет в SAP</span>
+    @endif
+    @if($employee->warning_message)
+        <div class="text-xs text-red-600 mt-1">{{ $employee->warning_message }}</div>
+    @endif
+</td>                                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->absence_start_date ? $employee->absence_start_date->format('d.m.Y') : '—' }}</td>
+                                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->absence_end_date ? $employee->absence_end_date->format('d.m.Y') : '—' }}</td>
+                                <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->absence_type ?? '—' }}</td>
+                                <td class="px-2 py-4 whitespace-nowrap text-sm">
+                                    @if($employee->status == 'active')
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Активен</span>
+                                    @elseif($employee->status == 'blocked')
+                                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Заблокирован</span>
+                                    @elseif($employee->status == 'warning')
+                                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Внимание</span>
+                                    @elseif($employee->status == 'expired')
+                                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Просрочено</span>
+                                    @elseif($employee->status == 'dismissed')
+                                        <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">Уволен</span>
+                                    @else
+                                        <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{{ $employee->status }}</span>
+                                    @endif
+                                </td>
+                                     <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
+    {{ $employee->document_issue_date ? $employee->document_issue_date->format('d.m.Y') : '—' }}
+</td>
+<td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->reissue_period ?? '—' }}</td>
+                                <td class="px-2 py-4 whitespace-nowrap text-sm font-medium">
+<!-- Кнопка редактирования -->
+<button type="button" 
+        class="text-indigo-600 hover:text-indigo-900 mr-2 edit-btn"
+        data-id="{{ $employee->id }}"
+        data-request-id="{{ $trainingRequest->id }}"
+        data-start="{{ $employee->absence_start_date ? $employee->absence_start_date->format('Y-m-d') : '' }}"
+        data-end="{{ $employee->absence_end_date ? $employee->absence_end_date->format('Y-m-d') : '' }}"
+        data-type="{{ $employee->absence_type }}"
+        data-distance="{{ $employee->distance_learning_date ? $employee->distance_learning_date->format('Y-m-d') : '' }}"
+        data-fulltime="{{ $employee->fulltime_learning_date ? $employee->fulltime_learning_date->format('Y-m-d') : '' }}"
+        data-note="{{ $employee->note }}"
+        data-doc-date="{{ $employee->document_issue_date ? $employee->document_issue_date->format('Y-m-d') : '' }}"
+        data-period="{{ $employee->reissue_period }}"
+        onclick="openEditModal(this)">✏️</button>
+
+
+<!-- Кнопка удаления -->
+<button type="button" 
+        class="text-red-600 hover:text-red-900 delete-btn"
+        data-id="{{ $employee->id }}"
+        data-request-id="{{ $trainingRequest->id }}"
+        onclick="deleteEmployee(this)">🗑️</button>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="8" class="px-2 py-4 text-center text-sm text-gray-500">Сотрудники не добавлены</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
                 <!-- Ссылка назад -->
                 <div class="mt-4">
                     <a href="{{ route('requests.index') }}" class="text-indigo-600 hover:text-indigo-900">← Назад к заявкам</a>

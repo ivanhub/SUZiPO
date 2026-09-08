@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Request as TrainingRequestModel;
 use App\Models\RequestEmployee;
 use App\Models\AllUserSap;
+use App\Models\CourseException;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+
 
 class RequestEmployeeController extends Controller
 {
@@ -55,12 +57,15 @@ class RequestEmployeeController extends Controller
         
         if (!$userSap) {
             // Пункт 8: Сотрудник не найден
+            $data['tab_number'] = $request->tab_number;
             $data['status'] = 'dismissed';
             $data['warning_type'] = 'dismissed';
             $data['warning_message'] = 'Сотрудник не найден в SAP. Возможно уволен.';
         } else {
             $data['user_sap_id'] = $userSap->id;
             
+	    // Сохраняем ВСЕ данные из SAP
+                $this->copySapData($data, $userSap);
             // Пункт 7: Проверка на дубликат
             $duplicateCheck = $this->checkDuplicate($userSap, $trainingRequest);
             if ($duplicateCheck['duplicate']) {
@@ -127,11 +132,12 @@ class RequestEmployeeController extends Controller
                 // Пункт 8: Добавляем как уволенного
                 RequestEmployee::create([
                     'request_id' => $requestId,
+                    'tab_number' => $tabNumber,
                     'status' => 'dismissed',
                     'warning_type' => 'dismissed',
                     'warning_message' => 'Сотрудник не найден в SAP. Возможно уволен.',
-                    'last_name' => 'Не найден в SAP',
-                    'first_name' => 'Таб. №' . $tabNumber,
+//                    'last_name' => 'Не найден в SAP',
+//                    'first_name' => 'Таб. №' . $tabNumber,
                 ]);
                 $notFound[] = $tabNumber;
                 $addedCount++;
@@ -152,7 +158,12 @@ class RequestEmployeeController extends Controller
             $data = [
                 'request_id' => $requestId,
                 'user_sap_id' => $userSap->id,
+                'tab_number' => $tabNumber,
             ];
+	    // Сохраняем ВСЕ данные из SAP
+            $this->copySapData($data, $userSap);
+            
+            $duplicateCheck = $this->checkDuplicate($userSap, $trainingRequest);
 
             if ($duplicateCheck['duplicate']) {
                 $data['status'] = 'blocked';
@@ -181,12 +192,47 @@ class RequestEmployeeController extends Controller
             ->with($addedCount > 0 ? 'success' : 'error', $message);
     }
 
+ /**
+     * Копирование данных из SAP в request_employees
+     */
+    private function copySapData(array &$data, AllUserSap $userSap): void
+    {
+        $data['tab_number'] = $userSap->tab_number;
+        $data['last_name'] = $userSap->last_name;
+        $data['first_name'] = $userSap->first_name;
+        $data['middle_name'] = $userSap->middle_name;
+        $data['birth_date'] = $userSap->birth_date;
+        $data['gender'] = $userSap->gender;
+        $data['gender_key'] = $userSap->gender_key;
+        $data['pfr_certificate'] = $userSap->pfr_certificate;
+        $data['position'] = $userSap->position;
+        $data['rank'] = $userSap->rank;
+        $data['level_4_name'] = $userSap->level_4_name;
+        $data['level_3_name'] = $userSap->level_3_name;
+        $data['duv_b'] = $userSap->duv_b;
+        $data['mvz'] = $userSap->mvz;
+        $data['employee_category'] = $userSap->employee_category;
+    }
+
+
+
     /**
      * Проверка дубликата (пункт 7)
      */
 
 private function checkDuplicate(AllUserSap $userSap, TrainingRequestModel $currentRequest): array
 {
+    // Получаем название курса текущей заявки
+    $currentCourse = $currentRequest->course;
+    
+    // Проверяем, если курс в исключениях - пропускаем проверку
+    if ($currentCourse) {
+        $isException = CourseException::where('course_name', $currentCourse->course)->exists();
+        if ($isException) {
+            return ['duplicate' => false];
+        }
+    }
+    
     $courseId = $currentRequest->course_id;
     
     // Ищем ТОЛЬКО ПРОШЛЫЕ заявки (не текущую)
@@ -275,6 +321,39 @@ private function applyChecks(RequestEmployee $employee, TrainingRequestModel $tr
             $updates['status'] = 'expired';
             $updates['warning_type'] = 'expired';
             $updates['warning_message'] = 'Документ об обучении просрочен';
+        }
+    }
+
+    // Пункт 7: Проверка на дубликат - ТОЛЬКО если курс не в исключениях
+    if ($employee->userSap && !$employee->warning_type) {
+        // Получаем название курса
+        $currentCourse = $trainingRequest->course;
+        
+        // Проверяем, если курс в исключениях - пропускаем
+        if ($currentCourse) {
+            $isException = CourseException::where('course_name', $currentCourse->course)->exists();
+            
+            if (!$isException) {
+                $duplicateCheck = $this->checkDuplicate($employee->userSap, $trainingRequest);
+                if ($duplicateCheck['duplicate']) {
+                    // Проверяем, является ли текущая заявка первой для этого сотрудника
+                    $firstEmployee = RequestEmployee::where('user_sap_id', $employee->user_sap_id)
+                        ->whereHas('request', function($q) use ($trainingRequest) {
+                            $q->where('course_id', $trainingRequest->course_id);
+                        })
+                        ->orderBy('created_at')
+                        ->first();
+                        
+                    // Если этот сотрудник добавлен в текущей заявке первым - не блокируем
+                    if ($firstEmployee && $firstEmployee->request_id == $trainingRequest->id) {
+                        // Это первая заявка - не блокируем
+                    } else {
+                        $updates['status'] = 'blocked';
+                        $updates['warning_type'] = 'duplicate';
+                        $updates['warning_message'] = $duplicateCheck['message'];
+                    }
+                }
+            }
         }
     }
 

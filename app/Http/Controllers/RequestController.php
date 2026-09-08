@@ -154,7 +154,17 @@ class RequestController extends Controller
     public function show(RequestModel $request): View
     {
         $request->load(['user', 'provider', 'course', 'city', 'profession', 'learnReason', 'learningResource', 'learningType', 'eventType', 'discipline', 'audience', 'teacher', 'curator']);
-        return view('requests.show', compact('request'));
+	 $reserve = null;
+    if ($request->audience_id) {
+        $seats = $request->audience ? $request->audience->seats : null;
+        
+        if ($seats) {
+            $employeesCount = \App\Models\RequestEmployee::where('request_id', $request->id)->count();
+            $reserve = (int)$seats - (int)$employeesCount;
+        }
+    }
+
+        return view('requests.show', compact('request', 'reserve'));
     }
 
     public function edit(RequestModel $request): View
@@ -172,11 +182,24 @@ class RequestController extends Controller
         $teachers = RequestsTeachers::orderBy('fio')->get();
         $curators = RequestsCurator::orderBy('fio')->get();
 
-        return view('requests.edit', compact(
-            'request', 'providers', 'courses', 'cities', 'professions',
-            'learnReasons', 'learningResources', 'learningTypes',
-            'eventsTypes', 'disciplines', 'audiences', 'teachers', 'curators'
-        ));
+	$reserve = null;
+    if ($request->audience_id) {
+        $seats = $request->audience ? $request->audience->seats : null;
+
+	 if ($seats) {
+	  $employeesCount = \App\Models\RequestEmployee::where('request_id', $request->id)->count();
+            $reserve = (int)$seats - (int)$employeesCount;
+        }
+
+    }
+    
+    return view('requests.edit', compact(
+        'request', 'providers', 'courses', 'cities', 'professions',
+        'learnReasons', 'learningResources', 'learningTypes',
+        'eventsTypes', 'disciplines', 'audiences', 'teachers', 'curators',
+        'reserve'
+    ));
+
     }
 
     public function update(HttpRequest $httpRequest, $id): RedirectResponse

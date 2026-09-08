@@ -334,16 +334,12 @@
             ->exists();
     }
 @endphp
-<option value="{{ $audience->id }}" 
-    data-seats="{{ $audience->seats }}"
-    {{ old('audience_id', $request->audience_id) == $audience->id ? 'selected' : '' }}
-    {{ $isBusy ? 'disabled class="text-red-500"' : '' }}>
-    {{ $audience->number }} ({{ $audience->location }})
-    @if($audience->seats && $audience->number !== 'ДОТ' && $audience->location !== 'Свободное местоположение')
-        - {{ $audience->seats }} мест
-    @endif
-    @if($isBusy) - ЗАНЯТА @endif
-</option>
+            <option value="{{ $audience->id }}" 
+                {{ old('audience_id', $request->audience_id) == $audience->id ? 'selected' : '' }}
+                {{ $isBusy ? 'disabled class="text-red-500"' : '' }}>
+                {{ $audience->number }} ({{ $audience->location }})
+                @if($isBusy) - ЗАНЯТА @endif
+            </option>
         @endforeach
     </select>
     @if(isset($isBusy) && $isBusy)
@@ -692,44 +688,5 @@ document.addEventListener('DOMContentLoaded', function() {
         updateTeachers();
     }
 });
-
-
-// Функция для обновления резерва
-function updateReserve() {
-    const audienceSelect = document.getElementById('audience_id');
-    const reserveInput = document.getElementById('reserve');
-    const selectedAudienceId = audienceSelect.value;
-    
-    if (!selectedAudienceId) {
-        reserveInput.value = '';
-        return;
-    }
-    
-    // Находим выбранную аудиторию
-    const selectedOption = audienceSelect.options[audienceSelect.selectedIndex];
-    const seats = selectedOption.dataset.seats ? parseInt(selectedOption.dataset.seats) : 0;
-    
-    // Если seats не заполнено (ДОТ) - резерв пустой
-    if (!seats || seats === 0) {
-        reserveInput.value = '';
-        return;
-    }
-    
-    // Получаем количество сотрудников через AJAX
-    fetch(`/api/request-employees-count/{{ $request->id }}`)
-        .then(response => response.json())
-        .then(data => {
-            const employeeCount = data.count || 0;
-            const reserve = seats - employeeCount;
-//            reserveInput.value = reserve >= 0 ? reserve : 0;
-		reserveInput.value = reserve;
-        });
-}
-
-// Слушаем изменение аудитории
-document.getElementById('audience_id').addEventListener('change', updateReserve);
-
-// Обновляем при загрузке
-updateReserve();
 </script>
 </x-layouts.app-with-sidebar>

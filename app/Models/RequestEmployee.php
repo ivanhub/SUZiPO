@@ -13,9 +13,25 @@ class RequestEmployee extends Model
     protected $fillable = [
         'request_id',
         'user_sap_id',
+        
+        // Данные из SAP (сохраняем копию)
+        'tab_number',
         'last_name',
         'first_name',
         'middle_name',
+        'birth_date',
+        'gender',
+        'gender_key',
+        'pfr_certificate',
+        'position',
+        'rank',
+        'level_4_name',
+        'level_3_name',
+        'duv_b',
+        'mvz',
+        'employee_category',
+        
+        // Дополнительные поля
         'absence_start_date',
         'absence_end_date',
         'absence_type',
@@ -30,6 +46,7 @@ class RequestEmployee extends Model
     ];
 
     protected $casts = [
+        'birth_date' => 'date',
         'absence_start_date' => 'date',
         'absence_end_date' => 'date',
         'distance_learning_date' => 'date',
@@ -54,31 +71,27 @@ class RequestEmployee extends Model
     }
 
     /**
-     * Получить ФИО сотрудника
+     * Получить ФИО сотрудника (из сохраненных данных)
      */
     public function getFullNameAttribute(): string
     {
-        if ($this->userSap) {
-            return $this->userSap->full_name ?? '';
-        }
-        
         return trim(($this->last_name ?? '') . ' ' . ($this->first_name ?? '') . ' ' . ($this->middle_name ?? ''));
     }
 
     /**
-     * Получить табельный номер
+     * Получить табельный номер (из сохраненных данных)
      */
     public function getTabNumberAttribute(): ?string
     {
-        return $this->userSap ? $this->userSap->tab_number : null;
+        return $this->attributes['tab_number'] ?? null;
     }
 
     /**
-     * Получить должность
+     * Получить должность (из сохраненных данных)
      */
     public function getPositionAttribute(): ?string
     {
-        return $this->userSap ? $this->userSap->position : null;
+        return $this->attributes['position'] ?? null;
     }
 
     /**
