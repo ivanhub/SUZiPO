@@ -292,6 +292,31 @@ private function applyChecks(RequestEmployee $employee, TrainingRequestModel $tr
 {
     $updates = [];
 
+    // Получаем название курса для проверки исключений
+    $currentCourse = $trainingRequest->course;
+    $isException = false;
+    if ($currentCourse) {
+        $isException = CourseException::where('course_name', $currentCourse->course)->exists();
+    }
+
+    // СБРАСЫВАЕМ статусы, которые больше не актуальны
+    // Если курс в исключениях или курс изменился - сбрасываем duplicate
+    if ($employee->status == 'blocked' && $employee->warning_type == 'duplicate') {
+        if ($isException) {
+            $updates['status'] = 'active';
+            $updates['warning_type'] = null;
+            $updates['warning_message'] = null;
+        } else {
+            // Пересчитываем дубликат заново
+            $duplicateCheck = $this->checkDuplicate($employee->userSap, $trainingRequest);
+            if (!$duplicateCheck['duplicate']) {
+                $updates['status'] = 'active';
+                $updates['warning_type'] = null;
+                $updates['warning_message'] = null;
+            }
+        }
+    }
+
     // Пункт 8: Проверка на увольнение
     if ($employee->user_sap_id && !$employee->userSap) {
         $updates['status'] = 'dismissed';
@@ -324,41 +349,43 @@ private function applyChecks(RequestEmployee $employee, TrainingRequestModel $tr
         }
     }
 
-    // Пункт 7: Проверка на дубликат - ТОЛЬКО если курс не в исключениях
-    if ($employee->userSap && !$employee->warning_type) {
-        // Получаем название курса
-        $currentCourse = $trainingRequest->course;
-        
-        // Проверяем, если курс в исключениях - пропускаем
-        if ($currentCourse) {
-            $isException = CourseException::where('course_name', $currentCourse->course)->exists();
+    // Пункт 7: Проверка на дубликат - если курс не в исключениях
+    if ($employee->userSap && !$isException) {
+        // Проверяем, является ли текущая заявка первой для этого сотрудника
+        $firstEmployee = RequestEmployee::where('user_sap_id', $employee->user_sap_id)
+            ->whereHas('request', function($q) use ($trainingRequest) {
+                $q->where('course_id', $trainingRequest->course_id);
+            })
+            ->orderBy('created_at')
+            ->first();
             
-            if (!$isException) {
-                $duplicateCheck = $this->checkDuplicate($employee->userSap, $trainingRequest);
-                if ($duplicateCheck['duplicate']) {
-                    // Проверяем, является ли текущая заявка первой для этого сотрудника
-                    $firstEmployee = RequestEmployee::where('user_sap_id', $employee->user_sap_id)
-                        ->whereHas('request', function($q) use ($trainingRequest) {
-                            $q->where('course_id', $trainingRequest->course_id);
-                        })
-                        ->orderBy('created_at')
-                        ->first();
-                        
-                    // Если этот сотрудник добавлен в текущей заявке первым - не блокируем
-                    if ($firstEmployee && $firstEmployee->request_id == $trainingRequest->id) {
-                        // Это первая заявка - не блокируем
-                    } else {
-                        $updates['status'] = 'blocked';
-                        $updates['warning_type'] = 'duplicate';
-                        $updates['warning_message'] = $duplicateCheck['message'];
-                    }
+        // Если этот сотрудник добавлен в текущей заявке первым - не блокируем
+        if ($firstEmployee && $firstEmployee->request_id == $trainingRequest->id) {
+            // Это первая заявка - не блокируем
+            if ($employee->status == 'blocked' && $employee->warning_type == 'duplicate') {
+                $updates['status'] = 'active';
+                $updates['warning_type'] = null;
+                $updates['warning_message'] = null;
+            }
+        } else {
+            // Проверяем дубликат
+            $duplicateCheck = $this->checkDuplicate($employee->userSap, $trainingRequest);
+            if ($duplicateCheck['duplicate']) {
+                $updates['status'] = 'blocked';
+                $updates['warning_type'] = 'duplicate';
+                $updates['warning_message'] = $duplicateCheck['message'];
+            } else {
+                // Если раньше был блокирован как дубликат - сбрасываем
+                if ($employee->status == 'blocked' && $employee->warning_type == 'duplicate') {
+                    $updates['status'] = 'active';
+                    $updates['warning_type'] = null;
+                    $updates['warning_message'] = null;
                 }
             }
         }
     }
 
-    // НЕ перезаписываем статус, если он уже blocked (дубликат)
-    if (!empty($updates) && $employee->status != 'blocked') {
+    if (!empty($updates)) {
         $employee->update($updates);
     }
 }
@@ -390,6 +417,7 @@ private function applyChecks(RequestEmployee $employee, TrainingRequestModel $tr
         $validated = $request->validate([
             'absence_start_date' => 'nullable|date',
             'absence_end_date' => 'nullable|date',
+            'absence_reason' => 'nullable|string|max:1000', // Добавить
             'absence_type' => 'nullable|string|max:50',
             'distance_learning_date' => 'nullable|date',
             'fulltime_learning_date' => 'nullable|date',
@@ -398,7 +426,14 @@ private function applyChecks(RequestEmployee $employee, TrainingRequestModel $tr
             'reissue_period' => 'nullable|string|max:50',
         ]);
 
+        // Проверяем, заполнена ли причина отсутствия
+        $absenceReasonFilled = !empty($validated['absence_reason']);
         $employee->update($validated);
+
+ // Если причина отсутствия заполнена - отправляем уведомление куратору
+    if ($absenceReasonFilled) {
+        $this->notifyCurator($employee, $requestId);
+    }
 
         // Применяем проверки после обновления
         $trainingRequest = TrainingRequestModel::with('course')->findOrFail($requestId);
@@ -408,4 +443,57 @@ private function applyChecks(RequestEmployee $employee, TrainingRequestModel $tr
             ->route('request-employees.index', $requestId)
             ->with('success', 'Данные сотрудника обновлены.');
     }
+
+/**
+ * Отправка уведомления куратору
+ */
+/**
+ * Отправка уведомления куратору
+ */
+private function notifyCurator(RequestEmployee $employee, int $requestId): void
+{
+    $trainingRequest = TrainingRequestModel::with('curator')->find($requestId);
+
+//проверка поля email при отправке
+//    dd([        'has_request' => (bool)$trainingRequest, 'has_curator' => $trainingRequest ? (bool)$trainingRequest->curator : false,        'curator_email' => $trainingRequest?->curator?->email ?? 'EMAIL ОТСУТСТВУЕТ'    ]);
+    
+    if (!$trainingRequest || !$trainingRequest->curator || !$trainingRequest->curator->email) {
+        return;
+    }
+    
+    $curator = $trainingRequest->curator;
+    
+    // Безопасно получаем имя сотрудника
+    $employeeName = $employee->full_name ?: 'Сотрудник';
+    $tabNumber = $employee->tab_number ?: '—';
+    $absenceReason = $employee->absence_reason ?: '—';
+    
+    // Форматируем даты ЗАРАНЕЕ, а не внутри строки
+    $startDate = $employee->absence_start_date instanceof \Carbon\Carbon 
+        ? $employee->absence_start_date->format('d.m.Y') 
+        : ($employee->absence_start_date ?: '—');
+        
+    $endDate = $employee->absence_end_date instanceof \Carbon\Carbon 
+        ? $employee->absence_end_date->format('d.m.Y') 
+        : ($employee->absence_end_date ?: '—');
+    
+    $subject = "Уведомление об отсутствии сотрудника в заявке #{$requestId}";
+    
+    $message = "
+        <h2>Уведомление об отсутствии сотрудника</h2>
+        <p><strong>Заявка:</strong> #{$requestId}</p>
+        <p><strong>Сотрудник:</strong> {$employeeName}</p>
+        <p><strong>Табельный номер:</strong> {$tabNumber}</p>
+        <p><strong>Дата начала отсутствия:</strong> {$startDate}</p>
+        <p><strong>Дата окончания отсутствия:</strong> {$endDate}</p>
+        <p><strong>Причина отсутствия:</strong> {$absenceReason}</p>
+    ";
+    
+    // Отправляем email куратору
+    \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($curator, $subject) {
+        $mail->to($curator->email)
+             ->subject($subject);
+    });
+}
+
 }

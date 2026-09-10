@@ -1,3 +1,9 @@
 ﻿.date-placeholder {
   line-height: 18px;
 }
+
+
+.max-w-7xl {
+  max-width: 100% !important;
+  position: absolute;
+}

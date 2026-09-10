@@ -125,8 +125,8 @@
                 <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Дата нач.</th>
                 <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Дата окон.</th>
                 <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Форма</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 80px;">Статус</th>
-                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Дата док.</th>
+<!--                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 80px;">Статус</th>
+-->                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Дата док.</th>
                 <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Периодичн.</th>
                 <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Действия</th>
             </tr>
@@ -139,6 +139,23 @@
     {{ $employee->status == 'expired' ? 'bg-red-100' : '' }} 
     {{ $employee->status == 'dismissed' ? 'bg-gray-100' : '' }}
     {{ !$employee->user_sap_id ? 'bg-red-100 border-2 border-red-300' : '' }}">
+                <td class="px-2 py-4 whitespace-nowrap text-sm font-medium">
+                    <!-- Кнопка редактирования -->
+                    <button type="button" 
+                            class="text-indigo-600 hover:text-indigo-900 mr-2 edit-btn"
+                            data-id="{{ $employee->id }}"
+                            data-request-id="{{ $trainingRequest->id }}"
+                            data-start="{{ $employee->absence_start_date ? $employee->absence_start_date->format('Y-m-d') : '' }}"
+                            data-end="{{ $employee->absence_end_date ? $employee->absence_end_date->format('Y-m-d') : '' }}"
+			    data-absence-reason="{{ $employee->absence_reason ?? '' }}"
+                            data-type="{{ $employee->absence_type }}"
+                            data-distance="{{ $employee->distance_learning_date ? $employee->distance_learning_date->format('Y-m-d') : '' }}"
+                            data-fulltime="{{ $employee->fulltime_learning_date ? $employee->fulltime_learning_date->format('Y-m-d') : '' }}"
+                            data-note="{{ $employee->note }}"
+                            data-doc-date="{{ $employee->document_issue_date ? $employee->document_issue_date->format('Y-m-d') : '' }}"
+                            data-period="{{ $employee->reissue_period }}"
+                            onclick="openEditModal(this)">✏️</button>       </td>
+
                 <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{{ $employee->tab_number ?? '—' }}</td>
                 <td class="px-2 py-4 text-sm text-gray-900" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $employee->full_name }}">
                     {{ $employee->full_name ?? '—' }}
@@ -171,7 +188,7 @@
                 <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->absence_start_date ? $employee->absence_start_date->format('d.m.Y') : '—' }}</td>
                 <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->absence_end_date ? $employee->absence_end_date->format('d.m.Y') : '—' }}</td>
                 <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->absence_type ?? '—' }}</td>
-                <td class="px-2 py-4 whitespace-nowrap text-sm">
+<!--                <td class="px-2 py-4 whitespace-nowrap text-sm">
                     @if($employee->status == 'active')
                         <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Активен</span>
                     @elseif($employee->status == 'blocked')
@@ -186,6 +203,7 @@
                         <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{{ $employee->status }}</span>
                     @endif
                 </td>
+-->
                 <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->document_issue_date ? $employee->document_issue_date->format('d.m.Y') : '—' }}</td>
                 <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $employee->reissue_period ?? '—' }}</td>
                 <td class="px-2 py-4 whitespace-nowrap text-sm font-medium">
@@ -196,6 +214,7 @@
                             data-request-id="{{ $trainingRequest->id }}"
                             data-start="{{ $employee->absence_start_date ? $employee->absence_start_date->format('Y-m-d') : '' }}"
                             data-end="{{ $employee->absence_end_date ? $employee->absence_end_date->format('Y-m-d') : '' }}"
+			    data-absence-reason="{{ $employee->absence_reason ?? '' }}"
                             data-type="{{ $employee->absence_type }}"
                             data-distance="{{ $employee->distance_learning_date ? $employee->distance_learning_date->format('Y-m-d') : '' }}"
                             data-fulltime="{{ $employee->fulltime_learning_date ? $employee->fulltime_learning_date->format('Y-m-d') : '' }}"
@@ -255,7 +274,11 @@
                             <input type="date" name="absence_end_date" id="edit_absence_end_date"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                         </div>
-                        
+<div class="md:col-span-2">
+    <label for="edit_absence_reason" class="block text-sm font-medium text-gray-700 mb-1">Причина отсутствия</label>
+    <textarea name="absence_reason" id="edit_absence_reason" rows="2"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"></textarea>
+</div>                        
                         <div>
                             <label for="edit_absence_type" class="block text-sm font-medium text-gray-700 mb-1">Форма обучения</label>
                             <select name="absence_type" id="edit_absence_type"

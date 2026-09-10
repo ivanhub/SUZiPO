@@ -112,7 +112,7 @@ class Request extends Model
     }
 
     /**
-     * Сотрудники заѝвки
+     * Сотрудники заявки
      */
     public function employees(): \Illuminate\Database\Eloquent\Relations\HasMany
     {

@@ -84,7 +84,7 @@ class RequestController extends Controller
             'new_profession_name' => 'nullable|string|max:500',
         ]);
 
-        // Создание нового курѝа
+        // Создание нового курса
         if (!empty($validated['new_course_name'])) {
             $newCourse = RequestsCourse::firstOrCreate(
                 ['course' => $validated['new_course_name']],
@@ -114,7 +114,7 @@ class RequestController extends Controller
         }
         unset($validated['new_provider_name']);
 
-        // Создание новой профеѝѝии
+        // Создание новой профессии
         if (!empty($validated['new_profession_name'])) {
             $new = RequestsProfession::firstOrCreate(
                 ['name' => $validated['new_profession_name']],
@@ -124,9 +124,9 @@ class RequestController extends Controller
         }
         unset($validated['new_profession_name']);
 
-        // Уѝтановка города по умолчанию "Нефтеюганѝк"
+        // Установка города по умолчанию "Нефтеюганск"
         if (empty($validated['city_id'])) {
-            $defaultCity = RequestsCity::where('city', 'LIKE', '%Нефтеюганѝк%')->first();
+            $defaultCity = RequestsCity::where('city', 'LIKE', '%Нефтеюганск%')->first();
             if ($defaultCity) {
                 $validated['city_id'] = $defaultCity->id;
             }
@@ -134,20 +134,26 @@ class RequestController extends Controller
 
         $validated['user_id'] = auth()->id();
         $validated['status'] = 'Создана';
-        $validated['country'] = $validated['country'] ?? 'Роѝѝиѝ';
+        $validated['country'] = $validated['country'] ?? 'Россия';
 
         $trainingRequest = RequestModel::create($validated);
+
+    // Отправляем уведомление куратору о новой заявке
+   if ($trainingRequest->curator_id) {
+        $this->notifyCuratorNewRequest($trainingRequest);
+    }
+    
         
         $action = $request->input('action');
         
         if ($action === 'save_and_employees') {
             return redirect()
                 ->route('request-employees.index', $trainingRequest->id)
-                ->with('success', 'Заѝвка ѝоздана. Добавьте ѝотрудников.');
+                ->with('success', 'Заявка создана. Добавьте сотрудников.');
         }
         
         return redirect()->route('requests.index')
-            ->with('success', 'Заѝвка ѝоздана уѝпешно.')
+            ->with('success', 'Заявка создана успешно.')
             ->with('request_id', $trainingRequest->id);
     }
 
@@ -248,53 +254,60 @@ class RequestController extends Controller
         }
         unset($validated['new_profession_name']);
 
-        // Находим заѝвку по ID (НЕ из маршрута, а из параметра)
+        // Находим заявку по ID (НЕ из маршрута, а из параметра)
         $requestModel = RequestModel::findOrFail($id);
+        // Сохраняем старого куратора
+        $oldCuratorId = $requestModel->curator_id;
+
         $requestModel->update($validated);
 
-        // Создание или обновление бронированиѝ
+	// Отправляем уведомление новому куратору
+	  if ($requestModel->curator_id) {
+	      $this->notifyCuratorAssigned($requestModel);
+	  }
+        // Создание или обновление бронирования
         if ($requestModel->audience_id && $requestModel->teacher_id && $requestModel->start_date) {
             $this->createOrUpdateBooking($requestModel);
         } else {
             $this->deleteBookingForRequest($requestModel);
         }
 
-        // Обработка дейѝтвиѝ
+        // Обработка действия
         if ($httpRequest->input('action') === 'save_and_employees') {
             return redirect()
                 ->route('request-employees.index', $requestModel->id)
-                ->with('success', 'Заѝвка ѝохранена. Добавьте ѝотрудников.');
+                ->with('success', 'Заявка сохранена. Добавьте сотрудников.');
         }
 
         return redirect()->route('requests.index')
-            ->with('success', 'Заѝвка обновлена уѝпешно.');
+            ->with('success', 'Заявка обновлена успешно.');
     }
 
     public function destroy(RequestModel $request): RedirectResponse
     {
-        // Удалѝем бронирование перед удалением заѝвки
+        // Удаляем бронирование перед удалением заявки
         $this->deleteBookingForRequest($request);
         
         $request->delete();
         return redirect()->route('requests.index')
-            ->with('success', 'Заѝвка удалена.');
+            ->with('success', 'Заявка удалена.');
     }
 
    private function createOrUpdateBooking(RequestModel $requestModel): void
     {
-        // Получаем даты начала и окончаниѝ из заѝвки
+        // Получаем даты начала и окончания из заявки
         $startDate = $requestModel->start_date;
         $endDate = $requestModel->end_date;
 
-        // Еѝли даты не заполнены, выходим
+        // Если даты не заполнены, выходим
         if (!$startDate || !$endDate) {
             return;
         }
 
-        // Проверѝем, еѝть ли уже бронирование длѝ ѝтой заѝвки
+        // Проверяем, есть ли уже бронирование для этой заявки
         $booking = Booking::where('request_id', $requestModel->id)->first();
 
-        // Проверѝем конфликты на веѝь период
+        // Проверяем конфликты на весь период
         $conflicts = $this->checkAvailabilityForPeriod(
             $requestModel->audience_id,
             $requestModel->teacher_id,
@@ -304,7 +317,7 @@ class RequestController extends Controller
         );
 
         if (!empty($conflicts)) {
-            // Формируем ѝообщение об ошибке
+            // Формируем сообщение об ошибке
             $messages = [];
             foreach ($conflicts as $date => $message) {
                 $messages[] = Carbon::parse($date)->format('d.m.Y') . ' - ' . $message;
@@ -314,18 +327,18 @@ class RequestController extends Controller
             return;
         }
 
-        // Данные длѝ бронированиѝ
+        // Данные для бронирования
         $data = [
             'audience_id' => $requestModel->audience_id,
             'teacher_id' => $requestModel->teacher_id,
             'start_date' => $startDate,
             'end_date' => $endDate,
             'status' => 'active',
-            'notes' => 'Бронирование из заѝвки #' . $requestModel->id,
+            'notes' => 'Бронирование из заявки #' . $requestModel->id,
         ];
 
         if ($booking) {
-            // Обновлѝем ѝущеѝтвующее бронирование
+            // Обновляем существующее бронирование
             $booking->update($data);
         } else {
             // Создаём новое бронирование
@@ -335,20 +348,20 @@ class RequestController extends Controller
     }
 
     /**
-     * Проверка доѝтупноѝти на период
+     * Проверка доступности на период
      */
     private function checkAvailabilityForPeriod($audienceId, $teacherId, $startDate, $endDate, $excludeBookingId = null): array
     {
         $conflicts = [];
 
-        // Проверѝем каждую дату в периоде
+        // Проверяем каждую дату в периоде
         $current = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
 
         while ($current->lte($end)) {
             $dateStr = $current->format('Y-m-d');
             
-            // Проверѝем аудиторию
+            // Проверяем аудиторию
             $audienceConflict = Booking::where('audience_id', $audienceId)
                 ->whereDate('start_date', '<=', $dateStr)
                 ->whereDate('end_date', '>=', $dateStr)
@@ -356,10 +369,10 @@ class RequestController extends Controller
                 ->exists();
 
             if ($audienceConflict) {
-                $conflicts[$dateStr] = 'Нудиториѝ уже занѝта';
+                $conflicts[$dateStr] = 'Аудитория уже занята';
             }
 
-            // Проверѝем преподавателѝ
+            // Проверяем преподавателя
             $teacherConflict = Booking::where('teacher_id', $teacherId)
                 ->whereDate('start_date', '<=', $dateStr)
                 ->whereDate('end_date', '>=', $dateStr)
@@ -367,7 +380,7 @@ class RequestController extends Controller
                 ->exists();
 
             if ($teacherConflict) {
-                $conflicts[$dateStr] = 'Преподаватель уже занѝт';
+                $conflicts[$dateStr] = 'Преподаватель уже занят';
             }
 
             $current->addDay();
@@ -377,11 +390,93 @@ class RequestController extends Controller
     }
 
     /**
-     * Удаление бронированиѝ длѝ заѝвки
+     * Удаление бронирования для заявки
      */
     private function deleteBookingForRequest(RequestModel $requestModel): void
     {
         Booking::where('request_id', $requestModel->id)->delete();
     }
 
+
+/**
+ * Уведомление куратору о новой заявке
+ */
+private function notifyCuratorNewRequest(RequestModel $requestModel): void
+{
+    $curator = $requestModel->curator;
+    
+    if (!$curator || !$curator->email) {
+        return;
+    }
+    
+    // Форматируем даты ЗАРАНЕЕ, вынося логику из строки
+    $startDate = $requestModel->start_date instanceof \Carbon\Carbon 
+        ? $requestModel->start_date->format('d.m.Y') 
+        : ($requestModel->start_date ?: '—');
+        
+    $endDate = $requestModel->end_date instanceof \Carbon\Carbon 
+        ? $requestModel->end_date->format('d.m.Y') 
+        : ($requestModel->end_date ?: '—');
+        
+    $courseName = $requestModel->course->course ?? '—';
+    $educationForm = $requestModel->education_form ?: '—';
+    
+    $subject = "Новая заявка на обучение #{$requestModel->id}";
+    
+    $message = "
+        <h2>Новая заявка на обучение</h2>
+        <p><strong>Номер заявки:</strong> #{$requestModel->id}</p>
+        <p><strong>Курс:</strong> {$courseName}</p>
+        <p><strong>Дата начала:</strong> {$startDate}</p>
+        <p><strong>Дата окончания:</strong> {$endDate}</p>
+        <p><strong>Форма обучения:</strong> {$educationForm}</p>
+        <hr>
+        <p>Вы назначены куратором данной группы.</p>
+    ";
+    
+    \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($curator, $subject) {
+        $mail->to($curator->email)
+             ->subject($subject);
+    });
+}
+
+/**
+ * Уведомление куратору о назначении на заявку
+ */
+private function notifyCuratorAssigned(RequestModel $requestModel): void
+{
+    $curator = $requestModel->curator;
+    
+    if (!$curator || !$curator->email) {
+        return;
+    }
+    
+    // Форматируем даты ЗАРАНЕЕ, вынося логику из строки
+    $startDate = $requestModel->start_date instanceof \Carbon\Carbon 
+        ? $requestModel->start_date->format('d.m.Y') 
+        : ($requestModel->start_date ?: '—');
+        
+    $endDate = $requestModel->end_date instanceof \Carbon\Carbon 
+        ? $requestModel->end_date->format('d.m.Y') 
+        : ($requestModel->end_date ?: '—');
+        
+    $courseName = $requestModel->course->course ?? '—';
+    
+    $subject = "Вас назначили куратором заявки #{$requestModel->id}";
+    
+    $message = "
+        <h2>Назначение куратором</h2>
+        <p><strong>Номер заявки:</strong> #{$requestModel->id}</p>
+        <p><strong>Курс:</strong> {$courseName}</p>
+        <p><strong>Дата начала:</strong> {$startDate}</p>
+        <p><strong>Дата окончания:</strong> {$endDate}</p>
+        <hr>
+        <p>Вы были назначены куратором данной группы.</p>
+    ";
+    
+    \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($curator, $subject) {
+        $mail->to($curator->email)
+             ->subject($subject);
+    });
+}
 }

@@ -53,6 +53,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 300px;">ФИО</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 250px;">Профессия/Должность</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 150px;">Рабочий телефон</th>
+				<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 180px;">Действия</th>
                             </tr>
                         </thead>
@@ -63,6 +64,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style="overflow: hidden; text-overflow: ellipsis;" title="{{ $curator->fio }}">{{ $curator->fio }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" style="overflow: hidden; text-overflow: ellipsis;" title="{{ $curator->profession }}">{{ $curator->profession ?? '—' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $curator->phone ?? '—' }}</td>
+				<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $curator->email ?? '—' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <a href="{{ route('directories.curators.edit', $curator) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Ред.</a>
                                     <form action="{{ route('directories.curators.destroy', $curator) }}" method="POST" class="inline">

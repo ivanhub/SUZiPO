@@ -34,6 +34,7 @@ class RequestEmployee extends Model
         // Дополнительные поля
         'absence_start_date',
         'absence_end_date',
+        'absence_reason', 
         'absence_type',
         'distance_learning_date',
         'fulltime_learning_date',
