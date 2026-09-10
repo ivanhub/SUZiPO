@@ -34,10 +34,9 @@ use App\Http\Controllers\ErrorController;
 use App\Http\Controllers\Admin\UserController; 
 use App\Http\Controllers\AppDemandController; 
 
-
 use App\Models\Booking;
 
-// ??????? ??? ??????????????
+// Маршруты для аутентификации
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -60,7 +59,7 @@ Route::get('/', function () {
     return redirect('/dashboard');
 });
 
-//???????, ????
+//Экспорт, тест
 Route::get('/test-export', function() {
     $export = new \App\Exports\UsersExport();
     $users = $export->collection();
@@ -72,9 +71,8 @@ Route::get('/test-export', function() {
     ]);
 });
 
-
 // ==========================================
-// ???????? ?????????????? (Breeze)
+// Маршруты аутентификации (Breeze)
 // ==========================================
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
@@ -90,10 +88,8 @@ Route::middleware('guest')->group(function () {
     Route::post('reset-password', [NewPasswordController::class, 'store'])->name('password.store');
 });
 
-
-
 Route::middleware('auth')->group(function () {
-// ????????????????? ?????????????
+// Административная панель пользователей
     Route::prefix('admin')->name('admin.')->group(function () {
 //      Route::resource('users', UserController::class);
         Route::get('users/export', [UserController::class, 'export'])->name('users.export'); 
@@ -102,7 +98,7 @@ Route::middleware('auth')->group(function () {
 
     });
 
-    // ???????? ??? email ???????????
+    // Маршруты для email подтверждения
     Route::get('verify-email', [EmailVerificationPromptController::class, '__invoke'])->name('verification.notice');
     Route::get('verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
         ->middleware(['signed', 'throttle:6,1'])
@@ -111,17 +107,17 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:6,1')
         ->name('verification.send');
 
-    // ????????????? ??????
+    // Подтверждение пароля
     Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])->name('password.confirm');
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
 
-    // ?????????? ??????
+    // Обновление пароля
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
 
-    // ?????
+    // Выход
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
-    // ???????
+    // Профиль
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -132,7 +128,7 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 
     // ==========================================
-    // ???? ????????
+    // Пути заявок
     // ==========================================
     Route::resource('course-exceptions', CourseExceptionController::class);
 
@@ -142,7 +138,7 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// ????????? ??????? ????????? ?? ????
+// Проверка доступности аудитории на дату
 Route::get('/api/available-audiences', function (Illuminate\Http\Request $request) {
     $date = $request->get('date');
     $excludeBookingId = $request->get('booking_id');
@@ -155,7 +151,7 @@ Route::get('/api/available-audiences', function (Illuminate\Http\Request $reques
     return $query->pluck('audience_id');
 });
 
-// ????????? ??????? ?????????????? ?? ????
+// Проверка доступности преподавателя на дату
 Route::get('/api/available-teachers', function (Illuminate\Http\Request $request) {
     $date = $request->get('date');
     $excludeBookingId = $request->get('booking_id');
@@ -168,7 +164,7 @@ Route::get('/api/available-teachers', function (Illuminate\Http\Request $request
     return $query->pluck('teacher_id');
 });
 
-       //???????? ???????? ?? SAP (xls)
+       //Импорт сотрудников из SAP (xls)
 Route::post('all-users-sap/import', [AllUserSapController::class, 'import'])->name('all-users-sap.import');
 Route::delete('all-users-sap/{allUserSap}/delete', [AllUserSapController::class, 'destroy'])->name('all-users-sap.delete');
 
@@ -176,27 +172,27 @@ Route::resource('all-users-sap', AllUserSapController::class)->parameters([
     'all-users-sap' => 'allUserSap'
 ]);
 
-     // ??????
+     // Заявки
 Route::resource('requests', RequestController::class);
 Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
 
-// ???????? ??? ??????????? ??????
+// Маршруты для сотрудников заявки
 Route::prefix('request-employees')->name('request-employees.')->group(function () {
     Route::get('{requestId}', [RequestEmployeeController::class, 'index'])->name('index');
     Route::post('{requestId}', [RequestEmployeeController::class, 'store'])->name('store');
-    Route::post('{requestId}/bulk', [RequestEmployeeController::class, 'storeBulk'])->name('store-bulk'); // ????????
+    Route::post('{requestId}/bulk', [RequestEmployeeController::class, 'storeBulk'])->name('store-bulk'); // Пакетное
     Route::put('{requestId}/{employeeId}', [RequestEmployeeController::class, 'update'])->name('update');
     Route::delete('{requestId}/{employeeId}', [RequestEmployeeController::class, 'destroy'])->name('destroy');
 });
 
-    // ?????????
+    // Протоколы
 Route::resource('protocols', ProtocolController::class);
 Route::get('/protocols', [ProtocolController::class, 'index'])->name('protocols.index');
 
     
 Route::get('/bookings', function () {return view('bookings.index'); })->name('bookings.index');
 
-// ???????? ??? ??????
+// Маршруты для матриц
 Route::prefix('matrices')->name('matrices.')->group(function () {
     Route::resource('courses', MatrixCourseController::class);
 //Route::resource('courses', MatrixCourseController::class)->parameters(['course' => 'matrixCourse']);
@@ -207,7 +203,7 @@ Route::resource('ot', MatrixOtController::class)->parameters(['ot' => 'matrixOt'
     Route::resource('po', MatrixPoController::class);
 });
     
-    // ???????????
+    // Справочники
     Route::prefix('directories')->name('directories.')->group(function () {
         Route::get('countries', [DirectoryController::class, 'countries'])->name('countries');
         Route::get('reasons-non-certification', [DirectoryController::class, 'reasonsNonCertification'])->name('reasons-non-certification');
@@ -238,15 +234,15 @@ Route::resource('ot', MatrixOtController::class)->parameters(['ot' => 'matrixOt'
         Route::resource('curators', RequestsCuratorController::class);
         Route::get('absence-types', [DirectoryController::class, 'absenceTypes'])->name('absence-types');
 
-    // ??????
+    // Города
         Route::resource('cities', RequestsCityController::class);
         
-        // ?????
+        // Курсы
         Route::resource('courses', RequestsCourseController::class);
    
     });
 
-    // ??????
+    // Отчеты
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('auditorium-load', [ReportController::class, 'auditoriumLoad'])->name('auditorium-load');
         Route::get('training-journal', [ReportController::class, 'trainingJournal'])->name('training-journal');
@@ -254,7 +250,7 @@ Route::resource('ot', MatrixOtController::class)->parameters(['ot' => 'matrixOt'
         Route::get('certificate-print', [ReportController::class, 'certificatePrint'])->name('certificate-print');
     });
     
-    // ?????????????????
+    // Административная
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', UserController::class);
         Route::get('users/export', [UserController::class, 'export'])->name('users.export');
@@ -264,7 +260,7 @@ Route::resource('ot', MatrixOtController::class)->parameters(['ot' => 'matrixOt'
         Route::get('global-settings', [AdminController::class, 'globalSettings'])->name('global-settings');
     });
     
-    // ??????
+    // Ошибки
     Route::prefix('errors')->name('errors.')->group(function () {
         Route::get('/', [ErrorController::class, 'index'])->name('index');
         Route::get('create', [ErrorController::class, 'create'])->name('create');
@@ -276,10 +272,7 @@ Route::resource('ot', MatrixOtController::class)->parameters(['ot' => 'matrixOt'
         Route::get('help-sumo', [ErrorController::class, 'helpSumo'])->name('help-sumo');
     });
 
-
-
-
-// ?????????????? ???????? ? ??????? ???????? ?? ??????
+// Дополнительные маршруты для заявок и демонстрационных страниц
 Route::get('/', function () {
     // return redirect()->route('demands.index');
     return redirect('/login');
@@ -294,4 +287,3 @@ Route::get('requests/export-form', [RequestController::class, 'exportForm'])->na
 Route::get('/bookings', function () {return view('bookings.index'); })->name('bookings.index');
 Route::get('/demands', [AppDemandController::class, 'index'])->name('demands.index');
 Route::get('/demands/{id}', [AppDemandController::class, 'show'])->name('requests.show');
-
