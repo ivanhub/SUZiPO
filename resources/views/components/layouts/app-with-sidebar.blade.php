@@ -14,8 +14,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
    <!-- Подключение main.css -->
     <link href="{{ asset('css/main.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/mermaid.min.css') }}" rel="stylesheet">
 
-    
+  
     @stack('styles')
 </head>
 <body class="font-sans antialiased bg-gray-50">

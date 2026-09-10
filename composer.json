@@ -11,10 +11,12 @@
         "barryvdh/laravel-dompdf": "^3.1",
         "darkaonline/l5-swagger": "^11.1",
         "filament/filament": "^5.7",
+        "filament/tables": "^5.7",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
         "maatwebsite/excel": "^4.0",
         "phpoffice/phpspreadsheet": "^5.9",
+        "power-components/livewire-powergrid": "^6.11",
         "spatie/browsershot": "^5.4",
         "spatie/laravel-permission": "^8.3",
         "spatie/laravel-query-builder": "^7.3"

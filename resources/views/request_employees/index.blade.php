@@ -110,6 +110,7 @@
     <table class="min-w-full divide-y divide-gray-200" style="table-layout: fixed;">
         <thead class="bg-gray-50">
             <tr>
+                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 60px;"> </th>
                 <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 60px;">Таб.№</th>
                 <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 150px;">ФИО</th>
                 <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 80px;">Дата рожд.</th>

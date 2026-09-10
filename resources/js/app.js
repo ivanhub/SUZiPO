@@ -8,6 +8,18 @@ import "flatpickr/dist/flatpickr.min.css";
 import "flatpickr/dist/themes/material_orange.css"; 
 // Импорт русской локализации
 import { Russian } from "flatpickr/dist/l10n/ru.js";
+//import './../../vendor/power-components/livewire-powergrid/dist/powergrid'
+import 'gridjs.umd'
+// Inside resources/js/app.js
+import('/js/gridjs.umd.js')
+    .then((module) => {
+        // Script loaded successfully
+        console.log('Public script loaded');
+    })
+    .catch((err) => {
+        console.error('Failed to load script', err);
+    });
+
 
 window.Alpine = Alpine;
 Alpine.start();
