@@ -176,8 +176,11 @@ Route::resource('all-users-sap', AllUserSapController::class)->parameters([
     'all-users-sap' => 'allUserSap'
 ]);
 
-     // ??????
+// Route::post('requests/send-to-ooo', [RequestController::class, 'sendToOoo'])->name('requests.send-to-ooo');
+
 Route::resource('requests', RequestController::class);
+// Маршрут для массовой или одиночной отправки заявок в ООО
+
 Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
 
 // ???????? ??? ??????????? ??????
@@ -192,6 +195,8 @@ Route::prefix('request-employees')->name('request-employees.')->group(function (
     // ?????????
 Route::resource('protocols', ProtocolController::class);
 Route::get('/protocols', [ProtocolController::class, 'index'])->name('protocols.index');
+Route::get('/protocols/{id}/json', [ProtocolController::class, 'getJson'])->name('protocols.json');
+
 
     
 Route::get('/bookings', function () {return view('bookings.index'); })->name('bookings.index');
@@ -289,9 +294,12 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->name('dashboard');
 
-Route::resource('requests', RequestController::class);
+// Route::resource('requests', RequestController::class);
 Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
 Route::get('/bookings', function () {return view('bookings.index'); })->name('bookings.index');
 Route::get('/demands', [AppDemandController::class, 'index'])->name('demands.index');
 Route::get('/demands/{id}', [AppDemandController::class, 'show'])->name('requests.show');
+
+Route::post('/send-demand-to-ooo', [RequestController::class, 'sendToOoo'])->name('requests.send-to-ooo');
+
 

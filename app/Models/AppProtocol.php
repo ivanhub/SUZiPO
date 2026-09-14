@@ -8,21 +8,34 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AppProtocol extends Model
 {
     protected $table = 'app_protocols';
-
-    // Явно задаем первичный ключ (по умолчанию Laravel ищет просто "id")
     protected $primaryKey = 'prot_id';
-
-    // Отключаем таймстампы, так как в таблице кастомные поля дат
     public $timestamps = false;
+    protected $with = ['demand'];
 
-    /**
-     * Связь с таблицей заявок (app_demands)
-     */
+    protected $fillable = [
+        'prot_id',        
+        'prot_num',       
+        'prot_status',    
+        'prot_date',      
+        'id_user_create', 
+        'date_edit',
+        'id_user_edit',
+        'date_start',
+        'date_end',
+    ];
+
+    protected static function booted()
+    {
+        static::creating(function ($protocol) {
+            $maxId = static::max('prot_id');
+            $protocol->prot_id = $maxId ? $maxId + 1 : 1;
+        });
+    }
+
+
     public function demand(): BelongsTo
     {
-        // Внешний ключ в текущей таблице: dem_id
-        // Первичный ключ в таблице app_demands: dem_id
-        return $this->belongsTo(AppDemand::class, 'dem_id', 'dem_id');
+        return $this->belongsTo(Request::class, 'prot_num', 'req_id');
     }
 
     public function editor(): BelongsTo

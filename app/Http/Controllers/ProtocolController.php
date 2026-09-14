@@ -14,6 +14,11 @@ class ProtocolController extends Controller
         // Инициализируем запрос с жадной загрузкой программ обучения
         $query = AppProtocol::with(['demand.course', 'editor']);
 
+        if ($request->filled('activeTab') && $request->activeTab !== 'all') {
+            // Если выбраны Черновики, Активные, Просроченные, Отмененные или Завершенные
+            $query->where('prot_status', $request->activeTab);
+        }
+
         // 1. Фильтр по ID протокола (первичный ключ)
         if ($request->filled('searchId')) {
             $query->where('prot_id', $request->searchId);
@@ -81,19 +86,23 @@ class ProtocolController extends Controller
 
         // Быстрая постраничная навигация без нагрузки на базу данных
         // $protocols = $query->orderBy('dateprotocol', 'desc')->simplePaginate(15);
-        $protocols = AppProtocol::with(['demand.course', 'editor'])
-            ->orderBy('prot_id', 'desc')
-            ->simplePaginate(15);
+
+        // $protocols = AppProtocol::with(['demand.course', 'editor'])
+        //     ->orderBy('prot_id', 'desc')
+        //     ->simplePaginate(15);
+
+        // $protocols = $query->orderBy('prot_id', 'desc')->simplePaginate(15);
+        $protocols = $query->orderBy('prot_id', 'desc')->paginate(15);
 
         $protocols->appends($request->all());
 
-
         // Расчет счетчиков для верхних табов-вкладок по полю flagapproved
-        $totalCount = UcExtProtocol::count();
-        $counts = UcExtProtocol::select('flagapproved', DB::raw('count(*) as total'))
-            ->whereNotNull('flagapproved')
-            ->groupBy('flagapproved')
-            ->pluck('total', 'flagapproved')
+        $totalCount = AppProtocol::count();
+
+        $counts = AppProtocol::select('prot_status', DB::raw('count(*) as total'))
+            ->whereNotNull('prot_status')
+            ->groupBy('prot_status')
+            ->pluck('total', 'prot_status')
             ->toArray();
 
         // AJAX-ответ для Alpine.js (возвращает только строки tbody)
@@ -110,25 +119,37 @@ class ProtocolController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'date_start'   => 'nullable|date',
-            'date_end'     => 'nullable|date',
-            'prot_date'    => 'nullable|date',
-            'group_num'    => 'required|string|max:50',
-            'order_num'    => 'nullable|string|max:100',
-            'order_date'   => 'nullable|date',
-            'flagapproved' => 'required|integer',
+            'group_num'      => 'required|string|max:50',  // Номер группы
+            'order_num'      => 'nullable|string|max:100', // Номер приказа
+            'order_date'     => 'nullable|date',           // Дата приказа
+            'prot_date'      => 'nullable|date',           // Дата формирования
+            'flagapproved'   => 'required|integer',        // Состояние/статус протокола
+            'price_per_man'  => 'nullable|numeric',        // Цена за человека
+            'nds_percent'    => 'nullable|numeric',        // НДС%
+            'theory_hours'   => 'nullable|integer',        // Часы теории
+            'practice_hours' => 'nullable|integer',        // Часы практики
+            'program_hours'  => 'nullable|integer',        // Часы по программе
+            'document_type'  => 'nullable|string|max:100', // Тип документа
         ]);
 
 
-        $protocol = UcExtProtocol::findOrFail($id);
+        $protocol = AppProtocol::findOrFail($id);
 
-        $protocol->date_start   = $request->input('date_start');
-        $protocol->date_end     = $request->input('date_end');
-        $protocol->prot_date    = $request->input('prot_date');
-        $protocol->group_num    = $request->input('group_num');
-        $protocol->order_num    = $request->input('order_num');
-        $protocol->order_date   = $request->input('order_date');
-        $protocol->prot_status  = $request->input('flagapproved');
+        $protocol->group_num       = $request->input('group_num');
+        $protocol->order_num       = $request->input('order_num');
+        $protocol->order_date      = $request->input('order_date');
+        $protocol->prot_date       = $request->input('prot_date') ?? now();
+        $protocol->prot_status     = $request->input('flagapproved');
+
+        $protocol->price_per_man   = $request->input('price_per_man');
+        $protocol->nds_percent     = $request->input('nds_percent');
+        $protocol->theory_hours    = $request->input('theory_hours');
+        $protocol->practice_hours  = $request->input('practice_hours');
+        $protocol->program_hours   = $request->input('program_hours');
+        $protocol->document_type   = $request->input('document_type');
+
+        $protocol->id_user_edit    = auth()->id() ?? 1;
+        $protocol->date_edit       = now();
 
         $protocol->save();
 
@@ -159,4 +180,23 @@ class ProtocolController extends Controller
     {
         //
     }
+
+    public function getJson($id)
+    {
+        $protocol = AppProtocol::with([
+            'demand.course',
+            'demand.teacher',
+            'demand.curator',
+            'demand.profession',
+            'demand.audience',
+            'editor'
+        ])->find($id);
+
+        if (!$protocol) {
+            return response()->json(['error' => 'Протокол не найден'], 404);
+        }
+
+        return response()->json($protocol);
+    }
+
 }

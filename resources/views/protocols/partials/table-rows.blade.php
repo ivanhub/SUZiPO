@@ -1,87 +1,93 @@
 @forelse($protocols as $protocol)
-    <tr style="border-bottom: 1px solid #e5e7eb; height: 32px; background-color: #ffffff;" onmouseover="this.style.backgroundColor='#fffbeb'" onmouseout="this.style.backgroundColor='#ffffff'">
-        
-        <!-- 1. Действие (Иконка желтой папки) -->
-        <td style="padding: 4px; border-right: 1px solid #e5e7eb; text-align: center; background-color: #f9fafb;">
-            <button type="button" @click="openEdit({{ json_encode($protocol->load('demand.course')) }})" style="cursor: pointer; border: none; background: none; padding: 0; display: block; margin: 0 auto;">
-                <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 15px; height: 15px; color: #f59e0b;">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
-                </svg>
-            </button>
-        </td>
+<tr class="hover:bg-gray-50" style="border-bottom: 1px solid #e5e7eb;">
+    <!-- Действия (Иконки редактирования) -->
+    <td style="padding: 10px 8px; text-align: center;">
+        {{-- Передаем чистый ID без кавычек и текстов --}}
+        <span @click="openEdit({{ $protocol->prot_id }})" style="cursor: pointer; color: #4f46e5; font-size: 14px; margin-right: 8px;" title="Редактировать">✏️</span>
+        <a href="#" style="text-decoration: none; color: #10b981; font-size: 14px;" title="Скачать">📥</a>
+    </td>
 
-        <!-- 2. ID протокола -->
-        <td style="padding: 6px; border-right: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #4b5563;">
-            {{ $protocol->prot_id }}
-        </td>
-        
-        <!-- 3. Состояние -->
-        <td style="padding: 6px; border-right: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500;">
-            {{ $protocol->prot_status == 4 ? 'Принятые' : ($protocol->prot_status == 6 ? 'Архив' : '—') }}
-        </td>
-        
-        <!-- 4. № Протокола -->
-        <td style="padding: 6px; border-right: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            {{ $protocol->prot_num ?? '—' }}
-        </td>
 
-        <!-- 5. Создан (Дата) -->
-        <td style="padding: 6px; border-right: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            {{ $protocol->prot_date ? \Carbon\Carbon::parse($protocol->prot_date)->format('d.m.Y') : '—' }}
-        </td>
-        
-        <!-- 6. Название курса (Жесткое троеточие, текст гарантированно НЕ перенесется и НЕ раздует ячейку) -->
-        <td style="padding: 6px; border-right: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; color: #111827;" title="{{ $protocol->demand?->course?->name ?? '' }}">
-            {{ $protocol->demand?->course?->name ?? '—' }}
-        </td>
-        
-        <!-- 7. Начало -->
-        <td style="padding: 6px; border-right: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            {{ $protocol->date_start ? \Carbon\Carbon::parse($protocol->date_start)->format('d.m.Y') : '—' }}
-        </td>
-        
-        <!-- 8. Окончание -->
-        <td style="padding: 6px; border-right: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            {{ $protocol->date_end ? \Carbon\Carbon::parse($protocol->date_end)->format('d.m.Y') : '—' }}
-        </td>
-        
-        <!-- 9. Редактор -->
-        <td style="padding: 6px; border-right: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $protocol->editor?->user_name ?? '—' }}">
-            {{ $protocol->editor?->user_name ?? '—' }}
-        </td>
-        
-        <!-- 10. № Заявки -->
-        <td style="padding: 6px; border-right: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            {{ $protocol->demand?->dem_num ?? '—' }}
-        </td>
-        
-        <!-- 11. Дата Заявки -->
-        <td style="padding: 6px; border-right: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            {{ $protocol->demand?->dem_date ? \Carbon\Carbon::parse($protocol->demand->dem_date)->format('d.m.Y') : '—' }}
-        </td>
+    <!-- ID Протокола -->
+    <td style="padding: 10px 8px; font-weight: 500; color: #111827;">{{ $protocol->prot_id }}</td>
 
-        <!-- 12. Квалификация -->
-        <td style="padding: 6px; border-right: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $protocol->demand?->qualification ?? '' }}">
-            {{ $protocol->demand?->qualification ?? '—' }}
-        </td>
+    <!-- Состояние (Текстовый статус на основе числового prot_status) -->
+    <td style="padding: 10px 8px;">
+        <span style="padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;
+            @if($protocol->prot_status == 1) background-color: #d1fae5; color: #065f46;
+            @elseif($protocol->prot_status == 0) background-color: #fee2e2; color: #991b1b;
+            @else background-color: #f3f4f6; color: #374151; @endif">
+            @if($protocol->prot_status == 1) В работе
+            @elseif($protocol->prot_status == 0) Черновик
+            @elseif($protocol->prot_status == 4) Завершен
+            @else Статус {{ $protocol->prot_status }} @endif
+        </span>
+    </td>
 
-        <!-- 13. ФИО Преподавателя -->
-        <td style="padding: 6px; border-right: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $protocol->demand?->teacher_name ?? '' }}">
-            {{ $protocol->demand?->teacher_name ?? '—' }}
-        </td>
+    <!-- № Рег. (Номер протокола, куда сел сквозной номер заявки 1-ЮЛ) -->
+    <td style="padding: 10px 8px; font-weight: 600; color: #1f2937;">{{ $protocol->prot_num }}</td>
 
-        <!-- 14. Номер аудитории -->
-        <td style="padding: 6px; border-right: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            {{ $protocol->demand?->classroom_number ?? '—' }}
-        </td>
+    <!-- Создан (Дата протокола) -->
+    <td style="padding: 10px 8px; color: #6b7280;">
+        {{ $protocol->prot_date ? \Carbon\Carbon::parse($protocol->prot_date)->format('d.m.Y') : '—' }}
+    </td>
 
-        <!-- 15. Куратор группы -->
-        <td style="padding: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $protocol->demand?->curator_name ?? '' }}">
-            {{ $protocol->demand?->curator_name ?? '—' }}
-        </td>
-    </tr>
+    <!-- Курс / Квалификация (Данные берутся из связанной заявки) -->
+    <td style="padding: 10px 8px; font-weight: 500; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $protocol->demand->course->course ?? '' }}">
+        {{ $protocol->demand?->course->course ?? '—' }}
+        @if(isset($protocol->demand?->production_break))
+            <div style="font-size: 10px; color: #6b7280;">Разрыв: {{ $protocol->demand?->production_break }}</div>
+        @endif
+    </td>
+
+    <!-- Начало обучения -->
+    <td style="padding: 10px 8px; color: #374151;">
+        {{ $protocol->date_start ? \Carbon\Carbon::parse($protocol->date_start)->format('d.m.Y') : '—' }}
+    </td>
+
+    <!-- Окончание обучения -->
+    <td style="padding: 10px 8px; color: #374151;">
+        {{ $protocol->date_end ? \Carbon\Carbon::parse($protocol->date_end)->format('d.m.Y') : '—' }}
+    </td>
+
+    <!-- Создатель / Редактор -->
+    <td style="padding: 10px 8px; color: #4b5563;">
+        <div style="font-weight: 500;">{{ $protocol->editor?->name ?? '—' }}</div>
+        <div style="font-size: 10px; color: #9ca3af;">Ред: —</div>
+    </td>
+
+    <!-- № Заявки (Берем id исходной заявки из связи) -->
+    <td style="padding: 10px 8px; color: #4b5563;">№ {{ $protocol->demand?->id ?? '—' }}</td>
+
+    <!-- Дата Заявки -->
+    <td style="padding: 10px 8px; color: #4b5563;">
+        {{ $protocol->demand?->created_at ? $protocol->demand?->created_at->format('d.m.Y') : '—' }}
+    </td>
+
+    <!-- Квалификация -->
+    <td style="padding: 10px 8px; color: #4b5563;">
+        {{ $protocol->demand?->profession->profession ?? '—' }}
+    </td>
+
+    <!-- Преподаватель -->
+    <td style="padding: 10px 8px; color: #4b5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+        {{ $protocol->demand?->teacher->name ?? '—' }}
+    </td>
+
+    <!-- Аудитория -->
+    <td style="padding: 10px 8px; text-align: center; color: #4b5563;">
+        {{ $protocol->demand?->audience->name ?? '—' }}
+    </td>
+
+    <!-- Куратор -->
+    <td style="padding: 10px 8px; color: #4b5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+        {{ $protocol->demand?->curator->name ?? '—' }}
+    </td>
+</tr>
 @empty
-    <tr>
-        <td colspan="15" style="padding: 16px; text-align: center; color: #9ca3af;">Протоколы не найдены.</td>
-    </tr>
+<tr>
+    <td colspan="15" style="padding: 20px; text-align: center; color: #9ca3af; font-size: 13px;">
+        Протоколы не найдены
+    </td>
+</tr>
 @endforelse

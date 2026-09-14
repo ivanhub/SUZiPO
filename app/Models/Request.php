@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Request extends Model
 {
@@ -12,6 +13,7 @@ class Request extends Model
 
     protected $table = 'requests'; 
     protected $fillable = [
+        'req_id',
         'user_id',
         'status',
         'one_time',
@@ -35,7 +37,7 @@ class Request extends Model
         'audience_id',
         'teacher_id',
         'curator_id',
-	'reserve',
+	    'reserve',
     ];
 
     protected $casts = [
@@ -45,77 +47,36 @@ class Request extends Model
         'issue_date' => 'date',
     ];
 
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
+    public function protocols(): HasMany { return $this->hasMany(AppProtocol::class, 'prot_num', 'req_id'); }
 
-    public function provider(): BelongsTo
-    {
-        return $this->belongsTo(RequestsProvider::class);
-    }
+    public function user(): BelongsTo { return $this->belongsTo(User::class); }
 
-    public function course(): BelongsTo
-    {
-     //   return $this->belongsTo(RequestsCourse::class);
-        return $this->belongsTo(RequestsCourse::class, 'course_id');
-    }
+    public function provider(): BelongsTo { return $this->belongsTo(RequestsProvider::class); }
 
-    public function city(): BelongsTo
-    {
-        return $this->belongsTo(RequestsCity::class);
-    }
+    public function course(): BelongsTo { return $this->belongsTo(RequestsCourse::class, 'course_id'); }
 
-    public function profession(): BelongsTo
-    {
-        return $this->belongsTo(RequestsProfession::class);
-    }
+    public function city(): BelongsTo { return $this->belongsTo(RequestsCity::class); }
 
-    public function learnReason(): BelongsTo
-    {
-        return $this->belongsTo(RequestsLearnReason::class);
-    }
+    public function profession(): BelongsTo { return $this->belongsTo(RequestsProfession::class); }
 
-    public function learningResource(): BelongsTo
-    {
-        return $this->belongsTo(RequestsLearningResource::class);
-    }
+    public function learnReason(): BelongsTo { return $this->belongsTo(RequestsLearnReason::class); }
 
-    public function learningType(): BelongsTo
-    {
-        return $this->belongsTo(RequestsLearningType::class);
-    }
+    public function learningResource(): BelongsTo { return $this->belongsTo(RequestsLearningResource::class); }
 
-    public function eventType(): BelongsTo
-    {
-        return $this->belongsTo(RequestsEventsType::class);
-    }
+    public function learningType(): BelongsTo { return $this->belongsTo(RequestsLearningType::class); }
 
-    public function discipline(): BelongsTo
-    {
-        return $this->belongsTo(RequestsDiscipline::class);
-    }
+    public function eventType(): BelongsTo { return $this->belongsTo(RequestsEventsType::class); }
 
-    public function audience(): BelongsTo
-    {
-        return $this->belongsTo(Audience::class, 'audience_id');
-    }
+    public function discipline(): BelongsTo { return $this->belongsTo(RequestsDiscipline::class); }
 
-    public function teacher(): BelongsTo
-    {
-        return $this->belongsTo(Teacher::class, 'teacher_id');
-    }
+    public function audience(): BelongsTo { return $this->belongsTo(Audience::class, 'audience_id'); }
 
-    public function curator(): BelongsTo
-    {
-        return $this->belongsTo(RequestsCurator::class);
-    }
+    public function teacher(): BelongsTo { return $this->belongsTo(Teacher::class, 'teacher_id'); }
+
+    public function curator(): BelongsTo { return $this->belongsTo(RequestsCurator::class); }
 
     /**
      * Сотрудники заѝвки
      */
-    public function employees(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(RequestEmployee::class);
-    }
+    public function employees(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(RequestEmployee::class); }
  }
