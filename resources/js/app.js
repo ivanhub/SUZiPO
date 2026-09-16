@@ -9,9 +9,9 @@ import "flatpickr/dist/themes/material_orange.css";
 // Импорт русской локализации
 import { Russian } from "flatpickr/dist/l10n/ru.js";
 //import './../../vendor/power-components/livewire-powergrid/dist/powergrid'
-import 'gridjs.umd'
+//import 'gridjs.umd'
 // Inside resources/js/app.js
-import('/js/gridjs.umd.js')
+import('./gridjs.umd.js')
     .then((module) => {
         // Script loaded successfully
         console.log('Public script loaded');
