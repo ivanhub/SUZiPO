@@ -1,179 +1,178 @@
-<!-- Главный оверлей: фиксируется на весь экран, затемняет фон и выравнивает поп-ап ровно по центру -->
 <div x-show="isEditOpen"
     style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.4); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;"
     x-cloak>
 
     <!-- Белая карточка поп-апа с фиксированной шириной и внутренним скроллом -->
-    <div style="background-color: #ffffff; border: 1px solid #c5c5c5; border-radius: 4px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); width: 100%; max-width: 950px; max-height: 92vh; overflow-y: auto; display: flex; flex-direction: column; font-family: Arial, sans-serif; font-size: 11px; color: #000000; box-sizing: border-box;">
+    <div style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); width: 100%; max-width: 950px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; font-family: system-ui, -apple-system, sans-serif; font-size: 13px; color: #1f2937; box-sizing: border-box;">
 
         <!-- Заголовок окна -->
-        <div style="padding: 10px 16px; background-color: #f3f4f6; border-bottom: 1px solid #d1d5db; display: flex; align-items: center; box-sizing: border-box;">
-            <span style="font-weight: bold; font-size: 12px; color: #1f2937;">Редактирование записи протокола</span>
-            <button type="button" @click="isEditOpen = false" style="margin-left: auto; border: none; background: none; font-size: 18px; color: #9ca3af; cursor: pointer; line-height: 1; padding: 0;">&times;</button>
+        <div style="padding: 14px 20px; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; box-sizing: border-box;">
+            <span style="font-weight: 700; font-size: 15px; color: #111827;">Редактирование записи протокола</span>
+            <button type="button" @click="isEditOpen = false" style="margin-left: auto; border: none; background: none; font-size: 22px; color: #9ca3af; cursor: pointer; line-height: 1; padding: 0;" onmouseover="this.style.color='#4b5563'" onmouseout="this.style.color='#9ca3af'">&times;</button>
         </div>
 
         <!-- Тело формы -->
-        <form :action="`/protocols/${editData.prot_id}`" method="POST" style="padding: 20px; margin: 0; box-sizing: border-box;">
+        <form :action="`/protocols/${editData.prot_id}`" method="POST" style="padding: 24px; margin: 0; box-sizing: border-box;">
             @csrf
             @method('PUT')
 
             <!-- Основной двухколоночный контейнер, разделяющий Заявку и Реквизиты -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start;">
 
                 <!-- ЛЕВАЯ КОЛОНКА: Данные из заявки -->
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <div style="text-align: right; font-weight: bold; color: #7c8594; font-size: 11px; border-bottom: 1px solid #d1d5db; padding-bottom: 3px; margin-bottom: 8px;">Данные из заявки</div>
-                    
-                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                        <input type="checkbox" name="is_disposable" id="is_disposable" :checked="editData.demand?.is_disposable == 1" style="margin: 0; cursor: pointer;">
-                        <label for="is_disposable" style="color: #ef4444; font-weight: bold;">Одноразовая заявка</label>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="text-align: right; font-weight: 600; color: #4b5563; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 4px;">Данные из заявки</div>
+
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <input type="checkbox" disabled id="is_disposable" :checked="editData.demand?.one_time == 1" style="margin: 0; cursor: not-allowed; width: 16px; height: 16px; border-radius: 4px; border-color: #d1d5db;">
+                        <label for="is_disposable" style="color: #dc2626; font-weight: 600;">Одноразовая заявка</label>
                     </div>
 
-                    <!-- ИСПРАВЛЕНО: Привязка дат к полям из app_protocols -->
-                    <div style="display: grid; grid-template-columns: 160px 1fr; align-items: center; gap: 4px;">
-                        <label>Дата начала курса: <span style="color: #ef4444;">*</span></label>
-                        <input type="date" name="date_start" x-model="editData.date_start" style="width: 140px; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px;">
+                    <div style="display: grid; grid-template-columns: 180px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">Дата начала курса:</label>
+                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.start_date ? new Date(editData.demand.start_date).toLocaleDateString('ru-RU') : '—'"></span>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 160px 1fr; align-items: center; gap: 4px;">
-                        <label>Дата окончания курса:</label>
-                        <input type="date" name="date_end" x-model="editData.date_end" style="width: 140px; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px;">
+                    <div style="display: grid; grid-template-columns: 180px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">Дата окончания курса:</label>
+                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.end_date ? new Date(editData.demand.end_date).toLocaleDateString('ru-RU') : '—'"></span>
                     </div>
 
-                    <!-- ИСПРАВЛЕНО: Приведение названий свойств к реальному snake_case из вашей СУБД -->
-                    <div style="display: grid; grid-template-columns: 160px 1fr; gap: 4px;">
-                        <span style="color: #555555;">Форма образования:</span>
-                        <span style="font-weight: bold;" x-text="editData.demand?.form_education || 'дистанционное'"></span>
+                    <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
+                        <span style="color: #6b7280;">Форма образования:</span>
+                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.education_form || 'дистанционное'"></span>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 160px 1fr; gap: 4px;">
-                        <span style="color: #555555;">Учебное заведение:</span>
-                        <span style="font-weight: bold;" x-text="editData.demand?.educational_institution || 'Учебный центр ООО «РН-Юганскнефтегаз»'"></span>
+                    <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
+                        <span style="color: #6b7280;">Учебное заведение:</span>
+                        <span style="font-weight: 600; color: #111827;">Учебный центр ООО «РН-Юганскнефтегаз»</span>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 160px 1fr; gap: 4px;">
-                        <span style="color: #555555;">Наименование курса (тематика):</span>
-                        <span style="font-weight: bold; color: #111827;" x-text="editData.demand?.course?.name || '—'"></span>
+                    <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
+                        <span style="color: #6b7280;">Наименование курса:</span>
+                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.course?.course || '—'"></span>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 160px 1fr; gap: 4px;">
-                        <span style="color: #555555;">Место проведения (страна):</span>
-                        <span style="font-weight: bold;">РОССИЯ</span>
+                    <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
+                        <span style="color: #6b7280;">Место проведения (страна):</span>
+                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.country || 'РОССИЯ'"></span>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 160px 1fr; gap: 4px;">
-                        <span style="color: #555555;">Место проведения (город):</span>
-                        <span style="font-weight: bold;">Нефтеюганск</span>
+                    <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
+                        <span style="color: #6b7280;">Место проведения (город):</span>
+                        <span style="font-weight: 600; color: #111827;">Нефтеюганск</span>
                     </div>
 
-                    <!-- ИСПРАВЛЕНО: Вывод динамических данных из связи с app_demands -->
-                    <div style="display: grid; grid-template-columns: 160px 1fr; gap: 4px;">
-                        <span style="color: #555555;">Аудитории:</span>
-                        <span style="font-weight: bold;" x-text="editData.demand?.classroom_number || '—'"></span>
+                    <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
+                        <span style="color: #6b7280;">Аудитории:</span>
+                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.audience?.name || '—'"></span>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 160px 1fr; gap: 4px;">
-                        <span style="color: #555555;">ФИО преподавателей:</span>
-                        <span style="font-weight: bold;" x-text="editData.demand?.teacher_name || '—'"></span>
+                    <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
+                        <span style="color: #6b7280;">ФИО преподавателей:</span>
+                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.teacher?.name || '—'"></span>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 160px 1fr; gap: 4px;">
-                        <span style="color: #555555;">Кураторы группы:</span>
-                        <span style="font-weight: bold;" x-text="editData.demand?.curator_name || '—'"></span>
+                    <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
+                        <span style="color: #6b7280;">Кураторы группы:</span>
+                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.curator?.name || '—'"></span>
                     </div>
 
-                    <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
-                        <span style="color: #555555; font-weight: 500;">Профессия, присваиваемая по результатам обучения:</span>
-                        <select name="assigned_profession_id" style="width: 100%; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px; background-color: #f9fafb;">
-                            <option value="" x-text="editData.demand?.course?.name || 'Выберите профессию'"></option>
+                    <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+                        <span style="color: #4b5563; font-weight: 500;">Профессия, присваиваемая по результатам обучения:</span>
+                        <select name="assigned_profession_id" disabled style="width: 100%; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background-color: #f3f4f6; cursor: not-allowed;">
+                            <option value="" x-text="editData.demand?.profession?.profession || 'Не указана'"></option>
                         </select>
                     </div>
                 </div>
 
                 <!-- ПРАВАЯ КОЛОНКА: Реквизиты протокола -->
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <div style="text-align: right; font-weight: bold; color: #7c8594; font-size: 11px; border-bottom: 1px solid #d1d5db; padding-bottom: 3px; margin-bottom: 8px;">Реквизиты протокола</div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="text-align: right; font-weight: 600; color: #4b5563; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 4px;">Реквизиты протокола</div>
 
-                    <div style="display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 4px;">
-                        <label>Номер протокола: <span style="color: #ef4444;">*</span></label>
-                        <input type="text" name="prot_num" x-model="editData.prot_num" style="width: 100px; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px;">
+                    <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">Номер протокола: <span style="color: #dc2626;">*</span></label>
+                        <input type="text" name="prot_num" x-model="editData.prot_num" readonly style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background-color: #f3f4f6; cursor: not-allowed;">
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 4px;">
-                        <label>Дата формирования протокола:</label>
-                        <input type="date" name="prot_date" x-model="editData.prot_date" style="width: 140px; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px;">
+                    <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">Дата формирования:</label>
+                        <input type="date" name="prot_date" x-model="editData.prot_date" style="width: 160px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 4px;">
-                        <label>Номер группы: <span style="color: #ef4444;">*</span></label>
-                        <input type="text" name="group_num" x-model="editData.group_num" style="width: 100px; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px;">
+                    <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">Номер группы: <span style="color: #dc2626;">*</span></label>
+                        <input type="text" name="group_num" x-model="editData.group_num" required style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 4px;">
-                        <label>Номер приказа: <span style="color: #ef4444;">*</span></label>
-                        <input type="text" name="order_num" x-model="editData.order_num" style="width: 100px; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px;">
+                    <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">Номер приказа: <span style="color: #dc2626;">*</span></label>
+                        <input type="text" name="order_num" x-model="editData.order_num" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 4px;">
-                        <label>Дата назначения приказа:</label>
-                        <input type="date" name="order_date" x-model="editData.order_date" style="width: 140px; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px;">
+                                        <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">Дата назначения приказа:</label>
+                        <input type="date" name="order_date" x-model="editData.order_date" style="width: 160px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 4px;">
-                        <label>Цена за человека (без НДС): <span style="color: #ef4444;">*</span></label>
-                        <input type="text" name="cost" x-model="editData.Cost" style="width: 100px; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px; text-align: right;" value="0,00">
+                    <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">Цена за человека (без НДС): <span style="color: #dc2626;">*</span></label>
+                        <input type="text" name="price_per_man" x-model="editData.price_per_man" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 4px;">
-                        <label>НДС%:</label>
-                        <input type="text" name="cost_vat" x-model="editData.cost_vat" style="width: 100px; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px; text-align: right;" value="0">
+                    <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">НДС%:</label>
+                        <input type="text" name="nds_percent" x-model="editData.nds_percent" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
                     </div>
 
-                    <!-- Номер/дата договора -->
-                    <div style="display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 4px;">
-                        <label>№/дата договора на обучение/оценку: <span style="color: #ef4444;">*</span></label>
-                        <select name="contract_id" style="width: 180px; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px; background-color: #ffffff;">
+                    <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">№/дата договора:</label>
+                        <select name="contract_id" style="width: 100%; max-width: 220px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background-color: #ffffff;">
                             <option value="">—</option>
                         </select>
                     </div>
 
-                    <!-- Часы теории -->
-                    <div style="display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 4px;">
-                        <label>Количество часов теоретического обучения: <span style="color: #ef4444;">*</span></label>
-                        <input type="text" name="teor_count_hours" x-model="editData.teorcounthours" style="width: 100px; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px; text-align: right;">
+                    <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">Часы теории: <span style="color: #dc2626;">*</span></label>
+                        <input type="number" name="theory_hours" x-model="editData.theory_hours" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
                     </div>
 
-                    <!-- Часы практики -->
-                    <div style="display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 4px;">
-                        <label>Количество часов производственно-практического обучения: <span style="color: #ef4444;">*</span></label>
-                        <input type="text" name="prac_count_hours" x-model="editData.praccounthours" style="width: 100px; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px; text-align: right;">
+                    <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">Часы практики: <span style="color: #dc2626;">*</span></label>
+                        <input type="number" name="practice_hours" x-model="editData.practice_hours" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
                     </div>
 
-                    <!-- Часы по программе -->
-                    <div style="display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 4px;">
-                        <label>Количество часов по программе: <span style="color: #ef4444;">*</span></label>
-                        <div style="display: flex; align-items: center; gap: 4px;">
-                            <input type="text" readonly style="width: 100px; padding: 2px; border: 1px solid #ccc; font-size: 11px; background-color: #f3f4f6; text-align: right;" :value="Number(editData.teor_count_hours || 0) + Number(editData.prac_count_hours || 0)">
-                            <button type="button" style="padding: 2px 4px; border: 1px solid #a5a5a5; background: #f3f4f6; cursor: pointer; font-size: 10px;">📊</button>
+                    <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">Часы по программе: <span style="color: #dc2626;">*</span></label>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <input type="number" name="program_hours" readonly style="width: 120px; padding: 5px 8px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; background-color: #f3f4f6; text-align: right;" :value="Number(editData.theory_hours || 0) + Number(editData.practice_hours || 0)">
+                            <button type="button" style="padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; background: #f3f4f6; cursor: pointer; font-size: 12px;">📊</button>
                         </div>
                     </div>
 
-                    <!-- Тип документа -->
-                    <div style="display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 4px;">
-                        <label>Тип документа:</label>
-                        <select name="typedoc_id" x-model="editData.typedoc_id" style="width: 140px; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px; background-color: #ffffff;">
-                            <option value="1">Сертификат</option>
-                            <option value="2">Удостоверение</option>
+                    <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">Тип документа:</label>
+                        <select name="document_type" x-model="editData.document_type" style="width: 160px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background-color: #ffffff;">
+                            <option value="Сертификат">Сертификат</option>
+                            <option value="Удостоверение">Удостоверение</option>
                         </select>
                     </div>
 
-                    <!-- Номер распоряжения -->
-                    <div style="display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 4px;">
-                        <label>(Дата)Номер распоряжения: <span style="color: #ef4444;">*</span></label>
-                        <select name="disposition_id" style="width: 180px; padding: 2px; border: 1px solid #a5a5a5; font-size: 11px; background-color: #ffffff;">
+                    <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
+                        <label style="color: #4b5563; font-weight: 500;">Номер распоряжения: <span style="color: #dc2626;">*</span></label>
+                        <select name="disposition_id" style="width: 100%; max-width: 220px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background-color: #ffffff;">
                             <option value="" x-text="editData.order_num ? `(${editData.order_date || ''}) ${editData.order_num}` : '—'"></option>
                         </select>
                     </div>
-
+                    
+                    <input type="hidden" name="flagapproved" :value="editData.prot_status || 1">
                 </div> <!-- Конец правой колонки -->
-            </div> <!-- Конец двухколоночного контейнера (Заявка / Реквизиты) -->
+            </div> <!-- Конец двухколоночного контейнера -->
+
+            <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" @click="isEditOpen = false" style="padding: 7px 16px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; font-weight: 500; cursor: pointer;">Отмена</button>
+                <button type="submit" style="padding: 7px 16px; border: none; border-radius: 6px; background: #3b82f6; color: #ffffff; font-weight: 500; cursor: pointer;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">Сохранить изменения</button>
+            </div>
+        </form>
+    </div>
+</div>

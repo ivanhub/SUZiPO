@@ -16,9 +16,11 @@ use App\Models\RequestsAudience;
 use App\Models\RequestsTeachers;
 use App\Models\RequestsCurator;
 use App\Models\Booking;
+use App\Models\AppProtocol;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -31,7 +33,7 @@ class RequestController extends Controller
         $requests = RequestModel::with(['user', 'provider', 'course', 'city'])
             ->withCount('employees')
             ->paginate(15);
-        
+
         return view('requests.index', compact('requests'));
     }
 
@@ -51,9 +53,18 @@ class RequestController extends Controller
         $curators = RequestsCurator::orderBy('fio')->get();
 
         return view('requests.create', compact(
-            'providers', 'courses', 'cities', 'professions',
-            'learnReasons', 'learningResources', 'learningTypes',
-            'eventsTypes', 'disciplines', 'audiences', 'teachers', 'curators'
+            'providers',
+            'courses',
+            'cities',
+            'professions',
+            'learnReasons',
+            'learningResources',
+            'learningTypes',
+            'eventsTypes',
+            'disciplines',
+            'audiences',
+            'teachers',
+            'curators'
         ));
     }
 
@@ -82,6 +93,7 @@ class RequestController extends Controller
             'new_city_name' => 'nullable|string|max:255',
             'new_provider_name' => 'nullable|string|max:500',
             'new_profession_name' => 'nullable|string|max:500',
+            'req_prefix' => 'nullable|string|max:10',
         ]);
 
         // Создание нового курса
@@ -136,39 +148,55 @@ class RequestController extends Controller
         $validated['status'] = 'Создана';
         $validated['country'] = $validated['country'] ?? 'Россия';
 
+        //Prefix\suffix
+        // $prefix = $validated['req_prefix'];
+        // $lastRequest = RequestModel::where('req_id', 'LIKE', "%-{$prefix}")
+
+        $lastRequest = RequestModel::where('req_id', 'LIKE', "%-ЮЛ")
+            ->orderBy('id', 'desc')
+            ->first();
+
+        $nextNumber = 1;
+
+        if ($lastRequest && $lastRequest->req_id) {
+            $parts = explode('-', $lastRequest->req_id);
+            $lastNumber = (int)$parts[0];
+            $nextNumber = $lastNumber + 1;
+        }
+
+        // $validated['req_id'] = "{$nextNumber}-{$prefix}";
+        $validated['req_id'] = "{$nextNumber}-ЮЛ";
+        unset($validated['req_prefix']);
+
+
+
         $trainingRequest = RequestModel::create($validated);
 
-    // Отправляем уведомление куратору о новой заявке
-   if ($trainingRequest->curator_id) {
-        $this->notifyCuratorNewRequest($trainingRequest);
-    }
-    
-        
         $action = $request->input('action');
-        
+
         if ($action === 'save_and_employees') {
             return redirect()
                 ->route('request-employees.index', $trainingRequest->id)
                 ->with('success', 'Заявка создана. Добавьте сотрудников.');
         }
-        
+
         return redirect()->route('requests.index')
-            ->with('success', 'Заявка создана успешно.')
+            ->with('success', "Заявка успешно создана под номером {$trainingRequest->req_id}.")
             ->with('request_id', $trainingRequest->id);
     }
 
     public function show(RequestModel $request): View
     {
         $request->load(['user', 'provider', 'course', 'city', 'profession', 'learnReason', 'learningResource', 'learningType', 'eventType', 'discipline', 'audience', 'teacher', 'curator']);
-	 $reserve = null;
-    if ($request->audience_id) {
-        $seats = $request->audience ? $request->audience->seats : null;
-        
-        if ($seats) {
-            $employeesCount = \App\Models\RequestEmployee::where('request_id', $request->id)->count();
-            $reserve = (int)$seats - (int)$employeesCount;
+        $reserve = null;
+        if ($request->audience_id) {
+            $seats = $request->audience ? $request->audience->seats : null;
+
+            if ($seats) {
+                $employeesCount = \App\Models\RequestEmployee::where('request_id', $request->id)->count();
+                $reserve = (int)$seats - (int)$employeesCount;
+            }
         }
-    }
 
         return view('requests.show', compact('request', 'reserve'));
     }
@@ -188,24 +216,32 @@ class RequestController extends Controller
         $teachers = RequestsTeachers::orderBy('fio')->get();
         $curators = RequestsCurator::orderBy('fio')->get();
 
-	$reserve = null;
-    if ($request->audience_id) {
-        $seats = $request->audience ? $request->audience->seats : null;
+        $reserve = null;
+        if ($request->audience_id) {
+            $seats = $request->audience ? $request->audience->seats : null;
 
-	 if ($seats) {
-	  $employeesCount = \App\Models\RequestEmployee::where('request_id', $request->id)->count();
-            $reserve = (int)$seats - (int)$employeesCount;
+            if ($seats) {
+                $employeesCount = \App\Models\RequestEmployee::where('request_id', $request->id)->count();
+                $reserve = (int)$seats - (int)$employeesCount;
+            }
         }
 
-    }
-    
-    return view('requests.edit', compact(
-        'request', 'providers', 'courses', 'cities', 'professions',
-        'learnReasons', 'learningResources', 'learningTypes',
-        'eventsTypes', 'disciplines', 'audiences', 'teachers', 'curators',
-        'reserve'
-    ));
-
+        return view('requests.edit', compact(
+            'request',
+            'providers',
+            'courses',
+            'cities',
+            'professions',
+            'learnReasons',
+            'learningResources',
+            'learningTypes',
+            'eventsTypes',
+            'disciplines',
+            'audiences',
+            'teachers',
+            'curators',
+            'reserve'
+        ));
     }
 
     public function update(HttpRequest $httpRequest, $id): RedirectResponse
@@ -244,7 +280,7 @@ class RequestController extends Controller
             $validated['course_id'] = $newCourse->id;
         }
         unset($validated['new_course_name']);
-        
+
         if (!empty($validated['new_profession_name'])) {
             $new = RequestsProfession::firstOrCreate(
                 ['name' => $validated['new_profession_name']],
@@ -287,13 +323,13 @@ class RequestController extends Controller
     {
         // Удаляем бронирование перед удалением заявки
         $this->deleteBookingForRequest($request);
-        
+
         $request->delete();
         return redirect()->route('requests.index')
             ->with('success', 'Заявка удалена.');
     }
 
-   private function createOrUpdateBooking(RequestModel $requestModel): void
+    private function createOrUpdateBooking(RequestModel $requestModel): void
     {
         // Получаем даты начала и окончания из заявки
         $startDate = $requestModel->start_date;
@@ -322,7 +358,7 @@ class RequestController extends Controller
             foreach ($conflicts as $date => $message) {
                 $messages[] = Carbon::parse($date)->format('d.m.Y') . ' - ' . $message;
             }
-            
+
             session()->flash('error', 'Невозможно забронировать: ' . implode('; ', $messages));
             return;
         }
@@ -397,86 +433,51 @@ class RequestController extends Controller
         Booking::where('request_id', $requestModel->id)->delete();
     }
 
+    /*
+     * Массовая или одиночная отправка заявок в ООО с созданием протоколов
+     */
+    public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Http\RedirectResponse
+    {
+        // Извлекаем массив пришедших ID заявок из запроса
+        $requestIds = $httpRequest->input('request_ids', []);
 
-/**
- * Уведомление куратору о новой заявке
- */
-private function notifyCuratorNewRequest(RequestModel $requestModel): void
-{
-    $curator = $requestModel->curator;
-    
-    if (!$curator || !$curator->email) {
-        return;
-    }
-    
-    // Форматируем даты ЗАРАНЕЕ, вынося логику из строки
-    $startDate = $requestModel->start_date instanceof \Carbon\Carbon 
-        ? $requestModel->start_date->format('d.m.Y') 
-        : ($requestModel->start_date ?: '—');
-        
-    $endDate = $requestModel->end_date instanceof \Carbon\Carbon 
-        ? $requestModel->end_date->format('d.m.Y') 
-        : ($requestModel->end_date ?: '—');
-        
-    $courseName = $requestModel->course->course ?? '—';
-    $educationForm = $requestModel->education_form ?: '—';
-    
-    $subject = "Новая заявка на обучение #{$requestModel->id}";
-    
-    $message = "
-        <h2>Новая заявка на обучение</h2>
-        <p><strong>Номер заявки:</strong> #{$requestModel->id}</p>
-        <p><strong>Курс:</strong> {$courseName}</p>
-        <p><strong>Дата начала:</strong> {$startDate}</p>
-        <p><strong>Дата окончания:</strong> {$endDate}</p>
-        <p><strong>Форма обучения:</strong> {$educationForm}</p>
-        <hr>
-        <p>Вы назначены куратором данной группы.</p>
-    ";
-    
-    \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($curator, $subject) {
-        $mail->to($curator->email)
-             ->subject($subject);
-    });
-}
+        if (empty($requestIds)) {
+            return redirect()->back()->with('error', 'Не выбрано ни одной заявки для отправки.');
+        }
 
-/**
- * Уведомление куратору о назначении на заявку
- */
-private function notifyCuratorAssigned(RequestModel $requestModel): void
-{
-    $curator = $requestModel->curator;
-    
-    if (!$curator || !$curator->email) {
-        return;
+        // Выбираем заявки со статусом "Создана"
+        $requests = \App\Models\Request::whereIn('id', $requestIds)
+            ->where('status', 'Создана')
+            ->get();
+
+        if ($requests->isEmpty()) {
+            return redirect()->back()->with('error', 'Выбранные заявки уже отправлены или не могут быть обработаны.');
+        }
+
+        // Выполняем операции атомарно в транзакции
+        \Illuminate\Support\Facades\DB::transaction(function () use ($requests) {
+            foreach ($requests as $request) {
+
+                // 1. Обновляем статус самой заявки
+                $request->update([
+                    'status' => 'Отправлена'
+                ]);
+
+                // 2. Создаем протокол в таблице app_protocols
+                $request->protocols()->create([
+                    'prot_status'    => 1, // ID статуса "В работе"
+                    'prot_date'      => now(),
+                    'id_user_create' => auth()->id() ?? 1,
+                    'date_edit'      => now(),
+                    'id_user_edit'   => auth()->id() ?? 1,
+                    'date_start'     => $request->start_date ?? now(),
+                    'date_end'       => $request->end_date ?? now()->addDays(5),
+                ]);
+            }
+        });
+
+        $count = $requests->count();
+        return redirect()->route('requests.index')
+            ->with('success', "Успешно отправлено в ООО заявок: {$count}.");
     }
-    
-    // Форматируем даты ЗАРАНЕЕ, вынося логику из строки
-    $startDate = $requestModel->start_date instanceof \Carbon\Carbon 
-        ? $requestModel->start_date->format('d.m.Y') 
-        : ($requestModel->start_date ?: '—');
-        
-    $endDate = $requestModel->end_date instanceof \Carbon\Carbon 
-        ? $requestModel->end_date->format('d.m.Y') 
-        : ($requestModel->end_date ?: '—');
-        
-    $courseName = $requestModel->course->course ?? '—';
-    
-    $subject = "Вас назначили куратором заявки #{$requestModel->id}";
-    
-    $message = "
-        <h2>Назначение куратором</h2>
-        <p><strong>Номер заявки:</strong> #{$requestModel->id}</p>
-        <p><strong>Курс:</strong> {$courseName}</p>
-        <p><strong>Дата начала:</strong> {$startDate}</p>
-        <p><strong>Дата окончания:</strong> {$endDate}</p>
-        <hr>
-        <p>Вы были назначены куратором данной группы.</p>
-    ";
-    
-    \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($curator, $subject) {
-        $mail->to($curator->email)
-             ->subject($subject);
-    });
-}
 }

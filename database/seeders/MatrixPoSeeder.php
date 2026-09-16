@@ -10,7 +10,7 @@ class MatrixPoSeeder extends Seeder
 {
     public function run(): void
     {
-        $file = database_path('seeders/files/1.xlsx');
+        $file = database_path('1.xlsx');
         
         if (!file_exists($file)) {
             $this->command->error("Файл {$file} не найден!");
