@@ -39,6 +39,11 @@ class RequestController extends Controller
 
     public function create(): View
     {
+		// Проверка права
+	    if (!auth()->user()->hasPermissionTo('create_requests')) {
+	        abort(403, 'У вас нет прав на создание заявок');
+	    }
+
         $providers = RequestsProvider::orderBy('name')->get();
         $courses = RequestsCourse::orderBy('course')->get();
         $cities = RequestsCity::orderBy('city')->get();
@@ -298,9 +303,9 @@ class RequestController extends Controller
         $requestModel->update($validated);
 
 	// Отправляем уведомление новому куратору
-	  if ($requestModel->curator_id) {
-	      $this->notifyCuratorAssigned($requestModel);
-	  }
+//	  if ($requestModel->curator_id) {
+//	      $this->notifyCuratorAssigned($requestModel);
+//	  }
         // Создание или обновление бронирования
         if ($requestModel->audience_id && $requestModel->teacher_id && $requestModel->start_date) {
             $this->createOrUpdateBooking($requestModel);
@@ -472,6 +477,7 @@ class RequestController extends Controller
                     'id_user_edit'   => auth()->id() ?? 1,
                     'date_start'     => $request->start_date ?? now(),
                     'date_end'       => $request->end_date ?? now()->addDays(5),
+		    'row_version'    => 1, // Ставим первую версию	
                 ]);
             }
         });

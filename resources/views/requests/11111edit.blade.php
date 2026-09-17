@@ -333,27 +333,14 @@
             ->where('id', '!=', $request->booking_id ?? null)
             ->exists();
     }
-    
-    // Количество сотрудников в заявке
-    $employeesCount = \App\Models\RequestEmployee::where('request_id', $request->id)->count();
-    
-    // Количество свободных мест
-    $availableSeats = null;
-    if ($audience->seats && $audience->number !== 'ДОТ' && $audience->location !== 'Свободное местоположение') {
-        $availableSeats = (int)$audience->seats - $employeesCount;
-    }
 @endphp
 <option value="{{ $audience->id }}" 
     data-seats="{{ $audience->seats }}"
     {{ old('audience_id', $request->audience_id) == $audience->id ? 'selected' : '' }}
     {{ $isBusy ? 'disabled class="text-red-500"' : '' }}>
     {{ $audience->number }} ({{ $audience->location }})
-    @if($availableSeats !== null)
-        - свободно: {{ $availableSeats }}
-        @if($audience->seats)
-            / {{ $audience->seats }}
-        @endif
-        мест
+    @if($audience->seats && $audience->number !== 'ДОТ' && $audience->location !== 'Свободное местоположение')
+        - {{ $audience->seats }} мест
     @endif
     @if($isBusy) - ЗАНЯТА @endif
 </option>
@@ -363,7 +350,6 @@
         <p class="text-red-500 text-xs mt-1">Эта аудитория уже занята на выбранную дату</p>
     @endif
 </div>
-
 <div>
     <label for="teacher_id" class="block text-sm font-medium text-gray-700 mb-1">ФИО преподавателя</label>
     <select name="teacher_id" id="teacher_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
