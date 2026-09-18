@@ -51,58 +51,61 @@ class RoleSeeder extends Seeder
             Permission::firstOrCreate(['name' => $permissionName]);
         }
 
-        // Назначаем права ролям
+        // Админ - полный доступ (все права)
         Role::findByName('admin')->givePermissionTo(Permission::all());
         
-// urp - оставляем create_requests ✅ (только у этой роли)
-Role::findByName('urp')->givePermissionTo(['view_requests', 'create_requests', 'edit_requests', 'view_protocols', 'view_reports', 'export_data']);
-
-// ooo - убираем create_requests, оставляем view_requests
-Role::findByName('ooo')->givePermissionTo(['view_requests', 'edit_requests', 'view_protocols']);
-
-// oookoit - без изменений
-Role::findByName('ookoit')->givePermissionTo(['view_requests', 'view_protocols', 'view_reports']);
-
-// metodist - убираем create_requests, оставляем view_requests
-Role::findByName('metodist')->givePermissionTo(['view_requests', 'edit_requests', 'view_protocols', 'create_protocols', 'edit_protocols']);
-
-// ooo admin - убираем create_requests
-Role::findByName('ooo admin')->givePermissionTo(['view_requests', 'edit_requests', 'view_protocols', 'view_reports', 'export_data']);
-
-// ooo chief - без изменений
-Role::findByName('ooo chief')->givePermissionTo(['view_requests', 'view_protocols', 'view_reports']);
-
-// urp admin - убираем create_requests
-Role::findByName('urp admin')->givePermissionTo(['view_requests', 'edit_requests', 'view_protocols', 'view_reports', 'export_data']);
+        // urp - создает заявки, отправляет в ООО, смотрит протоколы
+        Role::findByName('urp')->givePermissionTo(['view_requests', 'create_requests', 'edit_requests', 'view_protocols', 'view_reports', 'export_data']);
+        
+        // ooo - просмотр заявок, редактирование (без создания)
+        Role::findByName('ooo')->givePermissionTo(['view_requests', 'edit_requests', 'view_protocols']);
+        
+        // ookoit - только просмотр
+        Role::findByName('ookoit')->givePermissionTo(['view_requests', 'view_protocols', 'view_reports']);
+        
+        // metodist - работа с заявками и протоколами
+        Role::findByName('metodist')->givePermissionTo(['view_requests', 'edit_requests', 'view_protocols', 'create_protocols', 'edit_protocols']);
+        
+        // ooo admin - как ooo + отчеты и экспорт
+        Role::findByName('ooo admin')->givePermissionTo(['view_requests', 'edit_requests', 'view_protocols', 'view_reports', 'export_data']);
+        
+        // ooo chief - как ooo + просмотр отчетов
+        Role::findByName('ooo chief')->givePermissionTo(['view_requests', 'view_protocols', 'view_reports']);
+        
+        // urp admin - как urp + редактирование пользователей
+        Role::findByName('urp admin')->givePermissionTo(['view_requests', 'create_requests', 'edit_requests', 'view_protocols', 'view_reports', 'export_data', 'view_users']);
 
         // Создаем пользователей для каждой роли
         $this->createUsersForRole('admin', 'admin', 3);
         $this->createUsersForRole('urp', 'urp', 3);
         $this->createUsersForRole('ooo', 'ooo', 3);
-        $this->createUsersForRole('ookoit', 'oookoit', 3);
+        $this->createUsersForRole('ookoit', 'ookoit', 3);
         $this->createUsersForRole('metodist', 'metodist', 3);
         $this->createUsersForRole('ooo admin', 'oooadmin', 3);
         $this->createUsersForRole('ooo chief', 'ooochief', 3);
         $this->createUsersForRole('urp admin', 'urpadmin', 3);
 
-        // Добавляем конкретных пользователей для роли ooo
+        // Добавляем конкретных специалистов для роли ooo
         $this->createSpecificUsersForOoo();
+        
+        // Создаем пользователя для уведомлений ООО
+        $this->createMainOooUser();
     }
 
-private function createUsersForRole(string $roleName, string $prefix, int $count): void
-{
-    for ($i = 0; $i < $count; $i++) {
-        $email = $prefix . ($i > 0 ? $i : '') . '@suzipo.ru';
-        
-        $user = User::factory()->create([
-            'name' => ucfirst($roleName) . ' User ' . ($i + 1),
-            'email' => $email,
-            'password' => bcrypt('p123'),
-        ]);
-        
-        $user->assignRole($roleName);
+    private function createUsersForRole(string $roleName, string $prefix, int $count): void
+    {
+        for ($i = 0; $i < $count; $i++) {
+            $email = $prefix . ($i > 0 ? $i : '') . '@suzipo.ru';
+            
+            $user = User::factory()->create([
+                'name' => ucfirst($roleName) . ' User ' . ($i + 1),
+                'email' => $email,
+                'password' => bcrypt('p123'),
+            ]);
+            
+            $user->assignRole($roleName);
+        }
     }
-}
 
     private function createSpecificUsersForOoo(): void
     {
@@ -134,5 +137,17 @@ private function createUsersForRole(string $roleName, string $prefix, int $count
             
             $user->assignRole('ooo');
         }
+    }
+
+    private function createMainOooUser(): void
+    {
+        // Пользователь для уведомлений ООО
+        $mainOoo = User::factory()->create([
+            'name' => 'Для уведомлений ООО',
+            'email' => 'mainooo@suzipo.ru',
+            'password' => bcrypt('p123'),
+        ]);
+        
+        $mainOoo->assignRole('ooo');
     }
 }

@@ -441,49 +441,132 @@ class RequestController extends Controller
     /*
      * Массовая или одиночная отправка заявок в ООО с созданием протоколов
      */
-    public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Http\RedirectResponse
-    {
-        // Извлекаем массив пришедших ID заявок из запроса
-        $requestIds = $httpRequest->input('request_ids', []);
+public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Http\RedirectResponse
+{
+    // Извлекаем массив пришедших ID заявок из запроса
+    $requestIds = $httpRequest->input('request_ids', []);
 
-        if (empty($requestIds)) {
-            return redirect()->back()->with('error', 'Не выбрано ни одной заявки для отправки.');
-        }
-
-        // Выбираем заявки со статусом "Создана"
-        $requests = \App\Models\Request::whereIn('id', $requestIds)
-            ->where('status', 'Создана')
-            ->get();
-
-        if ($requests->isEmpty()) {
-            return redirect()->back()->with('error', 'Выбранные заявки уже отправлены или не могут быть обработаны.');
-        }
-
-        // Выполняем операции атомарно в транзакции
-        \Illuminate\Support\Facades\DB::transaction(function () use ($requests) {
-            foreach ($requests as $request) {
-
-                // 1. Обновляем статус самой заявки
-                $request->update([
-                    'status' => 'Отправлена'
-                ]);
-
-                // 2. Создаем протокол в таблице app_protocols
-                $request->protocols()->create([
-                    'prot_status'    => 1, // ID статуса "В работе"
-                    'prot_date'      => now(),
-                    'id_user_create' => auth()->id() ?? 1,
-                    'date_edit'      => now(),
-                    'id_user_edit'   => auth()->id() ?? 1,
-                    'date_start'     => $request->start_date ?? now(),
-                    'date_end'       => $request->end_date ?? now()->addDays(5),
-		    'row_version'    => 1, // Ставим первую версию	
-                ]);
-            }
-        });
-
-        $count = $requests->count();
-        return redirect()->route('requests.index')
-            ->with('success', "Успешно отправлено в ООО заявок: {$count}.");
+    if (empty($requestIds)) {
+        return redirect()->back()->with('error', 'Не выбрано ни одной заявки для отправки.');
     }
+
+    // Выбираем заявки со статусом "Создана"
+    $requests = \App\Models\Request::whereIn('id', $requestIds)
+        ->where('status', 'Создана')
+        ->withCount('employees') // Добавляем подсчет сотрудников
+        ->get();
+
+    if ($requests->isEmpty()) {
+        return redirect()->back()->with('error', 'Выбранные заявки уже отправлены или не могут быть обработаны.');
+    }
+
+    // ПРОВЕРКА: есть ли заявки без сотрудников
+    $requestsWithoutEmployees = $requests->filter(function ($request) {
+        return $request->employees_count == 0;
+    });
+
+    if ($requestsWithoutEmployees->isNotEmpty()) {
+        $numbers = $requestsWithoutEmployees->pluck('req_id')->implode(', ');
+        
+        return redirect()
+            ->back()
+            ->with('error', "Заявки без сотрудников не могут быть отправлены: {$numbers}. Добавьте сотрудников в эти заявки.");
+    }
+
+    // Выполняем операции атомарно в транзакции
+    \Illuminate\Support\Facades\DB::transaction(function () use ($requests) {
+        foreach ($requests as $request) {
+
+            // 1. Обновляем статус самой заявки
+            $request->update([
+                'status' => 'Отправлена'
+            ]);
+
+            // 2. Создаем протокол в таблице app_protocols
+            $request->protocols()->create([
+                'prot_num'       => $request->req_id,
+                'prot_status'    => 1,
+                'prot_date'      => now(),
+                'id_user_create' => auth()->id() ?? 1,
+                'date_edit'      => now(),
+                'id_user_edit'   => auth()->id() ?? 1,
+                'date_start'     => $request->start_date ?? now(),
+                'date_end'       => $request->end_date ?? now()->addDays(5),
+                'row_version'    => 1,
+            ]);
+        }
+    });
+
+ // ОТПРАВКА УВЕДОМЛЕНИЯ НА mainooo@suzipo.ru
+    $mainOoo = \App\Models\User::where('email', 'mainooo@suzipo.ru')->first();
+
+    if ($mainOoo) {
+        // Формируем список заявок для письма
+        $requestList = '';
+        foreach ($requests as $request) {
+            $requestList .= "
+                <tr>
+                    <td style='padding: 8px; border: 1px solid #ddd;'>{$request->req_id}</td>
+                    <td style='padding: 8px; border: 1px solid #ddd;'>" . ($request->course->course ?? '—') . "</td>
+                    <td style='padding: 8px; border: 1px solid #ddd;'>" . ($request->start_date ? $request->start_date->format('d.m.Y') : '—') . "</td>
+                    <td style='padding: 8px; border: 1px solid #ddd;'>" . ($request->end_date ? $request->end_date->format('d.m.Y') : '—') . "</td>
+                </tr>
+            ";
+        }
+
+        $subject = "Новые заявки на обучение (" . $requests->count() . " шт.)";
+        
+        $message = "
+            <h2>Уведомление о новых заявках</h2>
+            <p>Были отправлены новые заявки на обучение.</p>
+            <table style='border-collapse: collapse; width: 100%;'>
+                <thead>
+                    <tr>
+                        <th style='padding: 8px; border: 1px solid #ddd;'>Номер</th>
+                        <th style='padding: 8px; border: 1px solid #ddd;'>Курс</th>
+                        <th style='padding: 8px; border: 1px solid #ddd;'>Дата начала</th>
+                        <th style='padding: 8px; border: 1px solid #ddd;'>Дата окончания</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {$requestList}
+                </tbody>
+            </table>
+            <p>Пожалуйста, проверьте заявки в системе.</p>
+        ";
+
+        \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($mainOoo, $subject) {
+            $mail->to($mainOoo->email)
+                 ->subject($subject);
+        });
+    }
+
+    $count = $requests->count();
+    return redirect()->route('requests.index')
+        ->with('success', "Успешно отправлено в ООО заявок: {$count}.");
+}
+
+
+/**
+ * Проверка доступа к редактированию заявки
+ */
+private function checkEditAccess(RequestModel $requestModel): ?\Illuminate\Http\RedirectResponse
+{
+    $user = auth()->user();
+    
+    // Админ имеет полный доступ
+    if ($user->hasRole('admin')) {
+        return null;
+    }
+    
+    // Если заявка отправлена - только ooo, ooo admin, ooo chief могут редактировать
+    if ($requestModel->status === 'Отправлена' || $requestModel->status === 'sent') {
+        if (!$user->hasAnyRole(['ooo', 'ooo admin', 'ooo chief'])) {
+            abort(403, 'У вас нет прав на редактирование отправленной заявки');
+        }
+    }
+    
+    return null;
+}
+
 }
