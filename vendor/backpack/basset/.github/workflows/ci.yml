@@ -1,0 +1,49 @@
+name: PHP Stan and Tests
+
+on:
+  - push
+
+jobs:
+  stan-and-tests:
+    strategy:
+      matrix:
+        php: [8.2, 8.3, 8.4, 8.5]
+        laravel: [^12.0, ^13.0]
+        exclude:
+          - laravel: '^13.0'
+            php: 8.2
+          - laravel: '^13.0'
+            php: 8.3
+
+    name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, zip
+          tools: composer:v2
+          coverage: none
+
+      - name: Cache dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.composer/cache/files
+          key: dependencies-laravel-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
+          composer install --no-interaction --no-progress
+
+      - name: PHP Stan Analyse
+        run: composer analyse
+
+      - name: PHP Tests
+        run: composer test

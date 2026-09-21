@@ -1,0 +1,69 @@
+<?php
+
+namespace Backpack\CRUD\app\Http\Controllers\Operations;
+
+use Backpack\CRUD\app\Library\CrudPanel\Hooks\Facades\LifecycleHook;
+use Illuminate\Support\Facades\Route;
+
+trait DeleteOperation
+{
+    /**
+     * Define which routes are needed for this operation.
+     *
+     * @param  string  $segment  Name of the current entity (singular). Used as first URL segment.
+     * @param  string  $routeName  Prefix of the route name.
+     * @param  string  $controller  Name of the current CrudController.
+     */
+    protected function setupDeleteRoutes($segment, $routeName, $controller)
+    {
+        Route::delete($segment.'/{id}', [
+            'as' => $routeName.'.destroy',
+            'uses' => $controller.'@destroy',
+            'operation' => 'delete',
+        ]);
+    }
+
+    /**
+     * Add the default settings, buttons, etc that this operation needs.
+     */
+    protected function setupDeleteDefaults()
+    {
+        $this->crud->allowAccess('delete');
+
+        LifecycleHook::hookInto('delete:before_setup', function () {
+            $this->crud->loadDefaultOperationSettingsFromConfig();
+        });
+
+        LifecycleHook::hookInto(['list:before_setup', 'show:before_setup'], function () {
+            $this->crud->addButton('line', 'delete', 'view', 'crud::buttons.delete', 'end');
+        });
+
+        // setup the default redirect to where user will be redirected after delete
+        // if user has access to list, redirect to list, otherwise redirect to previous page
+        LifecycleHook::hookInto('show:before_setup', function () {
+            $this->crud->setOperationSetting('deleteButtonRedirect', function () {
+                if ($this->crud->hasAccess('list')) {
+                    return url($this->crud->route);
+                }
+
+                return url()->previous();
+            });
+        });
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int|string  $id
+     * @return string
+     */
+    public function destroy($id)
+    {
+        $this->crud->hasAccessOrFail('delete');
+
+        // get entry ID from Request (makes sure its the last ID for nested resources)
+        $id = $this->crud->getCurrentEntryId() ?? $id;
+
+        return $this->crud->delete($id);
+    }
+}

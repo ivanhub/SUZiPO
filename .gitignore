@@ -30,7 +30,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 ### Laravel Core ###
-#/vendor/
+!/vendor/
 /node_modules/
 /public/storage
 /public/build/
@@ -76,7 +76,3 @@ auth.json
 *.sln
 *.sw?
 .DS_Store
-
-vendor/*
-!vendor/spatie/
-!vendor/composer/

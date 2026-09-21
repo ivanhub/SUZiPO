@@ -1,0 +1,200 @@
+<?php
+
+namespace Backpack\Basset\Helpers;
+
+use Backpack\Basset\AssetHashManager;
+use Backpack\Basset\AssetPathManager;
+use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use JsonSerializable;
+
+final class CacheEntry implements Arrayable, JsonSerializable
+{
+    private string $assetName;
+
+    private string $assetPath;
+
+    private string $assetDiskPath;
+
+    private array $assetAttributes = [];
+
+    private bool $isPublicFile = false;
+
+    private AssetPathManager $assetPathsManager;
+
+    private AssetHashManager $assetHashManager;
+
+    public function __construct()
+    {
+        $this->assetPathsManager = app(AssetPathManager::class);
+        $this->assetHashManager = app(AssetHashManager::class);
+    }
+
+    public static function from(array $asset): self
+    {
+        $instance = new self();
+
+        return $instance->assetName($asset['asset_name'])->assetPath($asset['asset_path'])->assetDiskPath($asset['asset_disk_path'])->assetAttributes($asset['asset_attributes']);
+    }
+
+    public function assetName(string $assetName): self
+    {
+        $this->assetName = $assetName;
+
+        return $this;
+    }
+
+    public function assetPath(string $assetPath): self
+    {
+        $this->assetPath = $assetPath;
+
+        if (Str::isUrl($assetPath)) {
+            $appUrl = Str::of(url(''))->finish('/')->value();
+            if (str_starts_with($assetPath, $appUrl)) {
+                $relativePath = (string) Str::of($assetPath)->after($appUrl)->before('?');
+                if ($relativePath !== '' && File::exists(public_path($relativePath))) {
+                    $this->assetPath = public_path($relativePath);
+                    $this->assetDiskPath = $this->assetPathsManager->getCleanPath($relativePath);
+                    $this->isPublicFile = true;
+                }
+            }
+        }
+
+        // Handle absolute paths that point to the public directory
+        // e.g. public_path('js/example.js') → C:\project\public\js\example.js
+        if (! $this->isPublicFile && str_starts_with($assetPath, public_path())) {
+            $this->assetDiskPath = $this->assetPathsManager->getCleanPath(
+                Str::after($assetPath, public_path())
+            );
+            $this->isPublicFile = true;
+        }
+
+        if (! $this->isPublicFile && ! str_starts_with($assetPath, base_path()) && ! Str::isUrl($assetPath)) {
+            if (File::exists(public_path($assetPath))) {
+                $this->assetPath = public_path($assetPath);
+                $this->assetDiskPath = $this->assetPathsManager->getCleanPath($assetPath);
+                $this->isPublicFile = true;
+            } else {
+                $this->assetPath = base_path($assetPath);
+            }
+        }
+
+        if (! isset($this->assetDiskPath)) {
+            $this->assetDiskPath = $this->getPathOnDisk($this->assetPathsManager->getCleanPath($assetPath));
+        }
+
+        return $this;
+    }
+
+    public function assetDiskPath(string $assetDiskPath): self
+    {
+        $this->assetDiskPath = $assetDiskPath;
+
+        return $this;
+    }
+
+    public function assetAttributes(array $attributes): self
+    {
+        $this->assetAttributes = $attributes;
+
+        return $this;
+    }
+
+    public function getAssetPath(): string
+    {
+        return $this->assetPath;
+    }
+
+    public function getAssetDiskPath(): string
+    {
+        return $this->assetDiskPath;
+    }
+
+    public function getAttributes(): array
+    {
+        return $this->assetAttributes;
+    }
+
+    public function getAssetName(): string
+    {
+        return $this->assetName;
+    }
+
+    /**
+     * Check if the asset exists in a given disk.
+     *
+     * @param  Filesystem  $disk
+     * @return bool
+     */
+    public function existsOnDisk(Filesystem $disk): bool
+    {
+        return isset($this->assetDiskPath) && $disk->exists($this->assetDiskPath);
+    }
+
+    /**
+     * Check if the asset is a local file.
+     *
+     * @return bool
+     */
+    public function isLocalAsset()
+    {
+        return $this->assetPathsManager->isLocal($this->assetPath);
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'asset_name' => $this->assetName,
+            'asset_path' => $this->assetPath,
+            'asset_disk_path' => isset($this->assetDiskPath) ? $this->assetDiskPath : $this->getPathOnDisk($this->assetPath),
+            'asset_attributes' => $this->assetAttributes,
+        ];
+    }
+
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
+    }
+
+    public function getContent(): string
+    {
+        try {
+            if (! File::isFile($this->assetPath) && ! Str::isUrl($this->assetPath)) {
+                return $this->assetPath;
+            }
+            $content = File::get($this->assetPath);
+        } catch (\Exception $e) {
+            throw new \Exception("Could not read file: {$this->assetPath}");
+        }
+
+        return $content;
+    }
+
+    public function getPathOnDiskHashed(string $content): string
+    {
+        $path = $this->assetPathsManager->getPathOnDisk($this->assetPath);
+        $hash = $this->assetHashManager->generateHash($content);
+
+        $this->assetDiskPath = $this->assetHashManager->appendHashToPath($path, $hash);
+
+        return $this->assetDiskPath;
+    }
+
+    private function getPathOnDisk(string $asset): string
+    {
+        return $this->assetPathsManager->getPathOnDisk($asset);
+    }
+
+    public function getOutputDiskPath(): string
+    {
+        if ($this->isPublicFile) {
+            return $this->assetDiskPath;
+        }
+
+        $diskPath = Str::of(config('filesystems.disks.'.config('backpack.basset.disk'))['url'])->finish('/');
+
+        return (string) Str::of($diskPath.$this->assetDiskPath);
+    }
+}

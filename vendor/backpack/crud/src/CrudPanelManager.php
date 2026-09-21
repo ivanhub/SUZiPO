@@ -1,0 +1,332 @@
+<?php
+
+namespace Backpack\CRUD;
+
+use Backpack\CRUD\app\Http\Controllers\Contracts\CrudControllerContract;
+use Backpack\CRUD\app\Http\Controllers\CrudController;
+use Backpack\CRUD\app\Library\CrudPanel\CrudPanel;
+use Illuminate\Support\Facades\Facade;
+
+/**
+ * CrudPanelManager - Central registry and factory for CRUD panels.
+ *
+ * This class manages multiple CrudPanel instances across different controllers.
+ * It acts as a singleton registry that:
+ * - Creates and stores CrudPanel instances for each controller
+ * - Tracks which operations have been initialized for each controller
+ * - Manages the currently active controller context
+ * - Provides methods to retrieve the appropriate CrudPanel based on context
+ *
+ * This allows multiple CRUD controllers to coexist and share state properly
+ * within a single request lifecycle.
+ */
+final class CrudPanelManager
+{
+    /** @var array<string, CrudPanel> Registry of CrudPanel instances indexed by controller class name */
+    private array $cruds = [];
+
+    /** @var array<string, array<string>> Tracks which operations have been initialized for each controller */
+    private array $initializedOperations = [];
+
+    /** @var string[] Stack of currently active controller class names */
+    private array $activeControllerStack = [];
+
+    /**
+     * Get or create a CrudPanel instance for the given controller.
+     */
+    public function getCrudPanel(CrudControllerContract|string $controller): CrudPanel
+    {
+        $controllerClass = is_string($controller) ? ltrim($controller, '\\') : get_class($controller);
+
+        if (isset($this->cruds[$controllerClass])) {
+            return $this->cruds[$controllerClass];
+        }
+
+        $instance = new CrudPanel();
+
+        $this->cruds[$controllerClass] = $instance;
+
+        return $this->cruds[$controllerClass];
+    }
+
+    /**
+     * Setup and initialize a CrudPanel for the given controller and operation.
+     *
+     * @param  string  $controller  The controller class name
+     * @param  ?string  $operation  The operation to set (defaults to 'list')
+     * @return CrudPanel The initialized CrudPanel instance
+     */
+    public function setupCrudPanel(string $controller, ?string $operation = null): CrudPanel
+    {
+        // Resolve the controller instance from the class name
+        $controller = is_string($controller) ? app($controller) : $controller;
+
+        $crud = $this->getCrudPanel($controller);
+
+        // Use provided operation or default to 'list'
+        $operation = $operation ?? 'list';
+
+        // primary controller request is used when doing a full initialization
+        $primaryControllerRequest = $this->cruds[array_key_first($this->cruds)]->getRequest();
+
+        // Push this controller onto the stack so that CRUD:: calls during setup resolve correctly.
+        // The controller's middleware won't fire because we're calling methods directly.
+        $this->pushActiveController($controller::class);
+        try {
+            // If the panel is already initialized but a different operation is requested,
+            // do a simple operation switch.
+            if ($crud->isInitialized() && $crud->getOperation() !== $operation) {
+                return $this->performSimpleOperationSwitch($controller, $operation, $crud);
+            }
+
+            // If the panel (or this specific operation) hasn't been initialized yet,
+            // perform the required initialization (full or operation-specific).
+            if (! $crud->isInitialized() || ! $this->isOperationInitialized($controller::class, $operation)) {
+                return $this->performInitialization($controller, $operation, $crud, $primaryControllerRequest);
+            }
+
+            // Already initialized and operation matches: nothing to do.
+            return $this->cruds[$controller::class];
+        } finally {
+            $this->popActiveController();
+        }
+    }
+
+    /**
+     * Perform a lightweight operation switch when the panel is initialized and
+     * isolation is not required.
+     */
+    private function performSimpleOperationSwitch($controller, string $operation, CrudPanel $crud): CrudPanel
+    {
+        $crud->setOperation($operation);
+        $this->setupSpecificOperation($controller, $operation, $crud);
+
+        // Mark this operation as initialized
+        $this->storeInitializedOperation($controller::class, $operation);
+
+        return $this->cruds[$controller::class];
+    }
+
+    /**
+     * Perform full or operation-specific initialization when needed.
+     */
+    private function performInitialization($controller, string $operation, CrudPanel $crud, $primaryControllerRequest): CrudPanel
+    {
+        // If the panel isn't initialized at all, do full initialization
+        if (! $crud->isInitialized()) {
+            // Set the operation for full initialization
+            $crud->setOperation($operation);
+            $crud->initialized = false;
+            $controller->initializeCrudPanel($primaryControllerRequest, $crud);
+        } else {
+            // Panel is initialized, just setup this specific operation
+            $crud->setOperation($operation);
+            $this->setupSpecificOperation($controller, $operation, $crud);
+        }
+
+        // Mark this operation as initialized
+        $this->storeInitializedOperation($controller::class, $operation);
+
+        return $this->cruds[$controller::class];
+    }
+
+    /**
+     * Setup a specific operation without reinitializing the entire CRUD panel.
+     *
+     * @param  object  $controller  The controller instance
+     * @param  string  $operation  The operation to setup
+     * @param  CrudPanel  $crud  The CRUD panel instance
+     */
+    private function setupSpecificOperation($controller, string $operation, CrudPanel $crud): void
+    {
+        // Setup the specific operation using the existing CrudController infrastructure
+        $crud->setOperation($operation);
+
+        $controller->setup();
+
+        // Use the controller's own method to setup the operation properly
+        $reflection = new \ReflectionClass($controller);
+        $method = $reflection->getMethod('setupConfigurationForCurrentOperation');
+        $method->invoke($controller, $operation);
+    }
+
+    /**
+     * Check if a specific operation has been initialized for a controller.
+     */
+    public function isOperationInitialized(string $controller, string $operation): bool
+    {
+        return in_array($operation, $this->getInitializedOperations(ltrim($controller, '\\')), true);
+    }
+
+    /**
+     * Record that an operation has been initialized for a controller.
+     *
+     * @param  string  $controller  The controller class name
+     * @param  string  $operation  The operation name (e.g., 'list', 'create', 'update')
+     */
+    public function storeInitializedOperation(string $controller, ?string $operation): void
+    {
+        if (! $operation) {
+            return;
+        }
+        $this->initializedOperations[ltrim($controller, '\\')][] = $operation;
+    }
+
+    /**
+     * Get the list of operations that have been initialized for a controller.
+     *
+     * @param  string  $controller  The controller class name
+     * @return array<string> Array of initialized operation names
+     */
+    public function getInitializedOperations(string $controller): array
+    {
+        return $this->initializedOperations[ltrim($controller, '\\')] ?? [];
+    }
+
+    /**
+     * Store a CrudPanel instance for a specific controller.
+     */
+    public function storeCrudPanel(string $controller, CrudPanel $crud): void
+    {
+        $this->cruds[ltrim($controller, '\\')] = $crud;
+    }
+
+    /**
+     * Check if a CrudPanel exists for the given controller.
+     */
+    public function hasCrudPanel(string $controller): bool
+    {
+        return isset($this->cruds[ltrim($controller, '\\')]);
+    }
+
+    /**
+     * Get the active CrudPanel for a controller, with fallback logic.
+     *
+     * @param  string  $controller  The controller class name
+     * @return CrudPanel The CrudPanel instance, creating one if necessary
+     */
+    public function getActiveCrudPanel(string $controller): CrudPanel
+    {
+        $controller = ltrim($controller, '\\');
+        if (! isset($this->cruds[$controller])) {
+            return $this->getCrudPanel($this->getActiveController() ?? $this->getParentController() ?? $controller);
+        }
+
+        return $this->cruds[$controller];
+    }
+
+    /**
+     * Get the parent (first registered) controller class name.
+     *
+     * @return ?string The parent controller class name or null if none exists
+     */
+    public function getParentController(): ?string
+    {
+        if (! empty($this->cruds)) {
+            return array_key_first($this->cruds);
+        }
+
+        return $this->getActiveController();
+    }
+
+    /**
+     * Set the currently active controller and clear the CRUD facade cache.
+     *
+     * @deprecated Use pushActiveController() instead. This method now delegates to pushActiveController().
+     *
+     * @param  string  $controller  The controller class name to set as active
+     */
+    public function setActiveController(string $controller): void
+    {
+        $this->pushActiveController($controller);
+    }
+
+    /**
+     * Push a controller onto the active stack.
+     * Called when entering a CRUD context (middleware or view component).
+     */
+    public function pushActiveController(string $controller): void
+    {
+        Facade::clearResolvedInstance('crud');
+        $this->activeControllerStack[] = ltrim($controller, '\\');
+    }
+
+    /**
+     * Pop the current controller off the active stack.
+     * Called when leaving a CRUD context.
+     */
+    public function popActiveController(): void
+    {
+        if (! empty($this->activeControllerStack)) {
+            array_pop($this->activeControllerStack);
+            Facade::clearResolvedInstance('crud');
+        }
+    }
+
+    /**
+     * Get the innermost active controller (top of stack).
+     *
+     * @return ?string The active controller class name or null if none is set
+     */
+    public function getActiveController(): ?string
+    {
+        if (empty($this->activeControllerStack)) {
+            return null;
+        }
+
+        return end($this->activeControllerStack);
+    }
+
+    /**
+     * Clear the currently active controller.
+     *
+     * @deprecated Use popActiveController() instead. This method now delegates to popActiveController().
+     */
+    public function unsetActiveController(): void
+    {
+        $this->popActiveController();
+    }
+
+    /**
+     * Resolve the current CrudPanel from the active controller stack.
+     * Must be called within a CRUD controller context (middleware or view component).
+     *
+     * @throws \RuntimeException if no CRUD controller is active on the stack
+     */
+    public function resolveCrudPanel(): CrudPanel
+    {
+        $active = $this->getActiveController();
+
+        if ($active === null) {
+            throw new \RuntimeException(
+                'CRUD facade accessed outside a CRUD controller context. '
+                .'Use $this->crud inside your controller, or ensure a '
+                .'CrudController middleware has run before calling CRUD::.'
+            );
+        }
+
+        $panel = $this->getCrudPanel($active);
+
+        return $panel;
+    }
+
+    /**
+     * Get all registered CrudPanel instances.
+     *
+     * @return array<string, CrudPanel> Array of CrudPanel instances indexed by controller class name
+     */
+    public function getCrudPanels(): array
+    {
+        return $this->cruds;
+    }
+
+    /**
+     * Reset all state. Useful between tests to prevent cross-class contamination.
+     */
+    public function reset(): void
+    {
+        $this->cruds = [];
+        $this->initializedOperations = [];
+        $this->activeControllerStack = [];
+    }
+}
