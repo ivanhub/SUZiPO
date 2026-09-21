@@ -9,5 +9,5 @@ class RequestsCurator extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['fio', 'profession', 'phone'];
+    protected $fillable = ['fio', 'profession', 'phone', 'email'];
 }

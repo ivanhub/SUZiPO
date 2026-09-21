@@ -31,13 +31,13 @@
 </div>
                 <!-- Поиск -->
                 <div class="mb-4">
-                    <form method="GET" action="{{ route('all-users-sap.index') }}" id="searchForm">
+	    <form method="GET" action="{{ route('all-users-sap.index') }}" id="searchForm" onsubmit="event.preventDefault();">
                         <div class="flex gap-2">
                             <div class="relative flex-1">
                                 <input type="text" 
                                        name="search" 
                                        value="{{ request('search') }}"
-                                       placeholder="Поиск по фамилии, имени, табельный номер..."
+                                       placeholder="Поиск по ФИО, табельному номеру..."
                                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                        id="searchInput"
                                        autocomplete="off">
@@ -55,7 +55,7 @@
                             @endif
                         </div>
                     </form>
-                </div>
+                </div>   
 
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold text-gray-900">Все пользователи SAP</h2>
@@ -66,15 +66,15 @@
                         </a>
                     </div>
                 </div>
-
+                    <div id="tableContainer">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200" style="table-layout: fixed;">
+		<table class="min-w-full divide-y divide-gray-200" style="table-layout: fixed; width: 1024px;" id="requestsTable">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 60px;">Таб.№</th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 150px;">ФИО</th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Дата рождения</th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 80px;">Пол</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 180px;">ФИО</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 70px;">Дата рождения</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 40px;">Пол</th>
                                 <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 200px;">Должность</th>
                                 <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 200px;">Подразделение</th>
                                 <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 100px;">Действия</th>
@@ -84,11 +84,11 @@
                             @forelse($users as $user)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{{ $user->tab_number ?? '—' }}</td>
-                                <td class="px-2 py-4 text-sm text-gray-900" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $user->full_name }}">{{ $user->full_name ?? '—' }}</td>
+<td class="px-2 py-4 text-sm text-gray-900 max-w-0" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $user->full_name }}">{{ $user->full_name ?? '—' }}</td>
                                 <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $user->birth_date ? $user->birth_date->format('d.m.Y') : '—' }}</td>
                                 <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{{ $user->gender ?? '—' }}</td>
-                                <td class="px-2 py-4 text-sm text-gray-500" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $user->position }}">{{ $user->position ?? '—' }}</td>
-                                <td class="px-2 py-4 text-sm text-gray-500" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $user->level_4_name }}">{{ $user->level_4_name ?? '—' }}</td>
+<td class="px-2 py-4 text-sm text-gray-500 max-w-0" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $user->position }}">{{ $user->position ?? '—' }}</td>
+<td class="px-2 py-4 text-sm text-gray-500 max-w-0" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $user->level_4_name }}">{{ $user->level_4_name ?? '—' }}</td>
 <td class="px-2 py-4 whitespace-nowrap text-sm font-medium">
     <a href="{{ route('all-users-sap.edit', $user) }}" class="text-indigo-600 hover:text-indigo-900 mr-2">✏️</a>
     <form action="{{ route('all-users-sap.delete', $user) }}" method="POST" class="inline">
@@ -103,7 +103,7 @@
                             </tr>
                             @endforelse
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
 
                 <div class="mt-4">
@@ -115,6 +115,55 @@
     </div>
 
 <script>
+// Поиск с автоотправкой через AJAX без потери фокуса
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+const searchForm = document.getElementById('searchForm');
+const tableContainer = document.getElementById('tableContainer');
+
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        
+        searchTimeout = setTimeout(() => {
+            const query = searchInput.value;
+            const url = new URL(searchForm.action);
+            
+            // Формируем URL с параметром поиска
+            if (query) {
+                url.searchParams.set('search', query);
+            } else {
+                url.searchParams.delete('search');
+            }
+
+            // Меняем URL в адресной строке браузера без перезагрузки (чтобы можно было скопировать ссылку)
+            window.history.pushState({}, '', url);
+
+            // Делаем AJAX запрос к контроллеру
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest' // Помечаем запрос как AJAX
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Создаем виртуальный элемент для парсинга ответа
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Находим обновленную таблицу в ответе и заменяем старую на странице
+                const newTable = doc.getElementById('tableContainer');
+                if (newTable && tableContainer) {
+                    tableContainer.innerHTML = newTable.innerHTML;
+                }
+            })
+            .catch(error => console.error('Ошибка поиска:', error));
+            
+        }, 400); // Задержка 400мс после окончания ввода
+    });
+}
+
+
     // Drag & Drop
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
@@ -192,7 +241,7 @@ function uploadFile(file) {
     });
 }
 
-    // Поиск с автоотправкой
+/*    // Поиск с автоотправкой
     let searchTimeout;
     const searchInput = document.getElementById('searchInput');
     
@@ -204,8 +253,11 @@ function uploadFile(file) {
             }, 400);
         });
     }
+*/
+
 </script>
-    <!-- Скрытая форма для загрузки файла -->
+
+	   <!-- Скрытая форма для загрузки файла -->
     <form id="uploadForm" action="{{ route('all-users-sap.import') }}" method="POST" enctype="multipart/form-data" class="hidden">
         @csrf
         <input type="file" name="file" id="uploadFileInput">

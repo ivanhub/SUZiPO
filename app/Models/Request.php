@@ -76,7 +76,7 @@ class Request extends Model
     public function curator(): BelongsTo { return $this->belongsTo(RequestsCurator::class); }
 
     /**
-     * Сотрудники заѝвки
+     * Сотрудники заявки
      */
     public function employees(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(RequestEmployee::class); }
  }

@@ -22,6 +22,7 @@ class AppProtocol extends Model
         'id_user_edit',
         'date_start',
         'date_end',
+        'row_version', 
     ];
 
     protected static function booted()

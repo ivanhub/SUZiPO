@@ -33,10 +33,13 @@ class RequestsCuratorController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+   dd($request->all());
+
         $validated = $request->validate([
             'fio' => 'required|string|max:500',
             'profession' => 'nullable|string|max:500',
             'phone' => 'nullable|string|max:100',
+            'email' => 'nullable|email|max:255',
         ]);
 
         RequestsCurator::create($validated);
@@ -52,13 +55,26 @@ class RequestsCuratorController extends Controller
 
     public function update(Request $request, RequestsCurator $curator): RedirectResponse
     {
+	//dd($curator->getFillable());
+	//dd($request->all());
+		//$reflector = new \ReflectionClass($curator);
+		//dd($reflector->getFileName());
         $validated = $request->validate([
             'fio' => 'required|string|max:500',
             'profession' => 'nullable|string|max:500',
             'phone' => 'nullable|string|max:100',
+    	    'email' => 'nullable|email|max:255',
         ]);
+//             dd($curator->getAttributes()); 
 
-        $curator->update($validated);
+// Вариант А: Прямое присвоение полей (Игнорирует $fillable и гарантированно сохраняет)
+    $curator->fio = $validated['fio'];
+    $curator->profession = $validated['profession'];
+    $curator->phone = $validated['phone'];
+    $curator->email = $validated['email']; // Принудительно пишем email
+    $curator->save(); // Сохраняем в PostgreSQL
+
+//        $curator->update($validated);
 
         return redirect()->route('directories.curators.index')
             ->with('success', 'Куратор обновлён успешно.');

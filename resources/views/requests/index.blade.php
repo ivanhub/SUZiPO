@@ -72,15 +72,15 @@
                             @forelse($requests as $request)
                             <tr class="hover:bg-gray-50">
                                 <!-- Чекбокс строки -->
-                                <!-- Измененный чекбокс внутри <tbody> -->
-                                <td class="px-2 py-4 whitespace-nowrap text-sm">
-                                    @if($request->status === 'Создана')
-                                    <!-- Добавлен атрибут form="mass-send-form" -->
-                                    <input type="checkbox" name="request_ids[]" value="{{ $request->id }}" form="mass-send-form" class="request-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                    @else
-                                    <input type="checkbox" disabled class="rounded border-gray-200 bg-gray-100 cursor-not-allowed">
-                                    @endif
-                                </td>
+<!-- Измененный чекбокс внутри <tbody> -->
+<td class="px-2 py-4 whitespace-nowrap text-sm">
+    @if($request->status === 'Создана' && $request->employees_count > 0)
+    <!-- Добавлен атрибут form="mass-send-form" -->
+    <input type="checkbox" name="request_ids[]" value="{{ $request->id }}" form="mass-send-form" class="request-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+    @else
+    <input type="checkbox" disabled class="rounded border-gray-200 bg-gray-100 cursor-not-allowed" title="{{ $request->status !== 'Создана' ? 'Заявка не в статусе Создана' : 'В заявке нет сотрудников' }}">
+    @endif
+</td>
 
 
                                 <td class="px-1 py-4 whitespace-nowrap text-sm text-gray-900">{{ $request->id }}</td>
@@ -105,15 +105,15 @@
                                 <td class="px-1 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex items-center space-x-2">
 
-                                        <!-- Одиночная отправка -->
-                                        @if($request->status === 'Создана')
-                                        <button type="button"
-                                            class="text-blue-600 hover:text-blue-900 text-sm font-bold border border-blue-300 rounded px-1"
-                                            title="Отправить одну заявку"
-                                            data-id="{{ $request->id }}"
-                                            onclick="sendSingleRequest(this)">📤
-                                        </button>
-                                        @endif
+<!-- Одиночная отправка -->
+@if($request->status === 'Создана' && $request->employees_count > 0)
+<button type="button"
+    class="text-blue-600 hover:text-blue-900 text-sm font-bold border border-blue-300 rounded px-1"
+    title="Отправить одну заявку"
+    data-id="{{ $request->id }}"
+    onclick="sendSingleRequest(this)">📤
+</button>
+@endif
 
                                         <!-- Посмотреть / Редактировать / Сотрудники -->
                                         <a href="{{ route('requests.show', $request) }}" class="text-indigo-600 hover:text-indigo-900" title="Посмотреть">👁️</a>

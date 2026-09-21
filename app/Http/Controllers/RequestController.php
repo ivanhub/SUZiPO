@@ -39,6 +39,11 @@ class RequestController extends Controller
 
     public function create(): View
     {
+		// Проверка права
+	    if (!auth()->user()->hasPermissionTo('create_requests')) {
+	        abort(403, 'У вас нет прав на создание заявок');
+	    }
+
         $providers = RequestsProvider::orderBy('name')->get();
         $courses = RequestsCourse::orderBy('course')->get();
         $cities = RequestsCity::orderBy('city')->get();
@@ -96,7 +101,7 @@ class RequestController extends Controller
             'req_prefix' => 'nullable|string|max:10',
         ]);
 
-        // Создание нового курѝа
+        // Создание нового курса
         if (!empty($validated['new_course_name'])) {
             $newCourse = RequestsCourse::firstOrCreate(
                 ['course' => $validated['new_course_name']],
@@ -126,7 +131,7 @@ class RequestController extends Controller
         }
         unset($validated['new_provider_name']);
 
-        // Создание новой профеѝѝии
+        // Создание новой профессии
         if (!empty($validated['new_profession_name'])) {
             $new = RequestsProfession::firstOrCreate(
                 ['name' => $validated['new_profession_name']],
@@ -136,9 +141,9 @@ class RequestController extends Controller
         }
         unset($validated['new_profession_name']);
 
-        // Уѝтановка города по умолчанию "Нефтеюганѝк"
+        // Установка города по умолчанию "Нефтеюганск"
         if (empty($validated['city_id'])) {
-            $defaultCity = RequestsCity::where('city', 'LIKE', '%Нефтеюганѝк%')->first();
+            $defaultCity = RequestsCity::where('city', 'LIKE', '%Нефтеюганск%')->first();
             if ($defaultCity) {
                 $validated['city_id'] = $defaultCity->id;
             }
@@ -146,7 +151,7 @@ class RequestController extends Controller
 
         $validated['user_id'] = auth()->id();
         $validated['status'] = 'Создана';
-        $validated['country'] = $validated['country'] ?? 'Роѝѝиѝ';
+        $validated['country'] = $validated['country'] ?? 'Россия';
 
         //Prefix\suffix
         // $prefix = $validated['req_prefix'];
@@ -290,53 +295,60 @@ class RequestController extends Controller
         }
         unset($validated['new_profession_name']);
 
-        // Находим заѝвку по ID (НЕ из маршрута, а из параметра)
+        // Находим заявку по ID (НЕ из маршрута, а из параметра)
         $requestModel = RequestModel::findOrFail($id);
+        // Сохраняем старого куратора
+        $oldCuratorId = $requestModel->curator_id;
+
         $requestModel->update($validated);
 
-        // Создание или обновление бронированиѝ
+	// Отправляем уведомление новому куратору
+//	  if ($requestModel->curator_id) {
+//	      $this->notifyCuratorAssigned($requestModel);
+//	  }
+        // Создание или обновление бронирования
         if ($requestModel->audience_id && $requestModel->teacher_id && $requestModel->start_date) {
             $this->createOrUpdateBooking($requestModel);
         } else {
             $this->deleteBookingForRequest($requestModel);
         }
 
-        // Обработка дейѝтвиѝ
+        // Обработка действия
         if ($httpRequest->input('action') === 'save_and_employees') {
             return redirect()
                 ->route('request-employees.index', $requestModel->id)
-                ->with('success', 'Заѝвка ѝохранена. Добавьте ѝотрудников.');
+                ->with('success', 'Заявка сохранена. Добавьте сотрудников.');
         }
 
         return redirect()->route('requests.index')
-            ->with('success', 'Заѝвка обновлена уѝпешно.');
+            ->with('success', 'Заявка обновлена успешно.');
     }
 
     public function destroy(RequestModel $request): RedirectResponse
     {
-        // Удалѝем бронирование перед удалением заѝвки
+        // Удаляем бронирование перед удалением заявки
         $this->deleteBookingForRequest($request);
 
         $request->delete();
         return redirect()->route('requests.index')
-            ->with('success', 'Заѝвка удалена.');
+            ->with('success', 'Заявка удалена.');
     }
 
     private function createOrUpdateBooking(RequestModel $requestModel): void
     {
-        // Получаем даты начала и окончаниѝ из заѝвки
+        // Получаем даты начала и окончания из заявки
         $startDate = $requestModel->start_date;
         $endDate = $requestModel->end_date;
 
-        // Еѝли даты не заполнены, выходим
+        // Если даты не заполнены, выходим
         if (!$startDate || !$endDate) {
             return;
         }
 
-        // Проверѝем, еѝть ли уже бронирование длѝ ѝтой заѝвки
+        // Проверяем, есть ли уже бронирование для этой заявки
         $booking = Booking::where('request_id', $requestModel->id)->first();
 
-        // Проверѝем конфликты на веѝь период
+        // Проверяем конфликты на весь период
         $conflicts = $this->checkAvailabilityForPeriod(
             $requestModel->audience_id,
             $requestModel->teacher_id,
@@ -346,7 +358,7 @@ class RequestController extends Controller
         );
 
         if (!empty($conflicts)) {
-            // Формируем ѝообщение об ошибке
+            // Формируем сообщение об ошибке
             $messages = [];
             foreach ($conflicts as $date => $message) {
                 $messages[] = Carbon::parse($date)->format('d.m.Y') . ' - ' . $message;
@@ -356,18 +368,18 @@ class RequestController extends Controller
             return;
         }
 
-        // Данные длѝ бронированиѝ
+        // Данные для бронирования
         $data = [
             'audience_id' => $requestModel->audience_id,
             'teacher_id' => $requestModel->teacher_id,
             'start_date' => $startDate,
             'end_date' => $endDate,
             'status' => 'active',
-            'notes' => 'Бронирование из заѝвки #' . $requestModel->id,
+            'notes' => 'Бронирование из заявки #' . $requestModel->id,
         ];
 
         if ($booking) {
-            // Обновлѝем ѝущеѝтвующее бронирование
+            // Обновляем существующее бронирование
             $booking->update($data);
         } else {
             // Создаём новое бронирование
@@ -377,20 +389,20 @@ class RequestController extends Controller
     }
 
     /**
-     * Проверка доѝтупноѝти на период
+     * Проверка доступности на период
      */
     private function checkAvailabilityForPeriod($audienceId, $teacherId, $startDate, $endDate, $excludeBookingId = null): array
     {
         $conflicts = [];
 
-        // Проверѝем каждую дату в периоде
+        // Проверяем каждую дату в периоде
         $current = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
 
         while ($current->lte($end)) {
             $dateStr = $current->format('Y-m-d');
-
-            // Проверѝем аудиторию
+            
+            // Проверяем аудиторию
             $audienceConflict = Booking::where('audience_id', $audienceId)
                 ->whereDate('start_date', '<=', $dateStr)
                 ->whereDate('end_date', '>=', $dateStr)
@@ -398,10 +410,10 @@ class RequestController extends Controller
                 ->exists();
 
             if ($audienceConflict) {
-                $conflicts[$dateStr] = 'Нудиториѝ уже занѝта';
+                $conflicts[$dateStr] = 'Аудитория уже занята';
             }
 
-            // Проверѝем преподавателѝ
+            // Проверяем преподавателя
             $teacherConflict = Booking::where('teacher_id', $teacherId)
                 ->whereDate('start_date', '<=', $dateStr)
                 ->whereDate('end_date', '>=', $dateStr)
@@ -409,7 +421,7 @@ class RequestController extends Controller
                 ->exists();
 
             if ($teacherConflict) {
-                $conflicts[$dateStr] = 'Преподаватель уже занѝт';
+                $conflicts[$dateStr] = 'Преподаватель уже занят';
             }
 
             $current->addDay();
@@ -419,7 +431,7 @@ class RequestController extends Controller
     }
 
     /**
-     * Удаление бронированиѝ длѝ заѝвки
+     * Удаление бронирования для заявки
      */
     private function deleteBookingForRequest(RequestModel $requestModel): void
     {
@@ -429,48 +441,132 @@ class RequestController extends Controller
     /*
      * Массовая или одиночная отправка заявок в ООО с созданием протоколов
      */
-    public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Http\RedirectResponse
-    {
-        // Извлекаем массив пришедших ID заявок из запроса
-        $requestIds = $httpRequest->input('request_ids', []);
+public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Http\RedirectResponse
+{
+    // Извлекаем массив пришедших ID заявок из запроса
+    $requestIds = $httpRequest->input('request_ids', []);
 
-        if (empty($requestIds)) {
-            return redirect()->back()->with('error', 'Не выбрано ни одной заявки для отправки.');
-        }
-
-        // Выбираем заявки со статусом "Создана"
-        $requests = \App\Models\Request::whereIn('id', $requestIds)
-            ->where('status', 'Создана')
-            ->get();
-
-        if ($requests->isEmpty()) {
-            return redirect()->back()->with('error', 'Выбранные заявки уже отправлены или не могут быть обработаны.');
-        }
-
-        // Выполняем операции атомарно в транзакции
-        \Illuminate\Support\Facades\DB::transaction(function () use ($requests) {
-            foreach ($requests as $request) {
-
-                // 1. Обновляем статус самой заявки
-                $request->update([
-                    'status' => 'Отправлена'
-                ]);
-
-                // 2. Создаем протокол в таблице app_protocols
-                $request->protocols()->create([
-                    'prot_status'    => 1, // ID статуса "В работе"
-                    'prot_date'      => now(),
-                    'id_user_create' => auth()->id() ?? 1,
-                    'date_edit'      => now(),
-                    'id_user_edit'   => auth()->id() ?? 1,
-                    'date_start'     => $request->start_date ?? now(),
-                    'date_end'       => $request->end_date ?? now()->addDays(5),
-                ]);
-            }
-        });
-
-        $count = $requests->count();
-        return redirect()->route('requests.index')
-            ->with('success', "Успешно отправлено в ООО заявок: {$count}.");
+    if (empty($requestIds)) {
+        return redirect()->back()->with('error', 'Не выбрано ни одной заявки для отправки.');
     }
+
+    // Выбираем заявки со статусом "Создана"
+    $requests = \App\Models\Request::whereIn('id', $requestIds)
+        ->where('status', 'Создана')
+        ->withCount('employees') // Добавляем подсчет сотрудников
+        ->get();
+
+    if ($requests->isEmpty()) {
+        return redirect()->back()->with('error', 'Выбранные заявки уже отправлены или не могут быть обработаны.');
+    }
+
+    // ПРОВЕРКА: есть ли заявки без сотрудников
+    $requestsWithoutEmployees = $requests->filter(function ($request) {
+        return $request->employees_count == 0;
+    });
+
+    if ($requestsWithoutEmployees->isNotEmpty()) {
+        $numbers = $requestsWithoutEmployees->pluck('req_id')->implode(', ');
+        
+        return redirect()
+            ->back()
+            ->with('error', "Заявки без сотрудников не могут быть отправлены: {$numbers}. Добавьте сотрудников в эти заявки.");
+    }
+
+    // Выполняем операции атомарно в транзакции
+    \Illuminate\Support\Facades\DB::transaction(function () use ($requests) {
+        foreach ($requests as $request) {
+
+            // 1. Обновляем статус самой заявки
+            $request->update([
+                'status' => 'Отправлена'
+            ]);
+
+            // 2. Создаем протокол в таблице app_protocols
+            $request->protocols()->create([
+                'prot_num'       => $request->req_id,
+                'prot_status'    => 1,
+                'prot_date'      => now(),
+                'id_user_create' => auth()->id() ?? 1,
+                'date_edit'      => now(),
+                'id_user_edit'   => auth()->id() ?? 1,
+                'date_start'     => $request->start_date ?? now(),
+                'date_end'       => $request->end_date ?? now()->addDays(5),
+                'row_version'    => 1,
+            ]);
+        }
+    });
+
+ // ОТПРАВКА УВЕДОМЛЕНИЯ НА mainooo@suzipo.ru
+    $mainOoo = \App\Models\User::where('email', 'mainooo@suzipo.ru')->first();
+
+    if ($mainOoo) {
+        // Формируем список заявок для письма
+        $requestList = '';
+        foreach ($requests as $request) {
+            $requestList .= "
+                <tr>
+                    <td style='padding: 8px; border: 1px solid #ddd;'>{$request->req_id}</td>
+                    <td style='padding: 8px; border: 1px solid #ddd;'>" . ($request->course->course ?? '—') . "</td>
+                    <td style='padding: 8px; border: 1px solid #ddd;'>" . ($request->start_date ? $request->start_date->format('d.m.Y') : '—') . "</td>
+                    <td style='padding: 8px; border: 1px solid #ddd;'>" . ($request->end_date ? $request->end_date->format('d.m.Y') : '—') . "</td>
+                </tr>
+            ";
+        }
+
+        $subject = "Новые заявки на обучение (" . $requests->count() . " шт.)";
+        
+        $message = "
+            <h2>Уведомление о новых заявках</h2>
+            <p>Были отправлены новые заявки на обучение.</p>
+            <table style='border-collapse: collapse; width: 100%;'>
+                <thead>
+                    <tr>
+                        <th style='padding: 8px; border: 1px solid #ddd;'>Номер</th>
+                        <th style='padding: 8px; border: 1px solid #ddd;'>Курс</th>
+                        <th style='padding: 8px; border: 1px solid #ddd;'>Дата начала</th>
+                        <th style='padding: 8px; border: 1px solid #ddd;'>Дата окончания</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {$requestList}
+                </tbody>
+            </table>
+            <p>Пожалуйста, проверьте заявки в системе.</p>
+        ";
+
+        \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($mainOoo, $subject) {
+            $mail->to($mainOoo->email)
+                 ->subject($subject);
+        });
+    }
+
+    $count = $requests->count();
+    return redirect()->route('requests.index')
+        ->with('success', "Успешно отправлено в ООО заявок: {$count}.");
+}
+
+
+/**
+ * Проверка доступа к редактированию заявки
+ */
+private function checkEditAccess(RequestModel $requestModel): ?\Illuminate\Http\RedirectResponse
+{
+    $user = auth()->user();
+    
+    // Админ имеет полный доступ
+    if ($user->hasRole('admin')) {
+        return null;
+    }
+    
+    // Если заявка отправлена - только ooo, ooo admin, ooo chief могут редактировать
+    if ($requestModel->status === 'Отправлена' || $requestModel->status === 'sent') {
+        if (!$user->hasAnyRole(['ooo', 'ooo admin', 'ooo chief'])) {
+            abort(403, 'У вас нет прав на редактирование отправленной заявки');
+        }
+    }
+    
+    return null;
+}
+
 }

@@ -10,22 +10,32 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class AllUserSapController extends Controller
 {
-    public function index(Request $request): View
-    {
-        $search = $request->input('search');
-        
-        $users = AllUserSap::when($search, function ($query, $search) {
-            return $query->where('last_name', 'like', "%{$search}%")
-                ->orWhere('first_name', 'like', "%{$search}%")
-                ->orWhere('middle_name', 'like', "%{$search}%")
-                ->orWhere('tab_number', 'like', "%{$search}%")
-                ->orWhere('position', 'like', "%{$search}%");
-        })
-        ->orderBy('last_name')
-        ->paginate(20);
+public function index(Request $request): View
+{
+    $search = $request->input('search');
+    
+    $users = AllUserSap::when($search, function ($query, $search) {
+        $binding = "%{$search}%";
 
-        return view('all_users_sap.index', compact('users', 'search'));
-    }
+        return $query->where(function ($q) use ($binding) {
+            $q->whereRaw('last_name ILIKE ?', [$binding])
+              ->orWhereRaw('first_name ILIKE ?', [$binding])
+              ->orWhereRaw('middle_name ILIKE ?', [$binding])
+              ->orWhereRaw('position ILIKE ?', [$binding])
+              /* 
+                 Приводим bigint к TEXT через ::TEXT, 
+                 чтобы Postgres мог искать число как строку 
+              */
+              ->orWhereRaw('tab_number::TEXT ILIKE ?', [$binding]);
+        });
+    })
+    ->orderBy('last_name')
+    ->paginate(20); 
+
+    return view('all_users_sap.index', compact('users', 'search'));
+}
+
+
 
     public function create(): View
     {
