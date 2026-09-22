@@ -6,12 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+// use Spatie\Activitylog\Models\Concerns\LogsActivity as ConcernsLogsActivity;
 
 class Request extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity; 
 
-    protected $table = 'requests'; 
+    protected $table = 'requests';
     protected $fillable = [
         'req_id',
         'user_id',
@@ -47,6 +50,16 @@ class Request extends Model
         'issue_date' => 'date',
     ];
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            // ->logAll()  
+            // ->logFillable()
+            ->logOnly(['status', 'country']) // Поля, изменения в которых нужно записывать
+            ->logOnlyDirty() // Записывать только те поля, которые реально изменились
+            ->dontLogEmptyChanges(); // Не создавать пустую запись, если ничего не поменялось
+    }
+    
     public function protocols(): HasMany { return $this->hasMany(AppProtocol::class, 'prot_num', 'req_id'); }
 
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
