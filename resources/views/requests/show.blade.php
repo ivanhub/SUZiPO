@@ -4,15 +4,15 @@
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-semibold text-gray-900">Просмотр заявки #{{ $request->id }}</h2>
-<div class="flex space-x-2">
-    <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
-    <a href="{{ route('request-employees.index', $request->id) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Сотрудники</a>
-    <a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
-</div>
+                    <div class="flex space-x-2">
+                        <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
+                        <a href="{{ route('request-employees.index', $request->id) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Сотрудники</a>
+                        <a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    
+
                     <!-- Статус -->
                     <div>
                         <h3 class="text-sm font-medium text-gray-500">Статус</h3>
@@ -154,24 +154,100 @@
                             <h3 class="text-sm font-medium text-gray-500">Куратор группы</h3>
                             <p class="mt-1 text-sm text-gray-900">{{ $request->curator->fio ?? '—' }}</p>
                         </div>
-<div>
-    <h3 class="text-sm font-medium text-gray-500">Резерв</h3>
-    <p class="mt-1 text-sm text-gray-900">
-        @if(isset($reserve) && $reserve !== null)
-            {{ $reserve }}
-        @else
-            —
-        @endif
-    </p>
-</div>
-                </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500">Резерв</h3>
+                            <p class="mt-1 text-sm text-gray-900">
+                                @if(isset($reserve) && $reserve !== null)
+                                {{ $reserve }}
+                                @else
+                                —
+                                @endif
+                            </p>
+                        </div>
+                    </div>
 
-<div class="mt-6 flex justify-end space-x-2">
-    <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
-    <a href="{{ route('request-employees.index', $request->id) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Сотрудники</a>
-    <a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
-</div>
+                    <div class="mt-6 flex justify-end space-x-2">
+                        <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
+                        <a href="{{ route('request-employees.index', $request->id) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Сотрудники</a>
+                        <a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">История изменений заявки</h4>
+            </div>
+            <div class="card-body">
+                @if($request->activities->isEmpty())
+                <p class="text-muted mb-0">По этой заявке изменений пока не зафиксировано.</p>
+                @else
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 15%">Дата и время</th>
+                                <th style="width: 15%">Кто изменил</th>
+                                <th style="width: 25%">Действие</th>
+                                <th style="width: 45%">Что именно изменилось</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($request->activities as $activity)
+                            @php
+                            // Декодируем строку JSON из поля attribute_changes в массив PHP
+                            $changes = json_decode($activity->attribute_changes, true) ?? [];
+                            $attributes = $changes['attributes'] ?? [];
+                            $oldValues = $changes['old'] ?? [];
+                            @endphp
+                            <tr>
+                                <td>{{ $activity->created_at->format('d.m.Y H:i:s') }}</td>
+                                <td>
+                                    {{-- Выводим имя пользователя, если causer существует --}}
+                                    @if($activity->causer)
+                                    <strong>{{ $activity->causer->name ?? $activity->causer->fio ?? 'ID: ' . $activity->causer_id }}</strong>
+                                    @else
+                                    <span class="text-muted">Не указан</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="badge bg-info text-dark">
+                                        {{ $activity->description }}
+                                    </span>
+                                </td>
+                                <td>
+                                    @if(!empty($attributes))
+                                    <ul class="mb-0 ps-3">
+                                        @foreach($attributes as $field => $newValue)
+                                        @php
+                                        $oldValue = $oldValues[$field] ?? null;
+
+                                        // Если поле относится к датам, форматируем его в d-m-Y
+                                        if (in_array($field, ['start_date', 'end_date', 'issue_date', 'created_at', 'updated_at'])) {
+                                        $oldValue = $oldValue ? \Carbon\Carbon::parse($oldValue)->format('d-m-Y') : '—';
+                                        $newValue = $newValue ? \Carbon\Carbon::parse($newValue)->format('d-m-Y') : '—';
+                                        }
+                                        @endphp
+                                        <li class="mb-1">
+                                            <strong class="text-secondary">{{ $field }}:</strong>
+                                            <span class="text-danger"><del>{{ $oldValue ?? '—' }}</del></span>
+                                            &rarr;
+                                            <span class="text-success"><strong>{{ $newValue ?? '—' }}</strong></span>
+                                        </li>
+                                        @endforeach
+                                    </ul>
+                                    @else
+                                    <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @endif
+            </div>
+        </div>
+
 </x-layouts.app-with-sidebar>

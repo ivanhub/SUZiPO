@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
-// use Spatie\Activitylog\Models\Concerns\LogsActivity as ConcernsLogsActivity;
 
 class Request extends Model
 {
@@ -54,10 +53,16 @@ class Request extends Model
     {
         return LogOptions::defaults()
             // ->logAll()  
-            // ->logFillable()
-            ->logOnly(['status', 'country']) // Поля, изменения в которых нужно записывать
-            ->logOnlyDirty() // Записывать только те поля, которые реально изменились
-            ->dontLogEmptyChanges(); // Не создавать пустую запись, если ничего не поменялось
+            ->logFillable() 
+            // ->logOnly(['status', 'country'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
+                'created' => 'Заявка успешно создана в системе',
+                'updated' => 'В параметры заявки внесены изменения',
+                'deleted' => 'Заявка была удалена',
+                default   => "{$eventName}"
+            });
     }
     
     public function protocols(): HasMany { return $this->hasMany(AppProtocol::class, 'prot_num', 'req_id'); }
@@ -88,8 +93,7 @@ class Request extends Model
 
     public function curator(): BelongsTo { return $this->belongsTo(RequestsCurator::class); }
 
-    /**
-     * Сотрудники заявки
-     */
     public function employees(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(RequestEmployee::class); }
+
+    public function activities(): \Illuminate\Database\Eloquent\Relations\MorphMany { return $this->morphMany(\Spatie\Activitylog\Models\Activity::class, 'subject'); }
  }
