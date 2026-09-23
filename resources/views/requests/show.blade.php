@@ -7,27 +7,44 @@
 <div class="flex space-x-2">
     <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
     <a href="{{ route('request-employees.index', $request->id) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Сотрудники</a>
-    <a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
+@if(!(auth()->user()->hasAnyRole(['urp', 'urp admin']) && $request->status === 'in_progress'))
+<a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
+@endif
+
+<!-- Кнопка запроса снятия защиты (только для ooo, ooo admin, ooo chief) -->
+@if(auth()->user() && auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']) && $request->start_date && \Carbon\Carbon::parse($request->start_date)->diffInHours(now()) < 48 && $request->status !== 'urpedit')
+<form action="{{ route('requests.request-unlock', $request->id) }}" method="POST" class="inline">
+    @csrf
+    <button type="submit" 
+            class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition"
+            onclick="return confirm('Отправить запрос на снятие защиты?')">
+        🔓 Запросить снять защиту
+    </button>
+</form>
+@endif
+
 </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     
-                    <!-- Статус -->
-                    <div>
-                        <h3 class="text-sm font-medium text-gray-500">Статус</h3>
-                        <p class="mt-1 text-sm text-gray-900">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                @if($request->status === 'draft') bg-yellow-100 text-yellow-800
-                                @elseif($request->status === 'sent') bg-blue-100 text-blue-800
-                                @elseif($request->status === 'accepted') bg-green-100 text-green-800
-                                @elseif($request->status === 'rejected') bg-red-100 text-red-800
-                                @else bg-gray-100 text-gray-800
-                                @endif">
-                                {{ $request->status }}
-                            </span>
-                        </p>
-                    </div>
+<!-- Статус -->
+<div>
+    <h3 class="text-sm font-medium text-gray-500">Статус</h3>
+    <p class="mt-1 text-sm text-gray-900">
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+            @if($request->status === 'Создана' || $request->status === 'created') bg-yellow-100 text-yellow-800
+            @elseif($request->status === 'Отправлена' || $request->status === 'sent') bg-blue-100 text-blue-800
+            @elseif($request->status === 'in_progress') bg-purple-100 text-purple-800
+            @elseif($request->status === 'urpedit') bg-orange-100 text-orange-800
+            @elseif($request->status === 'accepted') bg-green-100 text-green-800
+            @elseif($request->status === 'rejected') bg-red-100 text-red-800
+            @else bg-gray-100 text-gray-800
+            @endif">
+            {{ $request->status_label }}
+        </span>
+    </p>
+</div>
 
                     <!-- Одноразовая заявка -->
                     <div>
@@ -166,10 +183,72 @@
 </div>
                 </div>
 
+
+<!-- История изменений -->
+<div class="mt-8 pt-6 border-t border-gray-200">
+    <h3 class="text-md font-semibold text-gray-900 mb-4">История изменений</h3>
+    
+    @if($request->activities->count() > 0)
+        <div class="space-y-4">
+            @foreach($request->activities->reverse() as $activity)
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">
+                                {{ $activity->description }}
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                {{ $activity->created_at->format('d.m.Y H:i') }}
+                                • {{ $activity->causer->name ?? 'Система' }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    @if($activity->changes && isset($activity->changes['old']))
+                        <div class="mt-3 text-xs">
+                            @foreach($activity->changes['old'] as $field => $oldValue)
+                                @php
+                                    $newValue = $activity->changes['attributes'][$field] ?? null;
+                                @endphp
+                                <div class="flex justify-between mt-1">
+                                    <span class="text-gray-500">{{ $field }}:</span>
+                                    <span class="ml-4">
+                                        <span class="text-red-600 line-through">{{ $oldValue }}</span>
+                                        → 
+                                        <span class="text-green-600">{{ $newValue }}</span>
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    @else
+        <p class="text-sm text-gray-500">История изменений пуста</p>
+    @endif
+</div>
+
+
 <div class="mt-6 flex justify-end space-x-2">
     <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
     <a href="{{ route('request-employees.index', $request->id) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Сотрудники</a>
-    <a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
+@if(!(auth()->user()->hasAnyRole(['urp', 'urp admin']) && $request->status === 'in_progress'))
+<a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
+@endif
+
+<!-- Кнопка запроса снятия защиты (только для ooo, ooo admin, ooo chief) -->
+@if(auth()->user() && auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']) && $request->start_date && \Carbon\Carbon::parse($request->start_date)->diffInHours(now()) < 48 && $request->status !== 'urpedit')
+<form action="{{ route('requests.request-unlock', $request->id) }}" method="POST" class="inline">
+    @csrf
+    <button type="submit" 
+            class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition"
+            onclick="return confirm('Отправить запрос на снятие защиты?')">
+        🔓 Запросить снять защиту
+    </button>
+</form>
+@endif
+
 </div>
             </div>
         </div>

@@ -55,6 +55,26 @@ class RequestEmployee extends Model
         'document_issue_date' => 'date',
     ];
 
+
+ public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'status',
+                'absence_start_date',
+                'absence_end_date',
+                'absence_reason',
+                'absence_type',
+                'document_issue_date',
+                'reissue_period',
+                'note',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Сотрудник заявки был {$eventName}");
+    }
+
+
     /**
      * Связь с заявкой
      */

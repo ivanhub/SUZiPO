@@ -6,14 +6,24 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Models\Concerns\HasActivity; 
+use Spatie\Activitylog\Support\LogOptions;
 
 class Request extends Model
 {
-    use HasFactory;
+    use HasFactory, HasActivity;
+
+    const STATUS_CREATED = 'created';
+    const STATUS_SENT = 'sent';
+    const STATUS_IN_PROGRESS = 'in_progress';
+    const STATUS_ACCEPTED = 'accepted';
+    const STATUS_REJECTED = 'rejected';
+    const STATUS_URP_EDIT = 'urpedit';
 
     protected $table = 'requests'; 
     protected $fillable = [
         'req_id',
+	'protection_requested', // для запроса снятия защиты
         'user_id',
         'status',
         'one_time',
@@ -46,6 +56,44 @@ class Request extends Model
         'end_date' => 'date',
         'issue_date' => 'date',
     ];
+
+
+public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'status',
+                'start_date',
+                'end_date',
+                'issue_date',
+                'course_id',
+                'provider_id',
+                'audience_id',
+                'teacher_id',
+                'curator_id',
+            ])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges() 
+            ->setDescriptionForEvent(fn(string $eventName) => "Заявка была {$eventName}");
+    }
+
+
+   public static function getStatuses(): array
+    {
+        return [
+            self::STATUS_CREATED => 'Создана',
+            self::STATUS_SENT => 'Отправлена',
+            self::STATUS_IN_PROGRESS => 'В работе',
+            self::STATUS_URP_EDIT => 'На доработке',
+            self::STATUS_ACCEPTED => 'Принята',
+            self::STATUS_REJECTED => 'Отклонена',
+        ];
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return self::getStatuses()[$this->status] ?? $this->status;
+    }
 
     public function protocols(): HasMany { return $this->hasMany(AppProtocol::class, 'prot_num', 'req_id'); }
 

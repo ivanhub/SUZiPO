@@ -18,6 +18,23 @@
                             </label>
                         </div>
 
+<!-- Префикс номера заявки (только для urp, urp admin) -->
+@if(auth()->user()->hasAnyRole(['urp', 'urp admin']))
+<div class="col-span-full">
+    <label for="req_prefix" class="block text-sm font-medium text-gray-700 mb-1">Префикс номера заявки</label>
+    <select name="req_prefix" id="req_prefix"
+            class="w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        <option value="ФЛ" {{ old('req_prefix') === 'ФЛ' ? 'selected' : '' }}>ФЛ (Физические лица)</option>
+        <option value="ЮЛ" {{ old('req_prefix') === 'ЮЛ' ? 'selected' : '' }}>ЮЛ (Юридические лица)</option>
+    </select>
+</div>
+@endif
+
+<!-- Скрытое поле для ooo, ookoit, metodist (всегда ЮНГ) -->
+@if(!auth()->user()->hasAnyRole(['urp', 'urp admin']))
+<input type="hidden" name="req_prefix" value="ЮНГ">
+@endif
+
 <!-- Дата начала обучения -->
 <div class="relative">
     <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Дата начала обучения</label>

@@ -18,6 +18,7 @@ class RequestEmployeeController extends Controller
      */
     public function index(Request $request, int $requestId): View
     {
+    $this->checkAccess($requestId); 
         $trainingRequest = TrainingRequestModel::with('course')->findOrFail($requestId);
         
         $employees = RequestEmployee::where('request_id', $requestId)
@@ -38,6 +39,7 @@ class RequestEmployeeController extends Controller
      */
     public function store(Request $request, int $requestId): RedirectResponse
     {
+    $this->checkAccess($requestId); 
         $request->validate([
             'tab_number' => 'nullable|string|max:50',
             'last_name' => 'nullable|string|max:255',
@@ -104,6 +106,7 @@ class RequestEmployeeController extends Controller
      */
     public function storeBulk(Request $request, int $requestId): RedirectResponse
     {
+    $this->checkAccess($requestId);
         $request->validate([
             'tab_numbers' => 'required|string',
         ]);
@@ -394,6 +397,7 @@ private function applyChecks(RequestEmployee $employee, TrainingRequestModel $tr
      */
     public function destroy(int $requestId, int $employeeId): RedirectResponse
     {
+    $this->checkAccess($requestId); 
         $employee = RequestEmployee::where('request_id', $requestId)
             ->where('id', $employeeId)
             ->firstOrFail();
@@ -496,4 +500,36 @@ private function notifyCurator(RequestEmployee $employee, int $requestId): void
     });
 }
 
+/**
+ * Проверка доступа к сотрудникам заявки
+ */
+private function checkAccess(int $requestId): void
+{
+    $user = auth()->user();
+    
+    if (!$user) {
+        abort(403, 'Пожалуйста, авторизуйтесь');
+    }
+    
+    $request = \App\Models\Request::findOrFail($requestId);
+    
+    // Админ имеет полный доступ
+    if ($user->hasRole('admin')) {
+        return;
+    }
+    
+    // Если заявка в статусе "Создана" - только urp, urp admin, admin могут управлять сотрудниками
+    if ($request->status === 'Создана' || $request->status === 'created') {
+        if (!$user->hasAnyRole(['urp', 'urp admin'])) {
+            abort(403, 'У вас нет прав на добавление сотрудников в заявку в статусе "Создана"');
+        }
+    }
+    
+    // Если заявка отправлена - ooo, ooo admin, ooo chief могут управлять сотрудниками
+    if ($request->status === 'Отправлена' || $request->status === 'sent' || $request->status === 'in_progress') {
+        if (!$user->hasAnyRole(['ooo', 'ooo admin', 'ooo chief'])) {
+            abort(403, 'У вас нет прав на редактирование сотрудников отправленной заявки');
+        }
+    }
+}
 }

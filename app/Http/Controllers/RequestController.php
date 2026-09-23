@@ -153,25 +153,31 @@ class RequestController extends Controller
         $validated['status'] = 'Создана';
         $validated['country'] = $validated['country'] ?? 'Россия';
 
-        //Prefix\suffix
-        // $prefix = $validated['req_prefix'];
-        // $lastRequest = RequestModel::where('req_id', 'LIKE', "%-{$prefix}")
 
-        $lastRequest = RequestModel::where('req_id', 'LIKE', "%-ЮЛ")
-            ->orderBy('id', 'desc')
-            ->first();
+// Определяем префикс в зависимости от роли пользователя
+$user = auth()->user();
+$prefix = 'ЮНГ'; // По умолчанию для ooo, ookoit, metodist
 
-        $nextNumber = 1;
+if ($user->hasAnyRole(['urp', 'urp admin', 'admin'])) {
+    // Для urp - выбор из ФЛ и ЮЛ
+    $prefix = $validated['req_prefix'] ?? 'ЮЛ'; // Если не выбран - по умолчанию ЮЛ
+}
 
-        if ($lastRequest && $lastRequest->req_id) {
-            $parts = explode('-', $lastRequest->req_id);
-            $lastNumber = (int)$parts[0];
-            $nextNumber = $lastNumber + 1;
-        }
+// Ищем последнюю заявку с этим префиксом
+$lastRequest = RequestModel::where('req_id', 'LIKE', "%-{$prefix}")
+    ->orderBy('id', 'desc')
+    ->first();
 
-        // $validated['req_id'] = "{$nextNumber}-{$prefix}";
-        $validated['req_id'] = "{$nextNumber}-ЮЛ";
-        unset($validated['req_prefix']);
+$nextNumber = 1;
+
+if ($lastRequest && $lastRequest->req_id) {
+    $parts = explode('-', $lastRequest->req_id);
+    $lastNumber = (int)$parts[0];
+    $nextNumber = $lastNumber + 1;
+}
+
+$validated['req_id'] = "{$nextNumber}-{$prefix}";
+unset($validated['req_prefix']);
 
 
 
@@ -192,7 +198,7 @@ class RequestController extends Controller
 
     public function show(RequestModel $request): View
     {
-        $request->load(['user', 'provider', 'course', 'city', 'profession', 'learnReason', 'learningResource', 'learningType', 'eventType', 'discipline', 'audience', 'teacher', 'curator']);
+	$request->load(['user', 'provider', 'course', 'city', 'profession', 'learnReason', 'learningResource', 'learningType', 'eventType', 'discipline', 'audience', 'teacher', 'curator', 'activities.causer']);
         $reserve = null;
         if ($request->audience_id) {
             $seats = $request->audience ? $request->audience->seats : null;
@@ -208,6 +214,9 @@ class RequestController extends Controller
 
     public function edit(RequestModel $request): View
     {
+	// Проверка доступа
+        $this->checkEditAccess($request);
+
         $providers = RequestsProvider::orderBy('name')->get();
         $courses = RequestsCourse::orderBy('course')->get();
         $cities = RequestsCity::orderBy('city')->get();
@@ -297,15 +306,53 @@ class RequestController extends Controller
 
         // Находим заявку по ID (НЕ из маршрута, а из параметра)
         $requestModel = RequestModel::findOrFail($id);
+
+
+    // Проверка доступа
+    $this->checkEditAccess($requestModel);
+    
+    // Проверяем, была ли заявка в статусе "Отправлена"
+    $wasSent = $requestModel->status === 'Отправлена' || $requestModel->status === 'sent';
+    
+    // Сохраняем старые данные
+    $oldData = $requestModel->toArray();
+
         // Сохраняем старого куратора
         $oldCuratorId = $requestModel->curator_id;
 
+// Преобразование дат в формат Y-m-d
+if (!empty($validated['start_date'])) {
+    $validated['start_date'] = Carbon::parse($validated['start_date'])->format('Y-m-d');
+} else {
+    $validated['start_date'] = null;
+}
+
+if (!empty($validated['end_date'])) {
+    $validated['end_date'] = Carbon::parse($validated['end_date'])->format('Y-m-d');
+} else {
+    $validated['end_date'] = null;
+}
+
+if (!empty($validated['issue_date'])) {
+    $validated['issue_date'] = Carbon::parse($validated['issue_date'])->format('Y-m-d');
+} else {
+    $validated['issue_date'] = null;
+}
+
         $requestModel->update($validated);
 
+    // Если заявка была отправлена и её редактирует группа ooo/ooo admin/ooo chief
+    if ($wasSent && auth()->user()->hasAnyRole(['ooo', 'ooo admin', 'ooo chief'])) {
+        // Меняем статус на "В работе"
+        $requestModel->update(['status' => 'in_progress']);
+    }
+    
+
+
 	// Отправляем уведомление новому куратору
-//	  if ($requestModel->curator_id) {
-//	      $this->notifyCuratorAssigned($requestModel);
-//	  }
+	  if ($requestModel->curator_id) {
+	      $this->notifyCuratorAssigned($requestModel);
+	  }
         // Создание или обновление бронирования
         if ($requestModel->audience_id && $requestModel->teacher_id && $requestModel->start_date) {
             $this->createOrUpdateBooking($requestModel);
@@ -450,11 +497,14 @@ public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Ht
         return redirect()->back()->with('error', 'Не выбрано ни одной заявки для отправки.');
     }
 
-    // Выбираем заявки со статусом "Создана"
+    // Выбираем заявки со статусом "Создана" ИЛИ "urpedit"
     $requests = \App\Models\Request::whereIn('id', $requestIds)
-        ->where('status', 'Создана')
+        //->where('status', 'Создана')
+	->whereIn('status', ['Создана', 'urpedit', 'created'])
         ->withCount('employees') // Добавляем подсчет сотрудников
         ->get();
+
+
 
     if ($requests->isEmpty()) {
         return redirect()->back()->with('error', 'Выбранные заявки уже отправлены или не могут быть обработаны.');
@@ -479,7 +529,7 @@ public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Ht
 
             // 1. Обновляем статус самой заявки
             $request->update([
-                'status' => 'Отправлена'
+                'status' => 'in_progress'
             ]);
 
             // 2. Создаем протокол в таблице app_protocols
@@ -548,16 +598,46 @@ public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Ht
 
 
 /**
+ * Проверка, заблокирована ли заявка (менее 48 часов до начала)
+ */
+private function isRequestLocked(RequestModel $requestModel): bool
+{
+    if (!$requestModel->start_date) {
+        return false;
+    }
+    
+    $startDate = Carbon::parse($requestModel->start_date);
+    $now = Carbon::now();
+    
+    // Заблокирована если до начала менее 48 часов и статус не urpedit
+    return $startDate->diffInHours($now) < 48 && $requestModel->status !== 'urpedit';
+}
+
+/**
  * Проверка доступа к редактированию заявки
  */
 private function checkEditAccess(RequestModel $requestModel): ?\Illuminate\Http\RedirectResponse
 {
     $user = auth()->user();
     
+ $user = auth()->user();
+    
+    // Если пользователь не авторизован - редирект на логин
+    if (!$user) {
+        return redirect()->route('login');
+    }
+    
     // Админ имеет полный доступ
     if ($user->hasRole('admin')) {
         return null;
     }
+
+// Если заявка в статусе "Создана" - только urp, urp admin, admin могут редактировать
+if ($requestModel->status === 'Создана' || $requestModel->status === 'created') {
+    if (!$user->hasAnyRole(['urp', 'urp admin', 'admin'])) {
+        abort(403, 'У вас нет прав на редактирование заявки в статусе "Создана"');
+    }
+}
     
     // Если заявка отправлена - только ooo, ooo admin, ooo chief могут редактировать
     if ($requestModel->status === 'Отправлена' || $requestModel->status === 'sent') {
@@ -566,7 +646,128 @@ private function checkEditAccess(RequestModel $requestModel): ?\Illuminate\Http\
         }
     }
     
+    // Если статус urpedit - только urp, urp admin могут редактировать
+    if ($requestModel->status === 'urpedit') {
+        if (!$user->hasAnyRole(['urp', 'urp admin', 'admin'])) {
+            abort(403, 'Заявка на доработке. Доступ разрешен только группам URP и URP Admin');
+        }
+    }
+    
+    // Если заявка заблокирована (48 часов) - только ooo, ooo admin, ooo chief могут видеть
+    if ($this->isRequestLocked($requestModel)) {
+        if (!$user->hasAnyRole(['ooo', 'ooo admin', 'ooo chief'])) {
+            abort(403, 'Заявка заблокирована за 48 часов до начала обучения. Обратитесь к администратору.');
+        }
+    }
+    
     return null;
+}
+
+/**
+ * Запрос снятия защиты с заявки
+ */
+public function requestUnlock(int $id): RedirectResponse
+{
+    $user = auth()->user();
+    $requestModel = RequestModel::findOrFail($id);
+    
+    \Illuminate\Support\Facades\Log::info('requestUnlock - user', [
+        'email' => $user->email,
+        'roles' => $user->roles->pluck('name')->implode(', '),
+        'request_id' => $requestModel->id,
+        'start_date' => $requestModel->start_date,
+        'is_locked' => $this->isRequestLocked($requestModel),
+    ]);
+
+    
+  // Только urp, urp admin могут запросить
+    if (!$user->hasAnyRole(['urp', 'urp admin'])) {
+        \Illuminate\Support\Facades\Log::error('requestUnlock - NO PERMISSION');
+        abort(403, 'У вас нет прав на запрос снятия защиты');
+    }
+    
+    // Заявка должна быть заблокирована
+    if (!$this->isRequestLocked($requestModel)) {
+        \Illuminate\Support\Facades\Log::error('requestUnlock - NOT LOCKED');
+        return redirect()->back()->with('error', 'Заявка не заблокирована');
+    }
+    
+    \Illuminate\Support\Facades\Log::info('requestUnlock - OK, sending emails');
+    
+
+    // Отмечаем запрос
+    $requestModel->update(['protection_requested' => true]);
+    
+    // Отправляем email всем пользователям с ролью ooo admin
+    $adminUsers = \App\Models\User::role('ooo admin')->get();
+
+  if ($adminUsers->isEmpty()) {
+        return redirect()->back()->with('error', 'Не незначен ответственный от ООО');
+    }
+    
+    foreach ($adminUsers as $admin) {
+        $unlockUrl = route('requests.unlock', $requestModel->id);
+        
+        $subject = "Запрос на снятие защиты с заявки #{$requestModel->req_id}";
+        $message = "
+            <h2>Запрос на снятие защиты</h2>
+            <p>Пользователь <strong>{$user->name}</strong>, роль <strong>{$user->roles->pluck('name')->implode(', ')}</strong></p>
+            <p>просит снять защиту с заявки <strong>#{$requestModel->req_id}</strong></p>
+            <p><a href='{$unlockUrl}' target='_blank'  rel='noopener noreferrer'>Снять защиту</a></p>
+        ";
+        
+        \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($admin, $subject) {
+            $mail->to($admin->email)->subject($subject);
+        });
+    }
+    
+    return redirect()->back()->with('success', 'Запрос на снятие защиты отправлен');
+}
+
+/**
+ * Снятие защиты с заявки (через ссылку из email)
+ */
+public function unlock(int $id): RedirectResponse
+{
+    $user = auth()->user();
+    $requestModel = RequestModel::findOrFail($id);    
+    // Только urp, urp admin могут снять защиту
+    if (!$user->hasAnyRole(['urp', 'urp admin', 'admin'])) {
+        abort(403, 'У вас нет прав на снятие защиты');
+    }
+    
+    // Меняем статус на urpedit
+    $requestModel->update([
+        'status' => 'urpedit',
+        'protection_requested' => false,
+    ]);
+    
+    return redirect()->route('requests.edit', $requestModel->id)
+        ->with('success', 'Защита снята. Заявка переведена в статус "На доработке".');
+}
+
+private function notifyCuratorAssigned(RequestModel $requestModel): void
+{
+    $curator = $requestModel->curator;
+    
+    if (!$curator || !$curator->email) {
+        return;
+    }
+    
+    $subject = "Вас назначили куратором заявки #{$requestModel->id}";
+    
+$message = "
+    <h2>Назначение куратором</h2>
+    <p><strong>Номер заявки:</strong> #{$requestModel->id}</p>
+    <p><strong>Курс:</strong> " . ($requestModel->course->course ?? '—') . "</p>
+    <p><strong>Дата начала:</strong> " . ($requestModel->start_date ? $requestModel->start_date->format('d.m.Y') : '—') . "</p>
+    <p><strong>Дата окончания:</strong> " . ($requestModel->end_date ? $requestModel->end_date->format('d.m.Y') : '—') . "</p>
+    <hr>
+    <p>Вы были назначены куратором данной группы.</p>
+";    
+    \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($curator, $subject) {
+        $mail->to($curator->email)->subject($subject);
+    });
 }
 
 }

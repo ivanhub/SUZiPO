@@ -138,31 +138,42 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// Проверка доступности аудитории на дату
+// Получение занятых аудиторий на период
 Route::get('/api/available-audiences', function (Illuminate\Http\Request $request) {
-    $date = $request->get('date');
-    $excludeBookingId = $request->get('booking_id');
+    $startDate = $request->get('start_date');
+    $endDate = $request->get('end_date');
     
-    $query = Booking::whereDate('date', $date);
-    if ($excludeBookingId) {
-        $query->where('id', '!=', $excludeBookingId);
-    }
+    $query = App\Models\Booking::where(function ($query) use ($startDate, $endDate) {
+        $query->whereBetween('start_date', [$startDate, $endDate])
+              ->orWhereBetween('end_date', [$startDate, $endDate])
+              ->orWhere(function ($query) use ($startDate, $endDate) {
+                  $query->where('start_date', '<=', $startDate)
+                        ->where('end_date', '>=', $endDate);
+              });
+    });
     
     return $query->pluck('audience_id');
 });
 
+
 // Проверка доступности преподавателя на дату
+// Получение занятых преподавателей на период
 Route::get('/api/available-teachers', function (Illuminate\Http\Request $request) {
-    $date = $request->get('date');
-    $excludeBookingId = $request->get('booking_id');
+    $startDate = $request->get('start_date');
+    $endDate = $request->get('end_date');
     
-    $query = Booking::whereDate('date', $date);
-    if ($excludeBookingId) {
-        $query->where('id', '!=', $excludeBookingId);
-    }
+    $query = App\Models\Booking::where(function ($query) use ($startDate, $endDate) {
+        $query->whereBetween('start_date', [$startDate, $endDate])
+              ->orWhereBetween('end_date', [$startDate, $endDate])
+              ->orWhere(function ($query) use ($startDate, $endDate) {
+                  $query->where('start_date', '<=', $startDate)
+                        ->where('end_date', '>=', $endDate);
+              });
+    });
     
     return $query->pluck('teacher_id');
 });
+
 
        //Импорт сотрудников из SAP (xls)
 Route::post('all-users-sap/import', [AllUserSapController::class, 'import'])->name('all-users-sap.import');
@@ -174,8 +185,15 @@ Route::resource('all-users-sap', AllUserSapController::class)->parameters([
 
 // Route::post('requests/send-to-ooo', [RequestController::class, 'sendToOoo'])->name('requests.send-to-ooo');
 
-Route::resource('requests', RequestController::class);
+Route::resource('requests', RequestController::class)->middleware('auth');
 // ������� ��� �������� ��� ��������� �������� ������ � ���
+
+
+Route::post('requests/{id}/request-unlock', [RequestController::class, 'requestUnlock'])
+    ->name('requests.request-unlock')
+    ->middleware('auth');
+
+Route::get('requests/{id}/unlock', [RequestController::class, 'unlock'])->name('requests.unlock');
 
 Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
 

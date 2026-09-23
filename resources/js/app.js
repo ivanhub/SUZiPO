@@ -26,9 +26,13 @@ Alpine.start();
 
 // Инициализация после загрузки DOM
 document.addEventListener("DOMContentLoaded", () => {
-  flatpickr(".date-input", {
-    locale: Russian,       // Подключаем русский язык
-    dateFormat: "d.m.Y",   // Формат даты: 25.10.2026
+  flatpickr("input[type='date']", {
+    locale: "ru",       // Подключаем русский язык
+  altInput: true,          // Включает отображение "дубликата" для пользователя
+    altFormat: "d.m.Y",      // Формат, который видит пользователь: "23.09.2026"
+    dateFormat: "Y-m-d", 
+
+//    dateFormat: "d.m.Y",   // Формат даты: 25.10.2026
     allowInput: false,     // Запрет ручного ввода (защита от дд.мм.гггг)
     
     // Дополнительные полезные настройки по желанию:

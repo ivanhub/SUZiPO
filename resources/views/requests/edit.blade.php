@@ -18,31 +18,39 @@
                                 <span class="ml-2 text-sm font-medium text-gray-700">Одноразовая заявка</span>
                             </label>
                         </div>
+<!-- Текущий номер заявки -->
+<div class="col-span-full">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Номер заявки</label>
+    <input type="text" value="{{ $request->req_id ?? '—' }}" 
+           class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
+           readonly>
+</div>
+<!-- Дата начала обучения -->
+<div>
+    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Дата начала обучения</label>
+    <input type="date" name="start_date" id="start_date" 
+           value="{{ $request->start_date ? $request->start_date->format('Y-m-d') : old('start_date', '') }}"
+           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+    @error('start_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+</div>
 
-                        <!-- Дата начала обучения -->
-                        <div>
-                            <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Дата начала обучения</label>
-                            <input type="date" name="start_date" id="start_date" value="{{ old('start_date', $request->start_date ? $request->start_date->format('Y-m-d') : '') }}"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                            @error('start_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                        </div>
+<!-- Дата окончания обучения -->
+<div>
+    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Дата окончания обучения</label>
+    <input type="date" name="end_date" id="end_date" 
+           value="{{ $request->end_date ? $request->end_date->format('Y-m-d') : old('end_date', '') }}"
+           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+    @error('end_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+</div>
 
-                        <!-- Дата окончания обучения -->
-                        <div>
-                            <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Дата окончания обучения</label>
-                            <input type="date" name="end_date" id="end_date" value="{{ old('end_date', $request->end_date ? $request->end_date->format('Y-m-d') : '') }}"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                            @error('end_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                        </div>
-
-                        <!-- Дата оформления -->
-                        <div>
-                            <label for="issue_date" class="block text-sm font-medium text-gray-700 mb-1">Дата оформления</label>
-                            <input type="date" name="issue_date" id="issue_date" value="{{ old('issue_date', $request->issue_date ? $request->issue_date->format('Y-m-d') : '') }}"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                            @error('issue_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                        </div>
-
+<!-- Дата оформления -->
+<div>
+    <label for="issue_date" class="block text-sm font-medium text-gray-700 mb-1">Дата оформления</label>
+    <input type="date" name="issue_date" id="issue_date" 
+           value="{{ $request->issue_date ? $request->issue_date->format('Y-m-d') : old('issue_date', '') }}"
+           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+    @error('issue_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+</div>
                         <!-- Форма образования -->
                         <div>
                             <label for="education_form" class="block text-sm font-medium text-gray-700 mb-1">Форма образования</label>
@@ -625,17 +633,18 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
     const audienceSelect = document.getElementById('audience_id');
     const teacherSelect = document.getElementById('teacher_id');
-    const selectedAudience = audienceSelect.value;
-    const selectedTeacher = teacherSelect.value;
 
     // Функция для обновления доступных аудиторий
     async function updateAudiences() {
-        const date = startDateInput.value;
-        if (!date) return;
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        
+        if (!startDate || !endDate) return;
 
-        const response = await fetch(`/api/available-audiences?date=${date}`);
+        const response = await fetch(`/api/available-audiences?start_date=${startDate}&end_date=${endDate}`);
         const bookedAudienceIds = await response.json();
 
         // Сохраняем выбранное значение
@@ -646,12 +655,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const audienceId = option.value;
             if (audienceId && bookedAudienceIds.includes(parseInt(audienceId))) {
                 option.disabled = true;
-                option.textContent = option.textContent + ' - ЗАНЯТА';
+		option.textContent = option.textContent.replace(' - ЗАНЯТА', '').trim() + ' - ЗАНЯТА';
                 option.classList.add('text-red-500');
             } else {
                 option.disabled = false;
                 // Убираем пометку "ЗАНЯТА"
-                option.textContent = option.textContent.replace(' - ЗАНЯТА', '');
+	        option.textContent = option.textContent.replace(' - ЗАНЯТА', '').trim();
                 option.classList.remove('text-red-500');
             }
         });
@@ -664,10 +673,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Функция для обновления доступных преподавателей
     async function updateTeachers() {
-        const date = startDateInput.value;
-        if (!date) return;
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        
+        if (!startDate || !endDate) return;
 
-        const response = await fetch(`/api/available-teachers?date=${date}`);
+        const response = await fetch(`/api/available-teachers?start_date=${startDate}&end_date=${endDate}`);
         const bookedTeacherIds = await response.json();
 
         // Сохраняем выбранное значение
@@ -678,12 +689,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const teacherId = option.value;
             if (teacherId && bookedTeacherIds.includes(parseInt(teacherId))) {
                 option.disabled = true;
-                option.textContent = option.textContent + ' - ЗАНЯТ';
+		option.textContent = option.textContent.replace(' - ЗАНЯТ', '').trim() + ' - ЗАНЯТ';
                 option.classList.add('text-red-500');
             } else {
                 option.disabled = false;
                 // Убираем пометку "ЗАНЯТ"
-                option.textContent = option.textContent.replace(' - ЗАНЯТ', '');
+//                option.textContent = option.textContent.replace(' - ЗАНЯТ', '');
+		option.textContent = option.textContent.replace(' - ЗАНЯТ', '').trim();
                 option.classList.remove('text-red-500');
             }
         });
@@ -694,19 +706,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Слушаем изменения даты
+    // Слушаем изменения дат
     startDateInput.addEventListener('change', function() {
         updateAudiences();
         updateTeachers();
     });
 
+    endDateInput.addEventListener('change', function() {
+        updateAudiences();
+        updateTeachers();
+    });
+
     // Обновляем при загрузке страницы
-    if (startDateInput.value) {
+    if (startDateInput.value && endDateInput.value) {
         updateAudiences();
         updateTeachers();
     }
 });
-
 
 // Функция для обновления резерва
 function updateReserve() {
@@ -735,8 +751,7 @@ function updateReserve() {
         .then(data => {
             const employeeCount = data.count || 0;
             const reserve = seats - employeeCount;
-//            reserveInput.value = reserve >= 0 ? reserve : 0;
-		reserveInput.value = reserve;
+            reserveInput.value = reserve;
         });
 }
 
@@ -746,4 +761,5 @@ document.getElementById('audience_id').addEventListener('change', updateReserve)
 // Обновляем при загрузке
 updateReserve();
 </script>
+
 </x-layouts.app-with-sidebar>

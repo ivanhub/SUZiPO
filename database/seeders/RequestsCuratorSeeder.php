@@ -2,39 +2,75 @@
 
 namespace Database\Seeders;
 
-use App\Models\RequestsCurator;
 use Illuminate\Database\Seeder;
+use App\Models\RequestsCurator;
 
 class RequestsCuratorSeeder extends Seeder
 {
     public function run(): void
     {
         $curators = [
-            ['fio' => 'Артемьева Анастасия Романовна', 'profession' => 'Специалист', 'phone' => '334-987'],
-            ['fio' => 'Бекивова Эльвина Заирхановна', 'profession' => 'Ведущий специалист', 'phone' => '336-318'],
-            ['fio' => 'Ямпольская Инна Азатовна', 'profession' => 'Специалист', 'phone' => '335-586'],
-            ['fio' => 'Кирвас Зоя Алексеевна', 'profession' => 'Специалист', 'phone' => '217-756'],
-            ['fio' => 'Иванова Екатерина Александровна', 'profession' => 'Старший специалист', 'phone' => '217-855'],
-            ['fio' => 'Миловидова Инна Евгеньевна', 'profession' => 'Старший специалист', 'phone' => '334-010'],
-            ['fio' => 'Росланова Алина Робертовна', 'profession' => 'Старший специалист', 'phone' => '333-647'],
-            ['fio' => 'Пономаренко Гульнара Раисовна', 'profession' => 'Старший специалист', 'phone' => '335-518'],
-            ['fio' => 'Морская Валентина Николаевна', 'profession' => 'Старший специалист', 'phone' => '335-469'],
-            ['fio' => 'Шевчик Ирина Анатольевна', 'profession' => 'Старший специалист', 'phone' => '217-448'],
-            ['fio' => 'Педан Наталья Константиновна', 'profession' => 'Специалист', 'phone' => '332-735'],
-            ['fio' => 'Лазорская Лариса Анатольевна', 'profession' => 'Старший специалист', 'phone' => '334-584'],
-            ['fio' => 'Курочка Елена Александровна', 'profession' => 'Старший специалист', 'phone' => '336-738'],
-            ['fio' => 'Терехина Валентина Ивановна', 'profession' => 'Старший специалист', 'phone' => '334-822'],
-            ['fio' => 'Пак Кристина Евгеньевна', 'profession' => 'Старший специалист', 'phone' => '335-936'],
-            ['fio' => 'Шелухина Наталья Ивановна', 'profession' => 'Ведущий специалист', 'phone' => '334-788'],
-            ['fio' => 'Миронова Лариса Владимировна', 'profession' => 'Специалист', 'phone' => '336-625'],
-            ['fio' => 'Гусева Ольга Маркеловна', 'profession' => 'Старший специалист', 'phone' => '336-451'],
-            ['fio' => 'Зуйко Екатерина Васильевна', 'profession' => 'Специалист', 'phone' => '335-881'],
+            [
+                'fio' => 'Анисимова Алёна Александровна',
+                'email' => 'AA_Anisimova1@ung.rosneft.ru',
+            ],
+            [
+                'fio' => 'Боцунова Елена Викторовна',
+                'email' => 'EV_Botsunova2@ung.rosneft.ru',
+            ],
+            [
+                'fio' => 'Гусева Ольга Маркеловна',
+                'email' => 'OM_Guseva@ung.rosneft.ru',
+            ],
+            [
+                'fio' => 'Курочка Елена Александровна',
+                'email' => 'EA_Kurochka@ung.rosneft.ru',
+            ],
+            [
+                'fio' => 'Лазорская Лариса Анатольевна',
+                'email' => 'LA_Lazorskaya@ung.rosneft.ru',
+            ],
+            [
+                'fio' => 'Миловидова Инна Евгеньевна',
+                'email' => 'IE_Milovidova@ung.rosneft.ru',
+            ],
+            [
+                'fio' => 'Миронова Лариса Владимировна',
+                'email' => 'LV_Mironova2@ung.rosneft.ru',
+            ],
+            [
+                'fio' => 'Морская Валентина Николаевна',
+                'email' => 'VN_Morskaya@ung.rosneft.ru',
+            ],
+            [
+                'fio' => 'Педан Наталья Константиновна',
+                'email' => 'NK_Pedan@ung.rosneft.ru',
+            ],
+            [
+                'fio' => 'Прокопьева Наталья Николаевна',
+                'email' => 'NN_Prokopeva@ung.rosneft.ru',
+            ],
+            [
+                'fio' => 'Селезнева Татьяна Ивановна',
+                'email' => 'TI_Selezneva@ung.rosneft.ru',
+            ],
+            [
+                'fio' => 'Сокурова Екатерина Александровна',
+                'email' => 'EA_Sokurova@ung.rosneft.ru',
+            ],
+            [
+                'fio' => 'Шелухина Наталья Ивановна',
+                'email' => 'NI_Shelukhina@ung.rosneft.ru',
+            ],
         ];
 
         foreach ($curators as $curator) {
-            RequestsCurator::create($curator);
+            RequestsCurator::firstOrCreate(
+                ['email' => $curator['email']],
+                $curator
+            );
         }
 
-        $this->command->info('Кураторы успешно загружены: ' . count($curators) . ' записей');
+        $this->command->info('Добавлено кураторов: ' . count($curators));
     }
 }
