@@ -57,26 +57,111 @@ class Request extends Model
         'issue_date' => 'date',
     ];
 
+    /**
+ * Маппинг полей на русские названия
+ */
+public static function getFieldLabels(): array
+{
+    return [
+        'status' => 'Статус',
+        'start_date' => 'Дата начала обучения',
+        'end_date' => 'Дата окончания обучения',
+        'issue_date' => 'Дата оформления',
+        'course_id' => 'Курс',
+        'provider_id' => 'Провайдер',
+        'audience_id' => 'Аудитория',
+        'teacher_id' => 'Преподаватель',
+        'curator_id' => 'Куратор',
+        'education_form' => 'Форма образования',
+        'employee_type' => 'ИТР/рабочие',
+        'production_break' => 'С отрывом от производства',
+        'country' => 'Страна',
+        'city_id' => 'Город',
+        'profession_id' => 'Профессия',
+        'cost_profit' => 'Себестоимость/Прибыль',
+        'req_id' => 'Номер заявки',
+    ];
+}
+
 
 public function getActivitylogOptions(): LogOptions
     {
+            
+    return LogOptions::defaults()
+        ->logOnly([
+            'start_date',
+            'end_date',
+            'issue_date',
+            'course_id',
+            'provider_id',
+            'audience_id',
+            'teacher_id',
+            'curator_id',
+        ])
+        ->logOnlyDirty()
+        ->dontLogEmptyChanges();
+
+          // ->setDescriptionForEvent(fn(string $eventName) => "Заявка была {$eventName}");*/
+
+
+/*
         return LogOptions::defaults()
-            ->logOnly([
-                'status',
-                'start_date',
-                'end_date',
-                'issue_date',
-                'course_id',
-                'provider_id',
-                'audience_id',
-                'teacher_id',
-                'curator_id',
-            ])
-            ->logOnlyDirty()
-            ->dontLogEmptyChanges() 
-            ->setDescriptionForEvent(fn(string $eventName) => "Заявка была {$eventName}");
+        ->logAll()
+        ->logOnlyDirty(); */
+        
+    }
+/**
+ * Форматирование значения поля для истории
+ */
+public static function formatFieldValue(string $field, mixed $value): string
+{
+    if ($value === null || $value === '') {
+        return '—';
+    }
+    
+    // Форматируем даты
+    if (in_array($field, ['start_date', 'end_date', 'issue_date'])) {
+        return \Carbon\Carbon::parse($value)->format('d.m.Y');
+    }
+    
+    // Форматируем преподавателя
+    if ($field === 'teacher_id') {
+        $teacher = \App\Models\RequestsTeachers::find($value);
+        return $teacher ? $teacher->fio : 'ID: ' . $value;
+    }
+    
+    // Форматируем куратора
+    if ($field === 'curator_id') {
+        $curator = \App\Models\RequestsCurator::find($value);
+        return $curator ? $curator->fio : 'ID: ' . $value;
+    }
+    
+    // Форматируем курс
+    if ($field === 'course_id') {
+        $course = \App\Models\RequestsCourse::find($value);
+        return $course ? $course->course : 'ID: ' . $value;
+    }
+    
+    // Форматируем провайдера
+    if ($field === 'provider_id') {
+        $provider = \App\Models\RequestsProvider::find($value);
+        return $provider ? $provider->name : 'ID: ' . $value;
+    }
+    
+    // Форматируем аудиторию
+    if ($field === 'audience_id') {
+        $audience = \App\Models\RequestsAudience::find($value);
+        return $audience ? $audience->number . ' (' . $audience->location . ')' : 'ID: ' . $value;
     }
 
+    // Форматируем сотрудника
+if ($field === 'employee_id') {
+    $employee = \App\Models\RequestEmployee::find($value);
+    return $employee ? $employee->full_name . ' (таб. №' . $employee->tab_number . ')' : 'ID: ' . $value;
+}
+    
+    return (string)$value;
+}
 
    public static function getStatuses(): array
     {

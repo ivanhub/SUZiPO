@@ -6,9 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+use Spatie\Activitylog\Models\Concerns\HasActivity;
+use Spatie\Activitylog\Support\LogOptions;
+
+
 class RequestEmployee extends Model
 {
-    use HasFactory;
+    use HasFactory, HasActivity;
 
     protected $fillable = [
         'request_id',
@@ -55,24 +59,47 @@ class RequestEmployee extends Model
         'document_issue_date' => 'date',
     ];
 
-
+ /**
+     * Настройка логирования изменений
+     */
  public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly([
-                'status',
-                'absence_start_date',
-                'absence_end_date',
-                'absence_reason',
-                'absence_type',
-                'document_issue_date',
-                'reissue_period',
-                'note',
-            ])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "Сотрудник заявки был {$eventName}");
-    }
+{
+    return LogOptions::defaults()
+        ->logOnly([
+            'tab_number',
+            'last_name',
+            'first_name',
+            'middle_name',
+            'position',
+            'absence_start_date',
+            'absence_end_date',
+            'absence_reason',
+            'absence_type',
+            'note',
+            'document_issue_date',
+            'reissue_period',
+            'status',
+        ])
+     //   ->logOnlyDirty()
+        ->dontLogEmptyChanges();
+        /*
+        ->setDescriptionForEvent(function(string $eventName) {
+            $fullName = trim(($this->last_name ?? '') . ' ' . ($this->first_name ?? '') . ' ' . ($this->middle_name ?? ''));
+            $tabNumber = $this->tab_number ?? '';
+            
+            // Если есть табельный номер - добавляем его, если нет - помечаем "ручной ввод"
+            $identifier = $tabNumber 
+                ? " (таб. №{$tabNumber})" 
+                : " (ручной ввод)";
+            
+            return match($eventName) {
+                'created' => "Добавлен сотрудник: {$fullName}{$identifier}",
+                'updated' => "Изменены данные сотрудника: {$fullName}{$identifier}",
+                'deleted' => "Удален сотрудник: {$fullName}{$identifier}",
+                default => "Сотрудник был {$eventName}",
+            };
+        }); */
+}
 
 
     /**

@@ -12,7 +12,7 @@
 @endif
 
 <!-- Кнопка запроса снятия защиты (только для ooo, ooo admin, ooo chief) -->
-@if(auth()->user() && auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']) && $request->start_date && \Carbon\Carbon::parse($request->start_date)->diffInHours(now()) < 48 && $request->status !== 'urpedit')
+@if(auth()->user() && auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']) && $request->start_date && \Carbon\Carbon::parse($request->start_date)->diffInHours(now()) < 48 && $request->status !== 'Создана' && $request->status !== 'created' && $request->status !== 'urpedit')
 <form action="{{ route('requests.request-unlock', $request->id) }}" method="POST" class="inline">
     @csrf
     <button type="submit" 
@@ -188,34 +188,51 @@
 <div class="mt-8 pt-6 border-t border-gray-200">
     <h3 class="text-md font-semibold text-gray-900 mb-4">История изменений</h3>
     
+    @php
+        $fieldLabels = \App\Models\Request::getFieldLabels();
+        $isOooGroup = auth()->user()->hasAnyRole(['ooo', 'ooo admin', 'ooo chief']);
+    @endphp
+    
     @if($request->activities->count() > 0)
         <div class="space-y-4">
             @foreach($request->activities->reverse() as $activity)
-                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                @php
+                    $changes = $activity->attribute_changes;
+                    $isUrpEdit = $request->status === 'urpedit';
+                @endphp
+                
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 
+                    {{ $isUrpEdit && $isOooGroup ? 'border-red-300 bg-red-50' : '' }}">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-900">
-                                {{ $activity->description }}
+                                Внесенные изменения
                             </p>
                             <p class="text-xs text-gray-500 mt-1">
                                 {{ $activity->created_at->format('d.m.Y H:i') }}
                                 • {{ $activity->causer->name ?? 'Система' }}
                             </p>
                         </div>
+                        @if($isUrpEdit && $isOooGroup)
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Изменено при доработке</span>
+                        @endif
                     </div>
                     
-                    @if($activity->changes && isset($activity->changes['old']))
-                        <div class="mt-3 text-xs">
-                            @foreach($activity->changes['old'] as $field => $oldValue)
+                    @if($changes && isset($changes['old']))
+                        <div class="mt-3 text-xs space-y-1">
+                            @foreach($changes['old'] as $field => $oldValue)
                                 @php
-                                    $newValue = $activity->changes['attributes'][$field] ?? null;
+                                    $newValue = $changes['attributes'][$field] ?? null;
+                                    $fieldLabel = $fieldLabels[$field] ?? $field;
+                                    $oldFormatted = \App\Models\Request::formatFieldValue($field, $oldValue);
+                                    $newFormatted = \App\Models\Request::formatFieldValue($field, $newValue);
                                 @endphp
-                                <div class="flex justify-between mt-1">
-                                    <span class="text-gray-500">{{ $field }}:</span>
-                                    <span class="ml-4">
-                                        <span class="text-red-600 line-through">{{ $oldValue }}</span>
-                                        → 
-                                        <span class="text-green-600">{{ $newValue }}</span>
+                                <div class="flex justify-between items-center bg-white rounded px-2 py-1">
+                                    <span class="text-gray-500 font-medium">{{ $fieldLabel }}:</span>
+                                    <span class="ml-4 flex items-center space-x-2">
+                                        <span class="text-red-600 line-through">{{ $oldFormatted }}</span>
+                                        →
+                                        <span class="text-green-600">{{ $newFormatted }}</span>
                                     </span>
                                 </div>
                             @endforeach
@@ -229,6 +246,111 @@
     @endif
 </div>
 
+<!-- История изменений сотрудников -->
+<div class="mt-8 pt-6 border-t border-gray-200">
+    <h3 class="text-md font-semibold text-gray-900 mb-4">История изменений сотрудников</h3>
+    
+    @php
+        $employeeFieldLabels = [
+            'tab_number' => 'Таб. номер',
+            'last_name' => 'Фамилия',
+            'first_name' => 'Имя',
+            'middle_name' => 'Отчество',
+            'birth_date' => 'Дата рождения',
+            'gender' => 'Пол',
+            'gender_key' => 'Ключ пола',
+            'pfr_certificate' => 'Свид. ПФР',
+            'position' => 'Должность',
+            'rank' => 'Разряд',
+            'level_4_name' => 'Уровень 4',
+            'level_3_name' => 'Уровень 3',
+            'duv_b' => 'ДУвБ',
+            'mvz' => 'МВЗ',
+            'employee_category' => 'Категория',
+            'absence_start_date' => 'Дата начала отсутствия',
+            'absence_end_date' => 'Дата окончания отсутствия',
+            'absence_reason' => 'Причина отсутствия',
+            'absence_type' => 'Форма обучения',
+            'distance_learning_date' => 'Дата заочного обучения',
+            'fulltime_learning_date' => 'Дата очного обучения',
+            'note' => 'Примечание',
+            'document_issue_date' => 'Дата выдачи документа',
+            'reissue_period' => 'Периодичность',
+            'status' => 'Статус',
+        ];
+        
+        $employeeActivities = \Spatie\Activitylog\Models\Activity::where('subject_type', \App\Models\RequestEmployee::class)
+            ->whereIn('subject_id', $request->employees->pluck('id'))
+            ->orderBy('created_at', 'desc')
+            ->get();
+    @endphp
+    
+    @if($employeeActivities->count() > 0)
+        <div class="space-y-4">
+            @foreach($employeeActivities as $activity)
+                @php
+        // Находим сотрудника по subject_id
+        $activityEmployee = $request->employees->firstWhere('id', $activity->subject_id);
+        $employeeName = $activityEmployee 
+            ? $activityEmployee->full_name . ($activityEmployee->tab_number ? ' (таб. №' . $activityEmployee->tab_number . ')' : ' (ручной ввод)')
+            : 'Сотрудник #' . $activity->subject_id;
+    @endphp
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div class="flex justify-between items-start">
+                        <div>
+                <p class="text-sm font-medium text-gray-900">
+                    @if($activity->description === 'created')
+                        Добавлен сотрудник: {{ $employeeName }}
+                    @elseif($activity->description === 'updated')
+                        Обновлены данные сотрудника: {{ $employeeName }}
+                    @elseif($activity->description === 'deleted')
+                        Удален сотрудник: {{ $employeeName }}
+                    @else
+                        {{ $activity->description }}: {{ $employeeName }}
+                    @endif
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                    {{ $activity->created_at->format('d.m.Y H:i') }}
+                    • {{ $activity->causer->name ?? 'Система' }}
+                </p>
+            </div>
+                    </div>
+                    
+@if($activity->attribute_changes && isset($activity->attribute_changes['old']))
+    <div class="mt-3 text-xs space-y-1">
+        @foreach($activity->attribute_changes['old'] as $field => $oldValue)
+            @php
+                $newValue = $activity->attribute_changes['attributes'][$field] ?? null;
+                $fieldLabel = $employeeFieldLabels[$field] ?? $field;
+                
+                // Форматирование дат
+                $dateFields = ['absence_start_date', 'absence_end_date', 'distance_learning_date', 'fulltime_learning_date', 'document_issue_date', 'birth_date'];
+                
+                if (in_array($field, $dateFields)) {
+                    $oldValue = $oldValue ? \Carbon\Carbon::parse($oldValue)->format('d.m.Y') : null;
+                    $newValue = $newValue ? \Carbon\Carbon::parse($newValue)->format('d.m.Y') : null;
+                }
+            @endphp
+            @if($oldValue !== $newValue)
+            <div class="flex justify-between items-center bg-white rounded px-2 py-1">
+                <span class="text-gray-500 font-medium">{{ $fieldLabel }}:</span>
+                <span class="ml-4 flex items-center space-x-2">
+                    <span class="text-red-600 line-through">{{ $oldValue ?: '—' }}</span>
+                    →
+                    <span class="text-green-600">{{ $newValue ?: '—' }}</span>
+                </span>
+            </div>
+            @endif
+        @endforeach
+    </div>
+@endif
+                </div>
+            @endforeach
+        </div>
+    @else
+        <p class="text-sm text-gray-500">История изменений сотрудников пуста</p>
+    @endif
+</div>
 
 <div class="mt-6 flex justify-end space-x-2">
     <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
@@ -238,7 +360,7 @@
 @endif
 
 <!-- Кнопка запроса снятия защиты (только для ooo, ooo admin, ooo chief) -->
-@if(auth()->user() && auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']) && $request->start_date && \Carbon\Carbon::parse($request->start_date)->diffInHours(now()) < 48 && $request->status !== 'urpedit')
+@if(auth()->user() && auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']) && $request->start_date && \Carbon\Carbon::parse($request->start_date)->diffInHours(now()) < 48 && $request->status !== 'Создана' && $request->status !== 'created' && $request->status !== 'urpedit')
 <form action="{{ route('requests.request-unlock', $request->id) }}" method="POST" class="inline">
     @csrf
     <button type="submit" 
