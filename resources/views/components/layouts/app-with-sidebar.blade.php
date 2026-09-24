@@ -48,37 +48,90 @@
                 </a>
 
                 <!-- Заявки -->
-                <div x-data="{ open: true }">
-                    <button @click="open = !open" 
-                            class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150 ease-in-out
-                                   {{ request()->routeIs('requests.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-100' }}">
-                        <span class="flex items-center">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            Заявки
-                        </span>
-                        <svg class="w-4 h-4 transition-transform duration-200" 
-                             :class="open ? 'rotate-90' : ''" 
-                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </button>
-                    <div x-show="open" 
-                         x-transition:enter="transition ease-out duration-100"
-                         x-transition:enter-start="opacity-0 transform -translate-y-2"
-                         x-transition:enter-end="opacity-100 transform translate-y-0"
-                         class="mt-1 ml-8 space-y-1">
-                        <a href="{{ route('requests.create') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Создать</a>
-                        <a href="{{ route('requests.index', ['status' => 'draft']) }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Черновик</a>
-                        <a href="{{ route('requests.index', ['status' => 'rejected']) }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Отвергнутые</a>
-                        <a href="{{ route('requests.index', ['status' => 'sent']) }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Отправленные</a>
-                        <a href="{{ route('requests.index', ['status' => 'accepted']) }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Принятые</a>
-                        <a href="{{ route('requests.index', ['status' => 'trash']) }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Корзина</a>
-                        <a href="{{ route('requests.index', ['status' => 'archive']) }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Архив</a>
-                        <a href="{{ route('requests.export-form') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Экспорт заявок</a>
-                    </div>
-                </div>
+<!-- Заявки -->
+<div x-data="{ open: true }">
+    <button @click="open = !open" 
+            class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150 ease-in-out
+                   {{ request()->routeIs('requests.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-100' }}">
+        <span class="flex items-center">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Заявки
+        </span>
+        <svg class="w-4 h-4 transition-transform duration-200" 
+             :class="open ? 'rotate-90' : ''" 
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+    </button>
+    <div x-show="open" 
+         x-transition:enter="transition ease-out duration-100"
+         x-transition:enter-start="opacity-0 transform -translate-y-2"
+         x-transition:enter-end="opacity-100 transform translate-y-0"
+         class="mt-1 ml-8 space-y-1">
+        
+        <!-- Все заявки -->
+        <a href="{{ route('requests.index') }}" 
+           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
+                  {{ request()->routeIs('requests.index') && !request()->has('status') ? 'bg-indigo-50 text-indigo-700' : '' }}">
+            Все заявки
+        </a>
+        
+        <!-- Создать заявку -->
+        @urp
+        <a href="{{ route('requests.create') }}" 
+           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
+                  {{ request()->routeIs('requests.create') ? 'bg-indigo-50 text-indigo-700' : '' }}">
+            + Создать заявку
+        </a>
+        @endurp
+        
+        <!-- По статусам -->
+        <a href="{{ route('requests.index', ['status' => 'created']) }}" 
+           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
+                  {{ request()->get('status') === 'created' ? 'bg-indigo-50 text-indigo-700' : '' }}">
+            Создана
+        </a>
+        
+        <a href="{{ route('requests.index', ['status' => 'sent']) }}" 
+           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
+                  {{ request()->get('status') === 'sent' ? 'bg-indigo-50 text-indigo-700' : '' }}">
+            Отправлена
+        </a>
+        
+        <a href="{{ route('requests.index', ['status' => 'in_progress']) }}" 
+           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
+                  {{ request()->get('status') === 'in_progress' ? 'bg-indigo-50 text-indigo-700' : '' }}">
+            В работе
+        </a>
+        
+        <a href="{{ route('requests.index', ['status' => 'urpedit']) }}" 
+           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
+                  {{ request()->get('status') === 'urpedit' ? 'bg-indigo-50 text-indigo-700' : '' }}">
+            На доработке
+        </a>
+        
+        <a href="{{ route('requests.index', ['status' => 'accepted']) }}" 
+           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
+                  {{ request()->get('status') === 'accepted' ? 'bg-indigo-50 text-indigo-700' : '' }}">
+            Принята
+        </a>
+        
+        <a href="{{ route('requests.index', ['status' => 'rejected']) }}" 
+           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
+                  {{ request()->get('status') === 'rejected' ? 'bg-indigo-50 text-indigo-700' : '' }}">
+            Отклонена
+        </a>
+        
+        <!-- Экспорт -->
+        <a href="{{ route('requests.export-form') }}" 
+           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
+                  {{ request()->routeIs('requests.export-form') ? 'bg-indigo-50 text-indigo-700' : '' }}">
+            Экспорт заявок
+        </a>
+    </div>
+</div>
 
                 <!-- Протоколы -->
                 <div x-data="{ open: true }">

@@ -28,14 +28,39 @@ use Carbon\CarbonPeriod;
 
 class RequestController extends Controller
 {
-    public function index(): View
-    {
-        $requests = RequestModel::with(['user', 'provider', 'course', 'city'])
-            ->withCount('employees')
-            ->paginate(15);
 
-        return view('requests.index', compact('requests'));
+public function index(\Illuminate\Http\Request $httpRequest): View
+{
+    // Маппинг английских статусов (из URL) на русские (в БД)
+    $statusMap = [
+        'created' => 'Создана',
+        'sent' => 'Отправлена',
+        'in_progress' => 'in_progress', // если в БД уже используется английский
+        'urpedit' => 'urpedit',         // если в БД уже используется английский
+        'accepted' => 'accepted',
+        'rejected' => 'rejected',
+    ];
+    
+    $statusFilter = $httpRequest->get('status');
+    
+    // Маппим английский на русский
+    $status = $statusMap[$statusFilter] ?? null;
+    
+    // Если статус не найден в мапе - используем как есть
+    if (!$status && $statusFilter) {
+        $status = $statusFilter;
     }
+    
+    $requests = RequestModel::with(['user', 'provider', 'course', 'city'])
+        ->withCount('employees')
+        ->when($status, function ($query, $status) {
+            return $query->where('status', $status);
+        })
+        ->paginate(15);
+    
+    return view('requests.index', compact('requests'));
+}
+
 
     public function create(): View
     {
