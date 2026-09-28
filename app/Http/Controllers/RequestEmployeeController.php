@@ -451,9 +451,6 @@ private function applyChecks(RequestEmployee $employee, TrainingRequestModel $tr
 /**
  * Отправка уведомления куратору
  */
-/**
- * Отправка уведомления куратору
- */
 private function notifyCurator(RequestEmployee $employee, int $requestId): void
 {
     $trainingRequest = TrainingRequestModel::with('curator')->find($requestId);

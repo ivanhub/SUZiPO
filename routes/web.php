@@ -197,6 +197,12 @@ Route::get('requests/{id}/unlock', [RequestController::class, 'unlock'])->name('
 
 Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
 
+
+// История изменений заявки
+Route::get('requests/{request}/history', [RequestController::class, 'history'])->name('requests.history');
+Route::post('requests/{request}/history/{activity}/rollback', [RequestController::class, 'rollback'])->name('requests.rollback');
+
+
 // Маршруты для сотрудников заявки
 Route::prefix('request-employees')->name('request-employees.')->group(function () {
     Route::get('{requestId}', [RequestEmployeeController::class, 'index'])->name('index');

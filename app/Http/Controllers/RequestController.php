@@ -795,4 +795,192 @@ $message = "
     });
 }
 
+/**
+ * Показать историю изменений заявки
+ */
+/**
+ * Показать историю изменений заявки
+ */
+public function history(RequestModel $request, \Illuminate\Http\Request $httpRequest): View
+{
+    // Проверка доступа
+    $user = auth()->user();
+    if (!$user->hasAnyRole(['admin', 'ooo chief'])) {
+        abort(403, 'У вас нет прав на просмотр истории изменений');
+    }
+
+    // Получаем все активности по заявке
+    $requestActivities = \Spatie\Activitylog\Models\Activity::where('subject_type', RequestModel::class)
+        ->where('subject_id', $request->id);
+    
+    // Получаем все активности по сотрудникам заявки
+    $employeeIds = $request->employees->pluck('id');
+    $employeeActivities = \Spatie\Activitylog\Models\Activity::where('subject_type', \App\Models\RequestEmployee::class)
+        ->whereIn('subject_id', $employeeIds);
+    
+    // Объединяем активности без проверки дубликатов JSON (для PostgreSQL)
+    $allActivities = $requestActivities->unionAll($employeeActivities)
+        ->orderBy('created_at', 'desc')
+        ->paginate(20);
+    
+    // Загружаем causer
+    $allActivities->load('causer');
+
+    // Маппинг полей для сотрудников (так как в Request у вас только для заявок)
+    $employeeLabels = [
+        'tab_number' => 'Таб. номер',
+        'last_name' => 'Фамилия',
+        'first_name' => 'Имя',
+        'middle_name' => 'Отчество',
+        'position' => 'Должность',
+        'absence_start_date' => 'Дата начала отсутствия',
+        'absence_end_date' => 'Дата окончания отсутствия',
+        'absence_reason' => 'Причина отсутствия',
+        'absence_type' => 'Форма обучения',
+        'note' => 'Примечание',
+        'document_issue_date' => 'Дата выдачи документа',
+        'reissue_period' => 'Периодичность',
+    ];
+
+    // Форматируем данные логов с помощью ваших бэкенд-функций перед отправкой в Blade
+    $allActivities->getCollection()->transform(function ($activity) use ($employeeLabels) {
+        $formattedChanges = [
+            'labels' => [],
+            'old' => [],
+            'attributes' => []
+        ];
+
+        $changes = $activity->attribute_changes;
+        $isEmployee = $activity->subject_type === \App\Models\RequestEmployee::class;
+        $labelsSource = $isEmployee ? $employeeLabels : \App\Models\Request::getFieldLabels();
+
+        // Запоминаем ФИО сотрудника, если это лог сотрудника
+        if ($isEmployee) {
+            $attrs = $changes['attributes'] ?? [];
+            $activity->employee_fio = trim(($attrs['last_name'] ?? '') . ' ' . ($attrs['first_name'] ?? '') . ' ' . ($attrs['middle_name'] ?? ''));
+        }
+
+        // Обрабатываем старые и новые значения информационных полей
+        if (isset($changes['attributes'])) {
+            foreach ($changes['attributes'] as $field => $newValue) {
+                if ($field === 'status' || $field === 'request_id') continue;
+
+                $oldValue = $changes['old'][$field] ?? null;
+
+                // Используем ваш метод форматирования значений из модели Request
+                // (Для дат сотрудников добавим базовую обработку, если они приходят с таймзоной)
+                if ($isEmployee && in_array($field, ['absence_start_date', 'absence_end_date', 'document_issue_date'])) {
+                    $formattedOld = $oldValue ? \Carbon\Carbon::parse($oldValue)->format('d.m.Y') : '—';
+                    $formattedNew = $newValue ? \Carbon\Carbon::parse($newValue)->format('d.m.Y') : '—';
+                } else {
+                    $formattedOld = \App\Models\Request::formatFieldValue($field, $oldValue);
+                    $formattedNew = \App\Models\Request::formatFieldValue($field, $newValue);
+                }
+
+                $formattedChanges['labels'][$field] = $labelsSource[$field] ?? $field;
+                $formattedChanges['old'][$field] = $formattedOld;
+                $formattedChanges['attributes'][$field] = $formattedNew;
+            }
+        }
+
+        $activity->formatted_changes = $formattedChanges;
+        return $activity;
+    });
+    
+    return view('requests.history', compact('request', 'allActivities'));
+}
+
+
+/**
+ * Откат изменений
+ */
+public function rollback(RequestModel $request, \Spatie\Activitylog\Models\Activity $activity): RedirectResponse
+{
+    // Проверка доступа
+    $user = auth()->user();
+    if (!$user->hasAnyRole(['admin', 'ooo chief'])) {
+        abort(403, 'У вас нет прав на откат изменений');
+    }
+    
+    // Проверяем что активность относится к этой заявке
+    if ($activity->subject_type === RequestModel::class && $activity->subject_id !== $request->id) {
+        abort(404, 'Изменение не найдено');
+    }
+    
+    if ($activity->subject_type === \App\Models\RequestEmployee::class) {
+        $employee = \App\Models\RequestEmployee::find($activity->subject_id);
+        if (!$employee || $employee->request_id !== $request->id) {
+            abort(404, 'Изменение не найдено');
+        }
+    }
+    
+    // Выполняем откат
+    $changes = $activity->attribute_changes;
+    
+    if (!$changes || !isset($changes['old'])) {
+        return redirect()->back()->with('error', 'Невозможно откатить это изменение');
+    }
+    
+    // ОТКАТ ДЛЯ ЗАЯВКИ
+    if ($activity->subject_type === RequestModel::class) {
+        // Сохраняем текущее состояние для лога отката
+        $currentState = $request->toArray();
+        
+        // Применяем старые значения
+        $request->update($changes['old']);
+        
+        // Логируем откат
+        activity()
+            ->performedOn($request)
+            ->causedBy($user)
+            ->withProperties([
+                'attributes' => $changes['old'],
+                'old' => $currentState,
+                'rollback_of' => $activity->id,
+            ])
+            ->log('Откат изменений');
+        
+        return redirect()->back()->with('success', 'Изменения откачены успешно');
+    }
+    
+    // ОТКАТ ДЛЯ СОТРУДНИКА
+    if ($activity->subject_type === \App\Models\RequestEmployee::class) {
+        $employee = \App\Models\RequestEmployee::find($activity->subject_id);
+        
+        if (!$employee) {
+            // Сотрудник был удален - возвращаем его
+            $oldData = $changes['old'];
+            $oldData['request_id'] = $request->id;
+            $employee = \App\Models\RequestEmployee::create($oldData);
+            
+            activity()
+                ->performedOn($employee)
+                ->causedBy($user)
+                ->withProperties(['rollback_of' => $activity->id])
+                ->log('Восстановлен сотрудник после отката');
+        } else {
+            // Сохраняем текущее состояние для лога отката
+            $currentState = $employee->toArray();
+            
+            // Применяем старые значения
+            $employee->update($changes['old']);
+            
+            // Логируем откат
+            activity()
+                ->performedOn($employee)
+                ->causedBy($user)
+                ->withProperties([
+                    'attributes' => $changes['old'],
+                    'old' => $currentState,
+                    'rollback_of' => $activity->id,
+                ])
+                ->log('Откат изменений сотрудника');
+        }
+        
+        return redirect()->back()->with('success', 'Изменения сотрудника откачены успешно');
+    }
+    
+    return redirect()->back()->with('error', 'Не удалось откатить изменения');
+}
+
 }

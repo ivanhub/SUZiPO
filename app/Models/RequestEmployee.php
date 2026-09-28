@@ -187,4 +187,22 @@ class RequestEmployee extends Model
         // Отнимаем 2 месяца
         return $expiryDate->subMonths(2);
     }
+
+// В модели Request
+protected static function booted(): void
+{
+    static::updated(function ($request) {
+        if ($request->getChanges()) {
+            RequestHistory::create([
+                'request_id' => $request->id,
+                'user_id' => auth()->id(),
+                'action' => 'updated',
+                'changes' => [
+                    'old' => $request->getOriginal(),
+                    'new' => $request->getChanges(),
+                ],
+            ]);
+        }
+    });
+}
 }

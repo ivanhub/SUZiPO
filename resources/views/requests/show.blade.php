@@ -23,6 +23,11 @@
 </form>
 @endif
 
+<!--  Kнопкa "История изменений" -->
+@if(auth()->user()->hasAnyRole(['admin', 'ooo chief']))
+<a href="{{ route('requests.history', $request->id) }}" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">🕐 История</a>
+@endif
+
 </div>
                 </div>
 
@@ -369,6 +374,11 @@
         🔓 Запросить снять защиту
     </button>
 </form>
+@endif
+
+<!--  Kнопкa "История изменений" -->
+@if(auth()->user()->hasAnyRole(['admin', 'ooo chief']))
+<a href="{{ route('requests.history', $request->id) }}" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">🕐 История</a>
 @endif
 
 </div>

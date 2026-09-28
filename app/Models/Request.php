@@ -212,4 +212,29 @@ if ($field === 'employee_id') {
      * Сотрудники заявки
      */
     public function employees(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(RequestEmployee::class); }
+
+
+
+protected static function booted(): void
+{
+    static::updated(function ($request) {
+        if ($request->getChanges()) {
+            RequestHistory::create([
+                'request_id' => $request->id,
+                'user_id' => auth()->id(),
+                'action' => 'updated',
+                'changes' => [
+                    'old' => $request->getOriginal(),
+                    'new' => $request->getChanges(),
+                ],
+            ]);
+        }
+    });
+}
+
+
+public function rollbacks(): \Illuminate\Database\Eloquent\Relations\HasMany
+{
+    return $this->hasMany(RequestRollback::class);
+}
  }
