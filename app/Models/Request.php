@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
@@ -15,6 +16,7 @@ class Request extends Model
 
     protected $table = 'requests';
     protected $fillable = [
+        'req_number', 
         'req_id',
         'user_id',
         'status',
@@ -93,7 +95,7 @@ class Request extends Model
 
     public function curator(): BelongsTo { return $this->belongsTo(RequestsCurator::class); }
 
-    public function employees(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(RequestEmployee::class); }
+    public function employees(): HasMany { return $this->hasMany(RequestEmployee::class); }
 
-    public function activities(): \Illuminate\Database\Eloquent\Relations\MorphMany { return $this->morphMany(\Spatie\Activitylog\Models\Activity::class, 'subject'); }
+    public function activities(): MorphMany { return $this->morphMany(\Spatie\Activitylog\Models\Activity::class, 'subject'); }
  }

@@ -6,13 +6,15 @@ use Illuminate\Http\Request;
 use App\Models\UcExtProtocol;
 use App\Models\AppProtocol;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ProtocolController extends Controller
 {
     public function index(Request $request)
     {
         // Инициализируем запрос с жадной загрузкой программ обучения
-        $query = AppProtocol::with(['demand.course', 'editor']);
+        $query = AppProtocol::with(['demand.course', 'demand.provider', 'editor']);
 
         if ($request->filled('activeTab') && $request->activeTab !== 'all') {
             // Если выбраны Черновики, Активные, Просроченные, Отмененные или Завершенные
@@ -110,7 +112,20 @@ class ProtocolController extends Controller
             return view('protocols.partials.table-rows', compact('protocols'))->render();
         }
 
-        return view('protocols.index', compact('protocols', 'totalCount', 'counts'));
+        $popupTeachers = \App\Models\RequestsTeachers::orderBy('fio')->get();
+        $popupLearningTypes = \App\Models\RequestsLearningType::orderBy('name')->get();
+
+        $jsonProtocols = collect($protocols->items())->map(function($p) {
+            return [
+                'prot_id' => $p->prot_id,
+                'prot_num' => $p->prot_num,
+                'prot_status' => $p->prot_status,
+                'teacher_id' => $p->demand?->teacher_id ?? null,
+                'learning_type_id' => $p->demand?->learning_type_id ?? null,
+            ];
+        })->toArray();
+
+        return view('protocols.index', compact('protocols', 'totalCount', 'counts', 'popupTeachers', 'popupLearningTypes', 'jsonProtocols'));
     }
 
     /**
@@ -189,6 +204,8 @@ class ProtocolController extends Controller
             'demand.curator',
             'demand.profession',
             'demand.audience',
+            'demand.provider',
+            'demand.city',
             'editor'
         ])->find($id);
 
@@ -197,6 +214,50 @@ class ProtocolController extends Controller
         }
 
         return response()->json($protocol);
+    }
+
+    public function exportExcel(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'protocol_id' => 'required|exists:app_protocols,prot_id',
+            'report_type' => 'required|string',
+        ]);
+
+        // Находим протокол со всеми базовыми связями
+        $protocol = AppProtocol::with(['demand.course', 'demand.provider', 'editor'])->findOrFail($request->protocol_id);
+
+        // 1. Инициализируем объект Excel-книги
+        $spreadsheet = new Spreadsheet();
+
+        // Лист 1: Отчет (Текущий активный лист по умолчанию)
+        $sheetReport = $spreadsheet->getActiveSheet();
+        $sheetReport->setTitle('Отчет');
+        $sheetReport->setCellValue('A1', 'Отчет специалиста отдела организации обучения');
+        $sheetReport->setCellValue('A3', 'Протокол №: ' . $protocol->prot_num);
+
+        // Лист 2: Список
+        $sheetList = $spreadsheet->createSheet();
+        $sheetList->setTitle('Список');
+        $sheetList->setCellValue('A1', 'Список обучаемых сотрудников');
+
+        // Лист 3: Протокол
+        $sheetProtocol = $spreadsheet->createSheet();
+        $sheetProtocol->setTitle('Протокол');
+        $sheetProtocol->setCellValue('A1', 'Официальный протокол заседания комиссии');
+
+        // Сбрасываем указатель на первую вкладку, чтобы файл открывался красиво
+        $spreadsheet->setActiveSheetIndex(0);
+
+        // 2. Формируем заголовки для скачивания файла браузером
+        $fileName = "Отчет_" . $protocol->prot_num . ".xlsx";
+        
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . urlencode($fileName) . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 
 }

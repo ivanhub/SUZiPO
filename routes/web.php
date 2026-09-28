@@ -192,6 +192,8 @@ Route::prefix('request-employees')->name('request-employees.')->group(function (
 Route::resource('protocols', ProtocolController::class);
 Route::get('/protocols', [ProtocolController::class, 'index'])->name('protocols.index');
 Route::get('/protocols/{id}/json', [ProtocolController::class, 'getJson'])->name('protocols.json');
+Route::post('/protocols/export-excel', [ProtocolController::class, 'exportExcel'])->name('protocols.export-excel');
+
 
 
     

@@ -44,6 +44,22 @@ class RequestController extends Controller
             abort(403, 'У вас нет прав на создание заявок');
         }
 
+        // $userDept = auth()->user()->department; // 'УРП' или 'УЦ'
+        $userDept = 'УЦ'; // для теста
+        $isUrp = (mb_strtoupper($userDept) === 'УРП');
+
+        $nextGlobalNumbers = [
+            'ЮНГ' => $this->getNextNumberForPrefix('ЮНГ'),
+            'ЮЛ'  => $this->getNextNumberForPrefix('ЮЛ'),
+            'ФЛ'  => $this->getNextNumberForPrefix('ФЛ'),
+        ];
+
+        $nextPrefixNumbers = [
+            'ЮНГ' => \App\Models\Request::where('req_id', 'LIKE', '%-ЮНГ')->count() + 1,
+            'ЮЛ'  => \App\Models\Request::where('req_id', 'LIKE', '%-ЮЛ')->count() + 1,
+            'ФЛ'  => \App\Models\Request::where('req_id', 'LIKE', '%-ФЛ')->count() + 1,
+        ];
+
         $providers = RequestsProvider::orderBy('name')->get();
         $courses = RequestsCourse::orderBy('course')->get();
         $cities = RequestsCity::orderBy('city')->get();
@@ -69,8 +85,27 @@ class RequestController extends Controller
             'disciplines',
             'audiences',
             'teachers',
-            'curators'
+            'curators',
+            'isUrp', 
+            'nextGlobalNumbers',
+            'nextPrefixNumbers'
         ));
+    }
+
+    private function getNextNumberForPrefix(string $prefix): int
+    {
+        if ($prefix === 'ЮНГ') {
+            $maxNumber = RequestModel::where('req_id', 'LIKE', '%-ЮНГ')
+                ->max('req_number');
+        } else {
+            $maxNumber = RequestModel::where(function($query) {
+                    $query->where('req_id', 'LIKE', '%-ЮЛ')
+                          ->orWhere('req_id', 'LIKE', '%-ФЛ');
+                })
+                ->max('req_number');
+        }
+
+        return $maxNumber ? (int)$maxNumber + 1 : 1;
     }
 
     public function store(HttpRequest $request): RedirectResponse
@@ -157,26 +192,26 @@ class RequestController extends Controller
         // $prefix = $validated['req_prefix'];
         // $lastRequest = RequestModel::where('req_id', 'LIKE', "%-{$prefix}")
 
-        $lastRequest = RequestModel::where('req_id', 'LIKE', "%-ЮЛ")
-            ->orderBy('id', 'desc')
-            ->first();
+        // $userDept = auth()->user()->department;
+        $userDept = 'УЦ';
+        $isUrp = (mb_strtoupper($userDept) === 'УРП');
 
-        $nextNumber = 1;
-
-        if ($lastRequest && $lastRequest->req_id) {
-            $parts = explode('-', $lastRequest->req_id);
-            $lastNumber = (int)$parts[0];
-            $nextNumber = $lastNumber + 1;
+        if ($isUrp) {
+            $prefix = 'ЮНГ'; 
+        } else {
+            $prefix = in_array($validated['req_prefix'], ['ЮЛ', 'ФЛ']) ? $validated['req_prefix'] : 'ЮЛ';
         }
 
-        // $validated['req_id'] = "{$nextNumber}-{$prefix}";
-        $validated['req_id'] = "{$nextNumber}-ЮЛ";
+        $nextGlobalNumber = $this->getNextNumberForPrefix($prefix);
+
+        $validated['req_number'] = $nextGlobalNumber;
+        $prefixCount = RequestModel::where('req_id', 'LIKE', "%-{$prefix}")
+            ->count();
+        $nextPrefixNumber = $prefixCount + 1;
+        $validated['req_id'] = "{$nextPrefixNumber}-{$prefix}";
+        
         unset($validated['req_prefix']);
-
-
-
         $trainingRequest = RequestModel::create($validated);
-
         $action = $request->input('action');
 
         if ($action === 'save_and_employees') {
@@ -184,6 +219,18 @@ class RequestController extends Controller
                 ->route('request-employees.index', $trainingRequest->id)
                 ->with('success', 'Заявка создана. Добавьте сотрудников.');
         }
+
+        // $lastRequest = RequestModel::where('req_id', 'LIKE', "%-ЮЛ")
+        //     ->orderBy('id', 'desc')
+        //     ->first();
+
+        // $nextNumber = 1;
+
+        // if ($lastRequest && $lastRequest->req_id) {
+        //     $parts = explode('-', $lastRequest->req_id);
+        //     $lastNumber = (int)$parts[0];
+        //     $nextNumber = $lastNumber + 1;
+        // }
 
         return redirect()->route('requests.index')
             ->with('success', "Заявка успешно создана под номером {$trainingRequest->req_id}.")
