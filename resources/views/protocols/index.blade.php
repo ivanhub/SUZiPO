@@ -57,7 +57,7 @@
             </button>
 
             <!-- ДИАЛОГОВОЕ ОКНО -->
-                        
+
             <div x-show="isDownloadModalOpen"
                 style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.3); z-index: 99999;"
                 x-cloak>
@@ -226,6 +226,9 @@
             filterStatus: '1',
             reportType: 'standard',
             protocolId: '',
+            isCreateReportOpen: false,
+            activeReportTab: 'report',
+            reportCreateData: {},
 
             openEdit(id) {
                 fetch(`/protocols/${id}/json`)

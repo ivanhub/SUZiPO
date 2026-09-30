@@ -122,12 +122,12 @@
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">Цена за человека (без НДС): <span style="color: #dc2626;">*</span></label>
-                        <input type="text" name="price_per_man" x-model="editData.price_per_man" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
+                        <input type="text" name="Cost" x-model="editData.Cost" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
                     </div>
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">НДС%:</label>
-                        <input type="text" name="nds_percent" x-model="editData.nds_percent" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
+                        <input type="text" name="costvat" x-model="editData.costvat" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
                     </div>
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
@@ -139,18 +139,18 @@
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">Часы теории: <span style="color: #dc2626;">*</span></label>
-                        <input type="number" name="theory_hours" x-model="editData.theory_hours" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
+                        <input type="number" name="theoryhours" x-model="editData.theoryhours" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
                     </div>
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">Часы практики: <span style="color: #dc2626;">*</span></label>
-                        <input type="number" name="practice_hours" x-model="editData.practice_hours" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
+                        <input type="number" name="practicehours" x-model="editData.practicehours" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
                     </div>
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">Часы по программе: <span style="color: #dc2626;">*</span></label>
                         <div style="display: flex; align-items: center; gap: 6px;">
-                            <input type="number" name="program_hours" readonly style="width: 120px; padding: 5px 8px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; background-color: #f3f4f6; text-align: right;" :value="Number(editData.theory_hours || 0) + Number(editData.practice_hours || 0)">
+                            <input type="number" name="hoursbyprogram" readonly style="width: 120px; padding: 5px 8px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; background-color: #f3f4f6; text-align: right;" x-model="editData.hoursbyprogram">
                             <button type="button" style="padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; background: #f3f4f6; cursor: pointer; font-size: 12px;">📊</button>
                         </div>
                     </div>

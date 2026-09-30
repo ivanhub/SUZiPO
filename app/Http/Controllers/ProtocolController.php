@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\UcExtProtocol;
+use App\Models\UcExtReport;
 use App\Models\AppProtocol;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Support\Str;
 
 class ProtocolController extends Controller
 {
@@ -115,7 +116,7 @@ class ProtocolController extends Controller
         $popupTeachers = \App\Models\RequestsTeachers::orderBy('fio')->get();
         $popupLearningTypes = \App\Models\RequestsLearningType::orderBy('name')->get();
 
-        $jsonProtocols = collect($protocols->items())->map(function($p) {
+        $jsonProtocols = collect($protocols->items())->map(function ($p) {
             return [
                 'prot_id' => $p->prot_id,
                 'prot_num' => $p->prot_num,
@@ -139,12 +140,12 @@ class ProtocolController extends Controller
             'order_date'     => 'nullable|date',           // Дата приказа
             'prot_date'      => 'nullable|date',           // Дата формирования
             'flagapproved'   => 'required|integer',        // Состояние/статус протокола
-            'price_per_man'  => 'nullable|numeric',        // Цена за человека
-            'nds_percent'    => 'nullable|numeric',        // НДС%
-            'theory_hours'   => 'nullable|integer',        // Часы теории
-            'practice_hours' => 'nullable|integer',        // Часы практики
-            'program_hours'  => 'nullable|integer',        // Часы по программе
-            'document_type'  => 'nullable|string|max:100', // Тип документа
+            'Cost'           => 'nullable|numeric',        // Цена за человека
+            'costvat'        => 'nullable|numeric',        // НДС%
+            'theoryhours'    => 'nullable|integer',        // Часы теории
+            'practicehours'  => 'nullable|integer',        // Часы практики
+            'hoursbyprogram' => 'nullable|integer',        // Часы по программе
+            'typedoc_id'     => 'nullable|string|max:100', // Тип документа
         ]);
 
 
@@ -156,12 +157,12 @@ class ProtocolController extends Controller
         $protocol->prot_date       = $request->input('prot_date') ?? now();
         $protocol->prot_status     = $request->input('flagapproved');
 
-        $protocol->price_per_man   = $request->input('price_per_man');
-        $protocol->nds_percent     = $request->input('nds_percent');
-        $protocol->theory_hours    = $request->input('theory_hours');
-        $protocol->practice_hours  = $request->input('practice_hours');
-        $protocol->program_hours   = $request->input('program_hours');
-        $protocol->document_type   = $request->input('document_type');
+        $protocol->Cost            = $request->input('Cost');
+        $protocol->costvat         = $request->input('costvat');
+        $protocol->theoryhours     = $request->input('theoryhours');
+        $protocol->practicehours   = $request->input('practicehours');
+        $protocol->hoursbyprogram  = $request->input('hoursbyprogram');
+        $protocol->typedoc_id      = $request->input('typedoc_id');
 
         $protocol->id_user_edit    = auth()->id() ?? 1;
         $protocol->date_edit       = now();
@@ -169,6 +170,91 @@ class ProtocolController extends Controller
         $protocol->save();
 
         return redirect()->route('protocols.index')->with('success', 'Протокол успешно обновлен!');
+    }
+
+    public function createReport($id)
+    {
+        // Подтягиваем протокол со всеми вложенными справочниками и сотрудниками заявки
+        $protocol = \App\Models\AppProtocol::with([
+            'demand.course',
+            'demand.provider',
+            'demand.teacher',
+            'demand.curator',
+            'demand.profession',
+            'demand.audience',
+            'demand.learningType', 
+            'demand.employees'     
+        ])->findOrFail($id);
+
+        $learningTypeName = $protocol->demand?->learningType?->name ?? 'Курсы';
+
+        // Подгружаем справочник аудиторий для ручного выбора на вкладке "Отчет"
+        $audiences = \App\Models\RequestsAudience::orderBy('number')->get();
+        // Подгружаем справочник преподавателей для множественного выбора
+        $teachers = \App\Models\RequestsTeachers::orderBy('fio')->get();
+
+        return view('protocols.report.create', compact('protocol', 'learningTypeName', 'audiences', 'teachers'));
+    }
+
+    public function storeReport(\Illuminate\Http\Request $request)
+    {
+        // Базовая валидация входящих полей
+        $validated = $request->validate([
+            'id_protocol' => 'required',
+            'order_num' => 'nullable|string|max:255',
+            'audience_id' => 'nullable|string',
+            'curator_id' => 'nullable|string',
+        ]);
+
+        // Извлекаем протокол со списками сотрудников для проведения финальных расчетов
+        $protocol = \App\Models\AppProtocol::with('demand.employees')->findOrFail($request->id_protocol);
+        $employees = collect($protocol->demand?->employees ?? []);
+
+        // Формируем массив для записи строго по столбцам таблицы uc_ext_report
+        $reportData = [
+            'id_report'       => (string) Str::uuid(), // Генерируем уникальный текстовый ID
+            'id_protocol'     => $protocol->prot_id,
+            'specialist'      => auth()->user()->name ?? 'Специалист ООО',
+            'numbergroup'     => $protocol->prot_num,
+            
+            // Категории должностей (считаем автоматически из коллекции)
+            'countworker'     => $employees->where('position_type', 'Рабочий')->count(),
+            'countleader'     => $employees->where('position_type', 'Руководитель')->count(),
+            'countspecialist' => $employees->where('position_type', 'Специалист')->count(),
+            
+            // Заглушки для явок/неявок до реализации логики вкладки оценок
+            'Show'            => $employees->count(), 
+            'noshow'          => 0,
+            'passed'          => $employees->count(),
+            'nopassed'        => 0,
+            
+            // Формы обучения
+            'fulltime'        => str_contains(mb_strtolower($protocol->demand?->education_form), 'очн') ? $employees->count() : 0,
+            'distance'        => str_contains(mb_strtolower($protocol->demand?->education_form), 'дист') ? $employees->count() : 0,
+            
+            // Подсчет по признаку пола
+            'countwoman'      => $employees->where('gender', 'Ж')->count(),
+            'countman'        => $employees->where('gender', 'М')->count(),
+            
+            // Группы предприятий по типам затрат
+            'countung'        => $employees->where('company_type', 'РН-ЮНГ')->count(),
+            'countservise'    => $employees->where('company_type', 'Сервис')->count(),
+            'countothercomp'  => $employees->where('company_type', 'Прочие')->count(),
+            'countcash'       => $employees->where('company_type', 'Наличные')->count(),
+            
+            // Ручные реквизиты и справочники
+            'teacher1'        => $protocol->demand?->teacher?->fio ?? '—',
+            'specialistuc'    => $protocol->demand?->curator?->fio ?? '—',
+            'curatorurp'      => $protocol->demand?->curator?->fio ?? '—',
+            'audiencenumber'  => $request->audience_id ?? '—',
+        ];
+
+        // Физически записываем строку в базу PostgreSQL
+        UcExtReport::create($reportData);
+
+        // Возвращаем пользователя в реестр с зеленым уведомлением об успехе
+        return redirect()->route('protocols.index')
+            ->with('success', "Отчет по протоколу № {$protocol->prot_num} успешно сохранен в базу данных.");
     }
 
     public function create()
@@ -250,7 +336,7 @@ class ProtocolController extends Controller
 
         // 2. Формируем заголовки для скачивания файла браузером
         $fileName = "Отчет_" . $protocol->prot_num . ".xlsx";
-        
+
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . urlencode($fileName) . '"');
         header('Cache-Control: max-age=0');
@@ -259,5 +345,4 @@ class ProtocolController extends Controller
         $writer->save('php://output');
         exit;
     }
-
 }
