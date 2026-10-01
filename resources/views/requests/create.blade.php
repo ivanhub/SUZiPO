@@ -772,9 +772,7 @@ async saveCourseToMatrix(matrix) {
                                 return {
                                     open: false,
                                     search: '',
-                                    selectedId: '{{ old('
-                                    city_id ', $defaultCityId ?? '
-                                    ') }}',
+			            selectedId: '{{ old('city_id', $defaultCityId ?? '') }}',
                                     selectedName: '',
                                     newCityName: '',
                                     cities: [
@@ -890,8 +888,7 @@ async saveCourseToMatrix(matrix) {
                                 return {
                                     open: false,
                                     search: '',
-                                    selectedId: '{{ old('
-                                    profession_id ') }}',
+				    selectedId: '{{ old('profession_id') }}',
                                     selectedName: '',
                                     newProfessionName: '',
                                     professions: [
