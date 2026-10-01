@@ -561,7 +561,7 @@ if (!empty($validated['issue_date'])) {
     /*
      * Массовая или одиночная отправка заявок в ООО с созданием протоколов
      */
-    public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Http\RedirectResponse
+  public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Http\RedirectResponse
     {
         // Извлекаем массив пришедших ID заявок из запроса
         $requestIds = $httpRequest->input('request_ids', []);
@@ -604,6 +604,12 @@ if ($requestsWithoutEmployees->isNotEmpty()) {
         $request->update([
             'status' => 'in_progress'
         ]);
+
+		 //Тестовый лог при отправке в ООО
+                activity()
+                    ->performedOn($request)
+                    ->causedBy(auth()->user())
+                    ->log('Заявка отправлена в ООО, создан протокол');
 
         // 2. Создаем протокол в таблице app_protocols
         $request->protocols()->create([
@@ -700,13 +706,6 @@ if ($requestsWithoutEmployees->isNotEmpty()) {
     }
 
 
-    /**
-     * Проверка доступа к редактированию заявки
-     */
-    private function checkEditAccess(RequestModel $requestModel): ?\Illuminate\Http\RedirectResponse
-    {
-        $user = auth()->user();
-
 /**
  * Проверка, заблокирована ли заявка (менее 48 часов до начала)
  */
@@ -729,9 +728,7 @@ private function isRequestLocked(RequestModel $requestModel): bool
 private function checkEditAccess(RequestModel $requestModel): ?\Illuminate\Http\RedirectResponse
 {
     $user = auth()->user();
-    
- $user = auth()->user();
-    
+      
     // Если пользователь не авторизован - редирект на логин
     if (!$user) {
         return redirect()->route('login');
