@@ -70,8 +70,9 @@ public function index(\Illuminate\Http\Request $httpRequest): View
         }
 
         // $userDept = auth()->user()->department; // 'УРП' или 'УЦ'
-        $userDept = 'УЦ'; // для теста
-        $isUrp = (mb_strtoupper($userDept) === 'УРП');
+       //  $userDept = 'УЦ'; // для теста
+       $isUrp = auth()->user()->hasAnyRole(['urp', 'urp admin']);
+      //if ($user->hasAnyRole(['urp', 'urp admin', 'admin']))  $isUrp = (mb_strtoupper($userDept) === 'УРП');
 
         $nextGlobalNumbers = [
             'ЮНГ' => $this->getNextNumberForPrefix('ЮНГ'),
@@ -216,15 +217,24 @@ public function index(\Illuminate\Http\Request $httpRequest): View
 
 
         // $userDept = auth()->user()->department;
-        $userDept = 'УЦ';
-        $isUrp = (mb_strtoupper($userDept) === 'УРП');
+        //$userDept = 'УЦ';
+        //$isUrp = (mb_strtoupper($userDept) === 'УРП');
+	$isUrp = auth()->user()->hasAnyRole(['urp', 'urp admin']);
+	$isAdmin = auth()->user()->hasRole('admin');
 
         if ($isUrp) {
             $prefix = 'ЮНГ'; 
         } else {
             $prefix = in_array($validated['req_prefix'], ['ЮЛ', 'ФЛ']) ? $validated['req_prefix'] : 'ЮЛ';
         }
+	
 
+        //if ($isAdmin) {
+        //    $prefix = in_array($validated['req_prefix'], ['ЮНГ','ЮЛ', 'ФЛ']) ? $validated['req_prefix'] : 'ЮЛ';
+        //}
+	
+
+	
         $nextGlobalNumber = $this->getNextNumberForPrefix($prefix);
 
         $validated['req_number'] = $nextGlobalNumber;
