@@ -1,0 +1,258 @@
+<?php
+
+namespace Backpack\CRUD\app\Library\Support;
+
+use Backpack\CRUD\app\Library\CrudPanel\CrudPanel;
+use Backpack\CRUD\app\Library\Widget;
+use Backpack\CRUD\CrudManager;
+
+final class DatatableCache extends SetupCache
+{
+    public function __construct()
+    {
+        $this->cachePrefix = 'datatable_config_';
+        $this->cacheDuration = 60; // 1 hour
+    }
+
+    /**
+     * Cache setup closure for a datatable component.
+     *
+     * @param  string  $tableId  The table ID to use as cache key
+     * @param  string  $controllerClass  The controller class
+     * @param  ?\Closure  $setup  The setup closure
+     * @param  ?string  $name  The element name
+     * @param  CrudPanel  $crud  The CRUD panel instance to update with datatable_id
+     * @return bool Whether the operation was successful
+     */
+    public function cacheForComponent(string $tableId, string $controllerClass, ?\Closure $setup = null, ?string $name = null, ?CrudPanel $crud = null): bool
+    {
+        if (! $setup) {
+            return false;
+        }
+
+        $cruds = CrudManager::getCrudPanels();
+        $parentCrud = null;
+        foreach ($cruds as $key => $crudPanel) {
+            if ($key !== \Backpack\CRUD\app\Http\Controllers\CrudController::class) {
+                $parentCrud = $crudPanel;
+                break;
+            }
+        }
+
+        if ($parentCrud && $parentCrud->getCurrentEntry()) {
+            $parentEntry = $parentCrud->getCurrentEntry();
+            $parentController = $parentCrud->controller;
+
+            // Store in cache (including the serialized setup closure)
+            $this->store(
+                $tableId,
+                $controllerClass,
+                $parentController,
+                $parentEntry,
+                $name,
+                $setup
+            );
+
+            // Set the datatable_id in the CRUD panel if provided
+            if ($crud) {
+                $crud->set('list.datatable_id', $tableId);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public static function applyAndStoreSetupClosure(
+        string $tableId,
+        string $controllerClass,
+        \Closure $setupClosure,
+        ?string $name = null,
+        ?CrudPanel $crud = null,
+        $parentEntry = null
+    ): bool {
+        $instance = new self();
+
+        // Apply the setup closure to the CrudPanel instance
+        if ($instance->applySetupClosure($crud, $controllerClass, $setupClosure, $parentEntry)) {
+            // Cache the setup closure for the datatable component
+            return $instance->cacheForComponent($tableId, $controllerClass, $setupClosure, $name, $crud);
+        }
+
+        return false;
+    }
+
+    /**
+     * Apply cached setup to a CRUD instance using the request's datatable_id.
+     *
+     * @param  CrudPanel  $crud  The CRUD panel instance
+     * @return bool Whether the operation was successful
+     */
+    /**
+     * Cache the backToAllEntriesUrl for a datatable so it can be restored during AJAX search requests.
+     * This is stored separately from the setup closure cache to handle the zero-config (no closure) case.
+     */
+    public static function cacheBackToAllEntriesUrl(string $tableId, ?string $url): void
+    {
+        if (! $url) {
+            return;
+        }
+
+        $instance = new self();
+        \Illuminate\Support\Facades\Cache::put(
+            $instance->cachePrefix.$tableId.'_back_url',
+            $url,
+            now()->addMinutes($instance->cacheDuration)
+        );
+    }
+
+    /**
+     * Apply cached setup to a CRUD instance using the request's datatable_id.
+     *
+     * @param  CrudPanel  $crud  The CRUD panel instance
+     * @return bool Whether the operation was successful
+     */
+    public static function applyFromRequest(CrudPanel $crud): bool
+    {
+        $instance = new self();
+        $tableId = request('datatable_id');
+
+        if (! $tableId) {
+            return false;
+        }
+
+        if ($backUrl = \Illuminate\Support\Facades\Cache::get($instance->cachePrefix.$tableId.'_back_url')) {
+            $crud->setOperationSetting('backToAllEntriesUrl', $backUrl);
+        }
+
+        return $instance->apply($tableId, $crud);
+    }
+
+    /**
+     * Apply a setup closure to a CrudPanel instance.
+     *
+     * @param  CrudPanel  $crud  The CRUD panel instance
+     * @param  string  $controllerClass  The controller class
+     * @param  \Closure  $setupClosure  The setup closure
+     * @param  mixed  $entry  The entry to pass to the setup closure
+     * @return bool Whether the operation was successful
+     */
+    public function applySetupClosure(CrudPanel $crud, string $controllerClass, \Closure $setupClosure, $entry = null): bool
+    {
+        $originalSetup = $setupClosure;
+        $modifiedSetup = function ($crud, $entry) use ($originalSetup, $controllerClass) {
+            CrudManager::setActiveController($controllerClass);
+
+            // Run the original closure
+            return ($originalSetup)($crud, $entry);
+        };
+
+        try {
+            // Execute the modified closure
+            ($modifiedSetup)($crud, $entry);
+
+            return true;
+        } finally {
+            // Clean up
+            CrudManager::unsetActiveController();
+        }
+    }
+
+    /**
+     * Prepare datatable data for storage in the cache.
+     *
+     * @param  string  $controllerClass  The controller class
+     * @param  string  $parentController  The parent controller
+     * @param  mixed  $parentEntry  The parent entry
+     * @param  ?string  $elementName  The element name
+     * @return array The data to be cached
+     */
+    protected function prepareDataForStorage(...$args): array
+    {
+        [$controllerClass, $parentController, $parentEntry, $elementName] = $args;
+        $setup = $args[4] ?? null;
+
+        $data = [
+            'controller' => $controllerClass,
+            'parentController' => $parentController,
+            'parent_entry' => $parentEntry,
+            'element_name' => $elementName,
+            'operations' => CrudManager::getInitializedOperations($parentController),
+        ];
+
+        if ($setup instanceof \Closure) {
+            $boundThis = (new \ReflectionFunction($setup))->getClosureThis();
+
+            if (! $boundThis instanceof \Backpack\CRUD\app\Http\Controllers\CrudController) {
+                try {
+                    $data['setup_closure'] = serialize(new \Laravel\SerializableClosure\SerializableClosure($setup));
+                } catch (\Throwable $e) {
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Apply data from the cache to configure a datatable.
+     *
+     * @param  array  $cachedData  The cached data
+     * @param  CrudPanel  $crud  The CRUD panel instance
+     * @return bool Whether the operation was successful
+     */
+    protected function applyFromCache($cachedData, ...$args): bool
+    {
+        [$crud] = $args;
+
+        try {
+            $entry = $cachedData['parent_entry'];
+            $elementName = $cachedData['element_name'];
+
+            if (! empty($cachedData['setup_closure'])) {
+                $serializableClosure = unserialize($cachedData['setup_closure']);
+                $closure = $serializableClosure->getClosure();
+
+                return $this->applySetupClosure($crud, $cachedData['controller'], $closure, $entry);
+            }
+
+            $this->initializeOperations($cachedData['parentController'], $cachedData['operations']);
+
+            $widgets = Widget::collection();
+
+            foreach ($widgets as $widget) {
+                $widgetSetup = $widget['setup'] ?? $widget['configure'] ?? null;
+
+                if ($widget['type'] === 'datatable' &&
+                    (isset($widget['name']) && $widget['name'] === $elementName) &&
+                    $widgetSetup instanceof \Closure) {
+                    return $this->applySetupClosure($crud, $cachedData['controller'], $widgetSetup, $entry);
+                }
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            \Log::error('Error applying cached datatable config: '.$e->getMessage(), [
+                'exception' => $e,
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * Initialize operations for a parent controller.
+     */
+    private function initializeOperations(string $parentController, $operations): void
+    {
+        $parentCrud = CrudManager::getCrudPanel($parentController);
+
+        $operations = array_unique((array) $operations);
+
+        foreach ($operations as $operation) {
+            $parentCrud->initialized = false;
+            CrudManager::setupCrudPanel($parentController, $operation);
+        }
+    }
+}

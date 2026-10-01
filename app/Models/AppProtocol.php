@@ -41,6 +41,6 @@ class AppProtocol extends Model
 
     public function editor(): BelongsTo
     {
-        return $this->belongsTo(SecUser::class, 'id_user_edit', 'user_id');
+        return $this->belongsTo(User::class, 'id_user_create');
     }
 }

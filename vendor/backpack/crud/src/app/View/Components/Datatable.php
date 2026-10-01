@@ -1,0 +1,117 @@
+<?php
+
+namespace Backpack\CRUD\app\View\Components;
+
+use Backpack\CRUD\app\Library\CrudPanel\CrudPanel;
+use Backpack\CRUD\app\Library\Support\DatatableCache;
+use Backpack\CRUD\CrudManager;
+use Illuminate\View\Component;
+
+class Datatable extends Component
+{
+    protected string $tableId;
+
+    /**
+     * Datatables do NOT isolate their operation setup.
+     * They manage their own operation state independently.
+     */
+    public function __construct(
+        private string $controller,
+        private ?CrudPanel $crud = null,
+        private bool $modifiesUrl = false,
+        private ?\Closure $setup = null,
+        private ?string $name = null,
+        private ?bool $useFixedHeader = null,
+        private ?bool $showFilterValues = null,
+    ) {
+        CrudManager::pushActiveController($controller);
+
+        $this->crud ??= CrudManager::setupCrudPanel($controller, 'list');
+
+        if ($this->crud->getOperation() !== 'list') {
+            $this->crud->setOperation('list');
+        }
+
+        $this->tableId = $this->generateTableId();
+
+        if (! $this->modifiesUrl) {
+            $this->crud->setOperationSetting('backToAllEntriesUrl', url()->current());
+        }
+
+        if ($this->setup) {
+            // Apply the configuration using DatatableCache
+            DatatableCache::applyAndStoreSetupClosure(
+                $this->tableId,
+                $this->controller,
+                $this->setup,
+                $this->name,
+                $this->crud,
+                $this->getParentCrudEntry()
+            );
+        }
+
+        if (! $this->modifiesUrl) {
+            DatatableCache::cacheBackToAllEntriesUrl(
+                $this->tableId,
+                $this->crud->getOperationSetting('backToAllEntriesUrl')
+            );
+        }
+
+        if (! $this->crud->has('list.datatablesUrl')) {
+            $route = $this->crud->getRoute();
+            // If route is not set, generate it from the controller
+            if (empty($route)) {
+                $route = action([$this->controller, 'index']);
+            }
+            $this->crud->set('list.datatablesUrl', $route);
+        }
+    }
+
+    private function getParentCrudEntry()
+    {
+        $cruds = CrudManager::getCrudPanels();
+
+        $parentCrud = null;
+        foreach ($cruds as $key => $crud) {
+            if ($key !== \Backpack\CRUD\app\Http\Controllers\CrudController::class) {
+                $parentCrud = $crud;
+                break;
+            }
+        }
+
+        if ($parentCrud && $parentCrud->getCurrentEntry()) {
+            CrudManager::storeInitializedOperation(
+                $parentCrud->controller,
+                $parentCrud->getCurrentOperation()
+            );
+
+            return $parentCrud->getCurrentEntry();
+        }
+
+        return null;
+    }
+
+    private function generateTableId(): string
+    {
+        $controllerPart = str_replace('\\', '_', $this->controller);
+        $namePart = $this->name ?? 'default';
+        $uniqueId = md5($controllerPart.'_'.$namePart);
+
+        return 'crudTable_'.$uniqueId;
+    }
+
+    public function render()
+    {
+        $useFixedHeader = $this->useFixedHeader ?? $this->crud->getOperationSetting('useFixedHeader') ?? true;
+        $showFilterValues = $this->showFilterValues ?? $this->crud->getOperationSetting('showFilterValues') ?? false;
+
+        return view('crud::components.datatable.datatable', [
+            'crud' => $this->crud,
+            'modifiesUrl' => $this->modifiesUrl,
+            'tableId' => $this->tableId,
+            'datatablesUrl' => url($this->crud->get('list.datatablesUrl')),
+            'useFixedHeader' => $useFixedHeader,
+            'showFilterValues' => $showFilterValues,
+        ]);
+    }
+}

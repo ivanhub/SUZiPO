@@ -2,9 +2,12 @@
 <tr class="hover:bg-gray-50" style="border-bottom: 1px solid #e5e7eb;">
     <!-- Действия (Иконки редактирования) -->
     <td style="padding: 10px 8px; text-align: center;">
-        {{-- Передаем чистый ID без кавычек и текстов --}}
         <span @click="openEdit({{ $protocol->prot_id }})" style="cursor: pointer; color: #4f46e5; font-size: 14px; margin-right: 8px;" title="Редактировать">✏️</span>
-        <a href="#" style="text-decoration: none; color: #10b981; font-size: 14px;" title="Скачать">📥</a>
+        <!--<a href="#" style="text-decoration: none; color: #10b981; font-size: 14px;" title="Скачать">📥</a> -->
+        <a href="{{ route('protocols.report.create', $protocol->prot_id) }}"
+            target="_blank"
+            style="text-decoration: none; color: #10b981; font-size: 13px; font-weight: 600;"
+            title="Создать отчет по этой записи">📄</a>
     </td>
 
 
@@ -36,7 +39,7 @@
     <td style="padding: 10px 8px; font-weight: 500; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $protocol->demand->course->course ?? '' }}">
         {{ $protocol->demand?->course->course ?? '—' }}
         @if(isset($protocol->demand?->production_break))
-            <div style="font-size: 10px; color: #6b7280;">Разрыв: {{ $protocol->demand?->production_break }}</div>
+        <div style="font-size: 10px; color: #6b7280;">Разрыв: {{ $protocol->demand?->production_break }}</div>
         @endif
     </td>
 
@@ -57,7 +60,7 @@
     </td>
 
     <!-- № Заявки (Берем id исходной заявки из связи) -->
-    <td style="padding: 10px 8px; color: #4b5563;">№ {{ $protocol->demand?->id ?? '—' }}</td>
+    <td style="padding: 10px 8px; color: #4b5563;">№ {{ $protocol->demand?->req_number ?? '—' }}</td>
 
     <!-- Дата Заявки -->
     <td style="padding: 10px 8px; color: #4b5563;">

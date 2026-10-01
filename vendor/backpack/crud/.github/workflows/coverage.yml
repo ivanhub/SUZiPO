@@ -1,0 +1,96 @@
+name: Generate Code Coverage Report
+on:
+  push:
+    branches:
+      - main
+permissions:
+  contents: write
+jobs:
+  test:
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    name: PHP setup
+
+    services:
+        mysql:
+            image: mysql:9
+            env:
+                MYSQL_ALLOW_EMPTY_PASSWORD: yes
+                MYSQL_DATABASE: backpack_test
+            ports:
+                - 3306:3306
+            options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+            ref: main
+            fetch-depth: 0
+      - name: Install SQLite 3
+        run: |
+          sudo apt-get update
+          sudo apt-get install sqlite3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: 8.5
+          extensions: curl, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, pdo_mysql, iconv, xdebug
+          coverage: xdebug
+          tools: composer:v2
+      - name: Install dependencies
+        run: |
+            composer require "laravel/framework:^12.0" "phpunit/phpunit:^12.0" "doctrine/dbal:^4.0" --no-interaction --no-update --no-suggest
+            composer update --prefer-dist --no-interaction
+      - name: Execute tests
+        run: vendor/bin/phpunit --coverage-clover coverage.xml
+        env:
+          DB_PORT: ${{ job.services.mysql.ports[3306] }}
+          DB_USERNAME: root
+      - name: Check test coverage
+        id: test-coverage
+        uses: johanvanhelden/gha-clover-test-coverage-check@2543c79a701f179bd63aa14c16c6938c509b2cec # v1
+        with:
+          percentage: "1"
+          filename: coverage.xml
+          metric: elements
+          rounded-precision: 2
+      - name: Generate the badge SVG image
+        uses: emibcn/badge-action@f9150fde070fcca0c4e832437611b44838fcd325 # v2.0.4
+        id: badge
+        with:
+          label: coverage
+          status: ${{ steps.test-coverage.outputs.coverage-rounded-display }}
+          path: ./test-coverage.svg
+          color: ${{ steps.test-coverage.outputs.coverage > 90 && 'green'              ||
+            steps.test-coverage.outputs.coverage > 80 && 'yellow,green, green'       ||
+            steps.test-coverage.outputs.coverage > 70 && 'yellow, green'             ||
+            steps.test-coverage.outputs.coverage > 60 && 'yellow,yellow, green'      ||
+            steps.test-coverage.outputs.coverage > 50 && 'orange'             ||
+            steps.test-coverage.outputs.coverage > 40 && 'red,orange'         ||
+            steps.test-coverage.outputs.coverage > 30 && 'red,red,orange'     ||
+            steps.test-coverage.outputs.coverage > 20 && 'red,red,red,orange' ||
+            'red' }}
+      - name: Upload badge as artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: badge
+          path: test-coverage.svg
+          if-no-files-found: error
+      - name: Commit badge
+        continue-on-error: true
+        env:
+          BADGE: test-coverage.svg
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add "${BADGE}"
+          git commit -m "Update Coverage Badge"
+      - name: Push badge commit
+        uses: ad-m/github-push-action@881a6320fdb16eb5318c5054f31c218aec2b324c # v1.3.0
+        if: ${{ success() }}
+        with:
+          force: true
+          github_token: ${{ secrets.COVERAGE_TOKEN }}
+          branch: coverage-badge-dont-delete

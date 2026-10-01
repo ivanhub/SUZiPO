@@ -45,7 +45,7 @@
 
                     <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
                         <span style="color: #6b7280;">Учебное заведение:</span>
-                        <span style="font-weight: 600; color: #111827;">Учебный центр ООО «РН-Юганскнефтегаз»</span>
+                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.provider?.name || '—'"></span>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
@@ -55,36 +55,41 @@
 
                     <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
                         <span style="color: #6b7280;">Место проведения (страна):</span>
-                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.country || 'РОССИЯ'"></span>
+                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.country || '—'"></span>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
                         <span style="color: #6b7280;">Место проведения (город):</span>
-                        <span style="font-weight: 600; color: #111827;">Нефтеюганск</span>
+                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.city?.city || '—'"></span>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
                         <span style="color: #6b7280;">Аудитории:</span>
-                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.audience?.name || '—'"></span>
+                        <!-- Исправлено: Ссылка на поле number согласно вашей модели -->
+                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.audience?.number || '—'"></span>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
                         <span style="color: #6b7280;">ФИО преподавателей:</span>
-                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.teacher?.name || '—'"></span>
+                        <!-- ИСПРАВЛЕНО: Заменено .name на .fio согласно модели Teacher -->
+                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.teacher?.fio || '—'"></span>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
                         <span style="color: #6b7280;">Кураторы группы:</span>
-                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.curator?.name || '—'"></span>
+                        <!-- ИСПРАВЛЕНО: Заменено .name на .fio согласно модели RequestsCurator -->
+                        <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.curator?.fio || '—'"></span>
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
                         <span style="color: #4b5563; font-weight: 500;">Профессия, присваиваемая по результатам обучения:</span>
                         <select name="assigned_profession_id" disabled style="width: 100%; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background-color: #f3f4f6; cursor: not-allowed;">
-                            <option value="" x-text="editData.demand?.profession?.profession || 'Не указана'"></option>
+                            <!-- ИСПРАВЛЕНО: Заменено .profession на .name согласно модели RequestsProfession -->
+                            <option value="" x-text="editData.demand?.profession?.name || 'Не указана'"></option>
                         </select>
                     </div>
                 </div>
+
 
                 <!-- ПРАВАЯ КОЛОНКА: Реквизиты протокола -->
                 <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -110,19 +115,19 @@
                         <input type="text" name="order_num" x-model="editData.order_num" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     </div>
 
-                                        <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
+                    <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">Дата назначения приказа:</label>
                         <input type="date" name="order_date" x-model="editData.order_date" style="width: 160px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     </div>
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">Цена за человека (без НДС): <span style="color: #dc2626;">*</span></label>
-                        <input type="text" name="price_per_man" x-model="editData.price_per_man" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
+                        <input type="text" name="Cost" x-model="editData.Cost" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
                     </div>
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">НДС%:</label>
-                        <input type="text" name="nds_percent" x-model="editData.nds_percent" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
+                        <input type="text" name="costvat" x-model="editData.costvat" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
                     </div>
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
@@ -134,18 +139,18 @@
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">Часы теории: <span style="color: #dc2626;">*</span></label>
-                        <input type="number" name="theory_hours" x-model="editData.theory_hours" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
+                        <input type="number" name="theoryhours" x-model="editData.theoryhours" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
                     </div>
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">Часы практики: <span style="color: #dc2626;">*</span></label>
-                        <input type="number" name="practice_hours" x-model="editData.practice_hours" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
+                        <input type="number" name="practicehours" x-model="editData.practicehours" style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right;">
                     </div>
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">Часы по программе: <span style="color: #dc2626;">*</span></label>
                         <div style="display: flex; align-items: center; gap: 6px;">
-                            <input type="number" name="program_hours" readonly style="width: 120px; padding: 5px 8px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; background-color: #f3f4f6; text-align: right;" :value="Number(editData.theory_hours || 0) + Number(editData.practice_hours || 0)">
+                            <input type="number" name="hoursbyprogram" readonly style="width: 120px; padding: 5px 8px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; background-color: #f3f4f6; text-align: right;" x-model="editData.hoursbyprogram">
                             <button type="button" style="padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; background: #f3f4f6; cursor: pointer; font-size: 12px;">📊</button>
                         </div>
                     </div>
@@ -164,7 +169,7 @@
                             <option value="" x-text="editData.order_num ? `(${editData.order_date || ''}) ${editData.order_num}` : '—'"></option>
                         </select>
                     </div>
-                    
+
                     <input type="hidden" name="flagapproved" :value="editData.prot_status || 1">
                 </div> <!-- Конец правой колонки -->
             </div> <!-- Конец двухколоночного контейнера -->

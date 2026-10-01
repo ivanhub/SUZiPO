@@ -64,10 +64,26 @@ public function index(\Illuminate\Http\Request $httpRequest): View
 
     public function create(): View
     {
-		// Проверка права
-	    if (!auth()->user()->hasPermissionTo('create_requests')) {
-	        abort(403, 'У вас нет прав на создание заявок');
-	    }
+        // Проверка права
+        if (!auth()->user()->hasPermissionTo('create_requests')) {
+            abort(403, 'У вас нет прав на создание заявок');
+        }
+
+        // $userDept = auth()->user()->department; // 'УРП' или 'УЦ'
+        $userDept = 'УЦ'; // для теста
+        $isUrp = (mb_strtoupper($userDept) === 'УРП');
+
+        $nextGlobalNumbers = [
+            'ЮНГ' => $this->getNextNumberForPrefix('ЮНГ'),
+            'ЮЛ'  => $this->getNextNumberForPrefix('ЮЛ'),
+            'ФЛ'  => $this->getNextNumberForPrefix('ФЛ'),
+        ];
+
+        $nextPrefixNumbers = [
+            'ЮНГ' => \App\Models\Request::where('req_id', 'LIKE', '%-ЮНГ')->count() + 1,
+            'ЮЛ'  => \App\Models\Request::where('req_id', 'LIKE', '%-ЮЛ')->count() + 1,
+            'ФЛ'  => \App\Models\Request::where('req_id', 'LIKE', '%-ФЛ')->count() + 1,
+        ];
 
         $providers = RequestsProvider::orderBy('name')->get();
         $courses = RequestsCourse::orderBy('course')->get();
@@ -94,8 +110,27 @@ public function index(\Illuminate\Http\Request $httpRequest): View
             'disciplines',
             'audiences',
             'teachers',
-            'curators'
+            'curators',
+            'isUrp', 
+            'nextGlobalNumbers',
+            'nextPrefixNumbers'
         ));
+    }
+
+    private function getNextNumberForPrefix(string $prefix): int
+    {
+        if ($prefix === 'ЮНГ') {
+            $maxNumber = RequestModel::where('req_id', 'LIKE', '%-ЮНГ')
+                ->max('req_number');
+        } else {
+            $maxNumber = RequestModel::where(function($query) {
+                    $query->where('req_id', 'LIKE', '%-ЮЛ')
+                          ->orWhere('req_id', 'LIKE', '%-ФЛ');
+                })
+                ->max('req_number');
+        }
+
+        return $maxNumber ? (int)$maxNumber + 1 : 1;
     }
 
     public function store(HttpRequest $request): RedirectResponse
@@ -180,35 +215,26 @@ public function index(\Illuminate\Http\Request $httpRequest): View
         $validated['country'] = $validated['country'] ?? 'Россия';
 
 
-// Определяем префикс в зависимости от роли пользователя
-$user = auth()->user();
-$prefix = 'ЮНГ'; // По умолчанию для ooo, ookoit, metodist
+        // $userDept = auth()->user()->department;
+        $userDept = 'УЦ';
+        $isUrp = (mb_strtoupper($userDept) === 'УРП');
 
-if ($user->hasAnyRole(['urp', 'urp admin', 'admin'])) {
-    // Для urp - выбор из ФЛ и ЮЛ
-    $prefix = $validated['req_prefix'] ?? 'ЮЛ'; // Если не выбран - по умолчанию ЮЛ
-}
+        if ($isUrp) {
+            $prefix = 'ЮНГ'; 
+        } else {
+            $prefix = in_array($validated['req_prefix'], ['ЮЛ', 'ФЛ']) ? $validated['req_prefix'] : 'ЮЛ';
+        }
 
-// Ищем последнюю заявку с этим префиксом
-$lastRequest = RequestModel::where('req_id', 'LIKE', "%-{$prefix}")
-    ->orderBy('id', 'desc')
-    ->first();
+        $nextGlobalNumber = $this->getNextNumberForPrefix($prefix);
 
-$nextNumber = 1;
-
-if ($lastRequest && $lastRequest->req_id) {
-    $parts = explode('-', $lastRequest->req_id);
-    $lastNumber = (int)$parts[0];
-    $nextNumber = $lastNumber + 1;
-}
-
-$validated['req_id'] = "{$nextNumber}-{$prefix}";
-unset($validated['req_prefix']);
-
-
-
+        $validated['req_number'] = $nextGlobalNumber;
+        $prefixCount = RequestModel::where('req_id', 'LIKE', "%-{$prefix}")
+            ->count();
+        $nextPrefixNumber = $prefixCount + 1;
+        $validated['req_id'] = "{$nextPrefixNumber}-{$prefix}";
+        
+        unset($validated['req_prefix']);
         $trainingRequest = RequestModel::create($validated);
-
         $action = $request->input('action');
 
         if ($action === 'save_and_employees') {
@@ -217,6 +243,18 @@ unset($validated['req_prefix']);
                 ->with('success', 'Заявка создана. Добавьте сотрудников.');
         }
 
+        // $lastRequest = RequestModel::where('req_id', 'LIKE', "%-ЮЛ")
+        //     ->orderBy('id', 'desc')
+        //     ->first();
+
+        // $nextNumber = 1;
+
+        // if ($lastRequest && $lastRequest->req_id) {
+        //     $parts = explode('-', $lastRequest->req_id);
+        //     $lastNumber = (int)$parts[0];
+        //     $nextNumber = $lastNumber + 1;
+        // }
+
         return redirect()->route('requests.index')
             ->with('success', "Заявка успешно создана под номером {$trainingRequest->req_id}.")
             ->with('request_id', $trainingRequest->id);
@@ -224,7 +262,9 @@ unset($validated['req_prefix']);
 
     public function show(RequestModel $request): View
     {
-	$request->load(['user', 'provider', 'course', 'city', 'profession', 'learnReason', 'learningResource', 'learningType', 'eventType', 'discipline', 'audience', 'teacher', 'curator', 'activities.causer']);
+        $request->load(['user', 'provider', 'course', 'city', 'profession',
+                        'learnReason', 'learningResource', 'learningType', 
+                        'eventType', 'discipline', 'audience', 'teacher', 'curator', 'activities']);
         $reserve = null;
         if ($request->audience_id) {
             $seats = $request->audience ? $request->audience->seats : null;
@@ -481,7 +521,7 @@ if (!empty($validated['issue_date'])) {
 
         while ($current->lte($end)) {
             $dateStr = $current->format('Y-m-d');
-            
+
             // Проверяем аудиторию
             $audienceConflict = Booking::where('audience_id', $audienceId)
                 ->whereDate('start_date', '<=', $dateStr)
@@ -521,14 +561,14 @@ if (!empty($validated['issue_date'])) {
     /*
      * Массовая или одиночная отправка заявок в ООО с созданием протоколов
      */
-public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Http\RedirectResponse
-{
-    // Извлекаем массив пришедших ID заявок из запроса
-    $requestIds = $httpRequest->input('request_ids', []);
+    public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Http\RedirectResponse
+    {
+        // Извлекаем массив пришедших ID заявок из запроса
+        $requestIds = $httpRequest->input('request_ids', []);
 
-    if (empty($requestIds)) {
-        return redirect()->back()->with('error', 'Не выбрано ни одной заявки для отправки.');
-    }
+        if (empty($requestIds)) {
+            return redirect()->back()->with('error', 'Не выбрано ни одной заявки для отправки.');
+        }
 
     // Выбираем заявки со статусом "Создана" ИЛИ "urpedit"
     $requests = \App\Models\Request::whereIn('id', $requestIds)
@@ -539,55 +579,85 @@ public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Ht
 
 
 
-    if ($requests->isEmpty()) {
-        return redirect()->back()->with('error', 'Выбранные заявки уже отправлены или не могут быть обработаны.');
+  if ($requests->isEmpty()) {
+    return redirect()->back()->with('error', 'Выбранные заявки уже отправлены или не могут быть обработаны.');
+}
+
+// ПРОВЕРКА: есть ли заявки без сотрудников
+$requestsWithoutEmployees = $requests->filter(function ($request) {
+    return $request->employees_count == 0;
+});
+
+if ($requestsWithoutEmployees->isNotEmpty()) {
+    $numbers = $requestsWithoutEmployees->pluck('req_id')->implode(', ');
+
+    return redirect()
+        ->back()
+        ->with('error', "Заявки без сотрудников не могут быть отправлены: {$numbers}. Добавьте сотрудников в эти заявки.");
+}
+
+// Выполняем операции атомарно в транзакции
+\Illuminate\Support\Facades\DB::transaction(function () use ($requests) {
+    foreach ($requests as $request) {
+
+        // 1. Обновляем статус самой заявки
+        $request->update([
+            'status' => 'in_progress'
+        ]);
+
+        // 2. Создаем протокол в таблице app_protocols
+        $request->protocols()->create([
+            'prot_num'       => $request->req_id,
+            'prot_status'    => 1,
+            'prot_date'      => now(),
+            'id_user_create' => auth()->id() ?? 1,
+            'date_edit'      => now(),
+            'id_user_edit'   => auth()->id() ?? 1,
+            'date_start'     => $request->start_date ?? now(),
+            'date_end'       => $request->end_date ?? now()->addDays(5),
+            'row_version'    => 1,
+        ]);
     }
+});
 
-    // ПРОВЕРКА: есть ли заявки без сотрудников
-    $requestsWithoutEmployees = $requests->filter(function ($request) {
-        return $request->employees_count == 0;
-    });
+        // Выполняем операции атомарно в транзакции
+        \Illuminate\Support\Facades\DB::transaction(function () use ($requests) {
+            foreach ($requests as $request) {
 
-    if ($requestsWithoutEmployees->isNotEmpty()) {
-        $numbers = $requestsWithoutEmployees->pluck('req_id')->implode(', ');
-        
-        return redirect()
-            ->back()
-            ->with('error', "Заявки без сотрудников не могут быть отправлены: {$numbers}. Добавьте сотрудников в эти заявки.");
-    }
+                // 1. Обновляем статус самой заявки
+                $request->update([
+                    'status' => 'Отправлена'
+                ]);
 
-    // Выполняем операции атомарно в транзакции
-    \Illuminate\Support\Facades\DB::transaction(function () use ($requests) {
-        foreach ($requests as $request) {
+                //Тестовый лог при отправке в ООО
+                activity()
+                    ->performedOn($request)
+                    ->causedBy(auth()->user())
+                    ->log('Заявка отправлена в ООО, создан протокол');
 
-            // 1. Обновляем статус самой заявки
-            $request->update([
-                'status' => 'in_progress'
-            ]);
+                // 2. Создаем протокол в таблице app_protocols
+                $request->protocols()->create([
+                    'prot_num'       => $request->req_id,
+                    'prot_status'    => 1,
+                    'prot_date'      => now(),
+                    'id_user_create' => auth()->id() ?? 1,
+                    'date_edit'      => now(),
+                    'id_user_edit'   => auth()->id() ?? 1,
+                    'date_start'     => $request->start_date ?? now(),
+                    'date_end'       => $request->end_date ?? now()->addDays(5),
+                    'row_version'    => 1,
+                ]);
+            }
+        });
 
-            // 2. Создаем протокол в таблице app_protocols
-            $request->protocols()->create([
-                'prot_num'       => $request->req_id,
-                'prot_status'    => 1,
-                'prot_date'      => now(),
-                'id_user_create' => auth()->id() ?? 1,
-                'date_edit'      => now(),
-                'id_user_edit'   => auth()->id() ?? 1,
-                'date_start'     => $request->start_date ?? now(),
-                'date_end'       => $request->end_date ?? now()->addDays(5),
-                'row_version'    => 1,
-            ]);
-        }
-    });
+        // ОТПРАВКА УВЕДОМЛЕНИЯ НА mainooo@suzipo.ru
+        $mainOoo = \App\Models\User::where('email', 'mainooo@suzipo.ru')->first();
 
- // ОТПРАВКА УВЕДОМЛЕНИЯ НА mainooo@suzipo.ru
-    $mainOoo = \App\Models\User::where('email', 'mainooo@suzipo.ru')->first();
-
-    if ($mainOoo) {
-        // Формируем список заявок для письма
-        $requestList = '';
-        foreach ($requests as $request) {
-            $requestList .= "
+        if ($mainOoo) {
+            // Формируем список заявок для письма
+            $requestList = '';
+            foreach ($requests as $request) {
+                $requestList .= "
                 <tr>
                     <td style='padding: 8px; border: 1px solid #ddd;'>{$request->req_id}</td>
                     <td style='padding: 8px; border: 1px solid #ddd;'>" . ($request->course->course ?? '—') . "</td>
@@ -595,11 +665,11 @@ public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Ht
                     <td style='padding: 8px; border: 1px solid #ddd;'>" . ($request->end_date ? $request->end_date->format('d.m.Y') : '—') . "</td>
                 </tr>
             ";
-        }
+            }
 
-        $subject = "Новые заявки на обучение (" . $requests->count() . " шт.)";
-        
-        $message = "
+            $subject = "Новые заявки на обучение (" . $requests->count() . " шт.)";
+
+            $message = "
             <h2>Уведомление о новых заявках</h2>
             <p>Были отправлены новые заявки на обучение.</p>
             <table style='border-collapse: collapse; width: 100%;'>
@@ -618,17 +688,24 @@ public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Ht
             <p>Пожалуйста, проверьте заявки в системе.</p>
         ";
 
-        \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($mainOoo, $subject) {
-            $mail->to($mainOoo->email)
-                 ->subject($subject);
-        });
+            \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($mainOoo, $subject) {
+                $mail->to($mainOoo->email)
+                    ->subject($subject);
+            });
+        }
+
+        $count = $requests->count();
+        return redirect()->route('requests.index')
+            ->with('success', "Успешно отправлено в ООО заявок: {$count}.");
     }
 
-    $count = $requests->count();
-    return redirect()->route('requests.index')
-        ->with('success', "Успешно отправлено в ООО заявок: {$count}.");
-}
 
+    /**
+     * Проверка доступа к редактированию заявки
+     */
+    private function checkEditAccess(RequestModel $requestModel): ?\Illuminate\Http\RedirectResponse
+    {
+        $user = auth()->user();
 
 /**
  * Проверка, заблокирована ли заявка (менее 48 часов до начала)

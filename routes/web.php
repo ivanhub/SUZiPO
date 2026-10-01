@@ -31,8 +31,8 @@ use App\Http\Controllers\CourseExceptionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ErrorController;
-use App\Http\Controllers\Admin\UserController; 
-use App\Http\Controllers\AppDemandController; 
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\AppDemandController;
 
 use App\Models\Booking;
 
@@ -55,17 +55,17 @@ use App\Http\Controllers\ProfileController;
 */
 
 Route::get('/', function () {
-   // return view('welcome');
+    // return view('welcome');
     return redirect('/dashboard');
 });
 
 //Экспорт, тест
-Route::get('/test-export', function() {
+Route::get('/test-export', function () {
     $export = new \App\Exports\UsersExport();
     $users = $export->collection();
     return response()->json([
         'total' => $users->count(),
-        'users' => $users->take(3)->map(function($u) {
+        'users' => $users->take(3)->map(function ($u) {
             return ['id' => $u->id, 'name' => $u->name, 'email' => $u->email];
         })
     ]);
@@ -89,13 +89,12 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-// Административная панель пользователей
+    // Административная панель пользователей
     Route::prefix('admin')->name('admin.')->group(function () {
-//      Route::resource('users', UserController::class);
-        Route::get('users/export', [UserController::class, 'export'])->name('users.export'); 
+        //      Route::resource('users', UserController::class);
+        Route::get('users/export', [UserController::class, 'export'])->name('users.export');
         Route::post('users/export-selected', [UserController::class, 'exportSelected'])->name('users.export-selected');
         Route::resource('users', UserController::class)->middleware('permission:view_users|create_users|edit_users|delete_users');
-
     });
 
     // Маршруты для email подтверждения
@@ -212,14 +211,22 @@ Route::prefix('request-employees')->name('request-employees.')->group(function (
     Route::delete('{requestId}/{employeeId}', [RequestEmployeeController::class, 'destroy'])->name('destroy');
 });
 
-    // Протоколы
+// Протоколы
 Route::resource('protocols', ProtocolController::class);
 Route::get('/protocols', [ProtocolController::class, 'index'])->name('protocols.index');
 Route::get('/protocols/{id}/json', [ProtocolController::class, 'getJson'])->name('protocols.json');
+Route::get('/protocols/{id}/report/create', [ProtocolController::class, 'createReport'])->name('protocols.report.create');
+Route::post('/protocols/export-excel', [ProtocolController::class, 'exportExcel'])->name('protocols.export-excel');
+Route::post('/protocols/report/store', [ProtocolController::class, 'storeReport'])->name('protocols.report.store');
 
 
-    
-Route::get('/bookings', function () {return view('bookings.index'); })->name('bookings.index');
+
+
+
+
+Route::get('/bookings', function () {
+    return view('bookings.index');
+})->name('bookings.index');
 
 // Маршруты для матриц
 Route::get('/api/courses-by-provider', [\App\Http\Controllers\Api\CourseController::class, 'getByProvider'])
@@ -234,82 +241,81 @@ Route::post('/api/courses', [CourseController::class, 'store'])
 
 Route::prefix('matrices')->name('matrices.')->group(function () {
     Route::resource('courses', MatrixCourseController::class);
-//Route::resource('courses', MatrixCourseController::class)->parameters(['course' => 'matrixCourse']);
-//    Route::resource('dpo', MatrixDpoController::class);
-Route::resource('dpo', MatrixDpoController::class)->parameters(['dpo' => 'matrixDpo']);
-//    Route::resource('ot', MatrixOtController::class);
-Route::resource('ot', MatrixOtController::class)->parameters(['ot' => 'matrixOt']);
+    //Route::resource('courses', MatrixCourseController::class)->parameters(['course' => 'matrixCourse']);
+    //    Route::resource('dpo', MatrixDpoController::class);
+    Route::resource('dpo', MatrixDpoController::class)->parameters(['dpo' => 'matrixDpo']);
+    //    Route::resource('ot', MatrixOtController::class);
+    Route::resource('ot', MatrixOtController::class)->parameters(['ot' => 'matrixOt']);
     Route::resource('po', MatrixPoController::class);
 });
-    
-    // Справочники
-    Route::prefix('directories')->name('directories.')->group(function () {
-        Route::get('countries', [DirectoryController::class, 'countries'])->name('countries');
-        Route::get('reasons-non-certification', [DirectoryController::class, 'reasonsNonCertification'])->name('reasons-non-certification');
-        Route::resource('providers', RequestsProviderController::class);
-        Route::get('courses', [DirectoryController::class, 'courses'])->name('courses');
-        Route::get('cities', [DirectoryController::class, 'cities'])->name('cities');
-        Route::resource('professions', RequestsProfessionController::class);
-        Route::get('qualifications', [DirectoryController::class, 'qualifications'])->name('qualifications');
-        Route::get('employees', [DirectoryController::class, 'employees'])->name('employees');
-        Route::get('departments', [DirectoryController::class, 'departments'])->name('departments');
-        Route::resource('learning-types', RequestsLearningTypeController::class);
-        Route::get('reasons-rejection', [DirectoryController::class, 'reasonsRejection'])->name('reasons-rejection');
-        Route::get('categories', [DirectoryController::class, 'categories'])->name('categories');
-        Route::get('document-types', [DirectoryController::class, 'documentTypes'])->name('document-types');
-        Route::get('training-type', [DirectoryController::class, 'trainingType'])->name('training-type');
-        Route::get('course-authors', [DirectoryController::class, 'courseAuthors'])->name('course-authors');
-        Route::get('training-directions', [DirectoryController::class, 'trainingDirections'])->name('training-directions');
-        Route::get('cost-allocation', [DirectoryController::class, 'costAllocation'])->name('cost-allocation');
-        Route::get('orders', [DirectoryController::class, 'orders'])->name('orders');
-        Route::resource('learn-reasons', RequestsLearnReasonController::class);
-        Route::get('contracts', [DirectoryController::class, 'contracts'])->name('contracts');
-        Route::resource('disciplines', RequestsDisciplineController::class);
-        Route::get('training-assessment-type', [DirectoryController::class, 'trainingAssessmentType'])->name('training-assessment-type');
-        Route::resource('learning-resources', RequestsLearningResourceController::class);
-        Route::resource('events-type', RequestsEventsTypeController::class);
-        Route::resource('teachers', RequestsTeachersController::class);
-        Route::resource('audiences', RequestsAudienceController::class);
-        Route::resource('curators', RequestsCuratorController::class);
-        Route::get('absence-types', [DirectoryController::class, 'absenceTypes'])->name('absence-types');
+
+// Справочники
+Route::prefix('directories')->name('directories.')->group(function () {
+    Route::get('countries', [DirectoryController::class, 'countries'])->name('countries');
+    Route::get('reasons-non-certification', [DirectoryController::class, 'reasonsNonCertification'])->name('reasons-non-certification');
+    Route::resource('providers', RequestsProviderController::class);
+    Route::get('courses', [DirectoryController::class, 'courses'])->name('courses');
+    Route::get('cities', [DirectoryController::class, 'cities'])->name('cities');
+    Route::resource('professions', RequestsProfessionController::class);
+    Route::get('qualifications', [DirectoryController::class, 'qualifications'])->name('qualifications');
+    Route::get('employees', [DirectoryController::class, 'employees'])->name('employees');
+    Route::get('departments', [DirectoryController::class, 'departments'])->name('departments');
+    Route::resource('learning-types', RequestsLearningTypeController::class);
+    Route::get('reasons-rejection', [DirectoryController::class, 'reasonsRejection'])->name('reasons-rejection');
+    Route::get('categories', [DirectoryController::class, 'categories'])->name('categories');
+    Route::get('document-types', [DirectoryController::class, 'documentTypes'])->name('document-types');
+    Route::get('training-type', [DirectoryController::class, 'trainingType'])->name('training-type');
+    Route::get('course-authors', [DirectoryController::class, 'courseAuthors'])->name('course-authors');
+    Route::get('training-directions', [DirectoryController::class, 'trainingDirections'])->name('training-directions');
+    Route::get('cost-allocation', [DirectoryController::class, 'costAllocation'])->name('cost-allocation');
+    Route::get('orders', [DirectoryController::class, 'orders'])->name('orders');
+    Route::resource('learn-reasons', RequestsLearnReasonController::class);
+    Route::get('contracts', [DirectoryController::class, 'contracts'])->name('contracts');
+    Route::resource('disciplines', RequestsDisciplineController::class);
+    Route::get('training-assessment-type', [DirectoryController::class, 'trainingAssessmentType'])->name('training-assessment-type');
+    Route::resource('learning-resources', RequestsLearningResourceController::class);
+    Route::resource('events-type', RequestsEventsTypeController::class);
+    Route::resource('teachers', RequestsTeachersController::class);
+    Route::resource('audiences', RequestsAudienceController::class);
+    Route::resource('curators', RequestsCuratorController::class);
+    Route::get('absence-types', [DirectoryController::class, 'absenceTypes'])->name('absence-types');
 
     // Города
-        Route::resource('cities', RequestsCityController::class);
-        
-        // Курсы
-        Route::resource('courses', RequestsCourseController::class);
-   
-    });
+    Route::resource('cities', RequestsCityController::class);
 
-    // Отчеты
-    Route::prefix('reports')->name('reports.')->group(function () {
-        Route::get('auditorium-load', [ReportController::class, 'auditoriumLoad'])->name('auditorium-load');
-        Route::get('training-journal', [ReportController::class, 'trainingJournal'])->name('training-journal');
-        Route::get('certificate-register', [ReportController::class, 'certificateRegister'])->name('certificate-register');
-        Route::get('certificate-print', [ReportController::class, 'certificatePrint'])->name('certificate-print');
-    });
-    
-    // Административная
-    Route::prefix('admin')->name('admin.')->group(function () {
-        Route::resource('users', UserController::class);
-        Route::get('users/export', [UserController::class, 'export'])->name('users.export');
-        Route::post('users/export-selected', [UserController::class, 'exportSelected'])->name('users.export-selected');
-        Route::get('technical-task', [AdminController::class, 'technicalTask'])->name('technical-task');
-        Route::get('notifications', [AdminController::class, 'notifications'])->name('notifications');
-        Route::get('global-settings', [AdminController::class, 'globalSettings'])->name('global-settings');
-    });
-    
-    // Ошибки
-    Route::prefix('errors')->name('errors.')->group(function () {
-        Route::get('/', [ErrorController::class, 'index'])->name('index');
-        Route::get('create', [ErrorController::class, 'create'])->name('create');
-        Route::get('non-certified', [ErrorController::class, 'nonCertified'])->name('non-certified');
-        Route::get('analysis', [ErrorController::class, 'analysis'])->name('analysis');
-        Route::get('help-admin', [ErrorController::class, 'helpAdmin'])->name('help-admin');
-        Route::get('help-muo', [ErrorController::class, 'helpMuo'])->name('help-muo');
-        Route::get('help-srp', [ErrorController::class, 'helpSrp'])->name('help-srp');
-        Route::get('help-sumo', [ErrorController::class, 'helpSumo'])->name('help-sumo');
-    });
+    // Курсы
+    Route::resource('courses', RequestsCourseController::class);
+});
+
+// Отчеты
+Route::prefix('reports')->name('reports.')->group(function () {
+    Route::get('auditorium-load', [ReportController::class, 'auditoriumLoad'])->name('auditorium-load');
+    Route::get('training-journal', [ReportController::class, 'trainingJournal'])->name('training-journal');
+    Route::get('certificate-register', [ReportController::class, 'certificateRegister'])->name('certificate-register');
+    Route::get('certificate-print', [ReportController::class, 'certificatePrint'])->name('certificate-print');
+});
+
+// Административная
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('users', UserController::class);
+    Route::get('users/export', [UserController::class, 'export'])->name('users.export');
+    Route::post('users/export-selected', [UserController::class, 'exportSelected'])->name('users.export-selected');
+    Route::get('technical-task', [AdminController::class, 'technicalTask'])->name('technical-task');
+    Route::get('notifications', [AdminController::class, 'notifications'])->name('notifications');
+    Route::get('global-settings', [AdminController::class, 'globalSettings'])->name('global-settings');
+});
+
+// Ошибки
+Route::prefix('errors')->name('errors.')->group(function () {
+    Route::get('/', [ErrorController::class, 'index'])->name('index');
+    Route::get('create', [ErrorController::class, 'create'])->name('create');
+    Route::get('non-certified', [ErrorController::class, 'nonCertified'])->name('non-certified');
+    Route::get('analysis', [ErrorController::class, 'analysis'])->name('analysis');
+    Route::get('help-admin', [ErrorController::class, 'helpAdmin'])->name('help-admin');
+    Route::get('help-muo', [ErrorController::class, 'helpMuo'])->name('help-muo');
+    Route::get('help-srp', [ErrorController::class, 'helpSrp'])->name('help-srp');
+    Route::get('help-sumo', [ErrorController::class, 'helpSumo'])->name('help-sumo');
+});
 
 // Дополнительные маршруты для заявок и демонстрационных страниц
 Route::get('/', function () {
@@ -323,10 +329,10 @@ Route::get('/dashboard', function () {
 
 // Route::resource('requests', RequestController::class);
 Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
-Route::get('/bookings', function () {return view('bookings.index'); })->name('bookings.index');
+Route::get('/bookings', function () {
+    return view('bookings.index');
+})->name('bookings.index');
 Route::get('/demands', [AppDemandController::class, 'index'])->name('demands.index');
 Route::get('/demands/{id}', [AppDemandController::class, 'show'])->name('demands.show');
 
 Route::post('/send-demand-to-ooo', [RequestController::class, 'sendToOoo'])->name('requests.send-to-ooo');
-
-

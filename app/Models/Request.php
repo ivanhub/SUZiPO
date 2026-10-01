@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Spatie\Activitylog\Models\Concerns\HasActivity; 
 use Spatie\Activitylog\Support\LogOptions;
 //use App\Models\RequestHistory as RequestsHistory;
@@ -22,8 +23,9 @@ class Request extends Model
     const STATUS_REJECTED = 'rejected';
     const STATUS_URP_EDIT = 'urpedit';
 
-    protected $table = 'requests'; 
+    protected $table = 'requests';
     protected $fillable = [
+        'req_number', 
         'req_id',
 	'protection_requested', // для запроса снятия защиты
         'user_id',
@@ -101,8 +103,18 @@ public function getActivitylogOptions(): LogOptions
             'teacher_id',
             'curator_id',
         ])
+        //->logFillable() 
         ->logOnlyDirty()
         ->dontLogEmptyChanges();
+
+
+    //     ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
+   //             'created' => 'Заявка успешно создана в системе',
+   //             'updated' => 'В параметры заявки внесены изменения',
+   //             'deleted' => 'Заявка была удалена',
+   //             default   => "{$eventName}"
+   //         });
+  
 
           // ->setDescriptionForEvent(fn(string $eventName) => "Заявка была {$eventName}");*/
 
@@ -215,6 +227,8 @@ if ($field === 'employee_id') {
      * Сотрудники заявки
      */
     public function employees(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(RequestEmployee::class); }
+
+    public function activities(): MorphMany { return $this->morphMany(\Spatie\Activitylog\Models\Activity::class, 'subject'); }
 
 
 

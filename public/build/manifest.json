@@ -1,0 +1,54 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-BgRsNME1.css",
+    "name": "app",
+    "names": [
+      "app.css"
+    ],
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "assets": [
+      "assets/inter-v20-cyrillic_latin-regular-C_DEjFmn.woff2",
+      "assets/inter-v20-cyrillic_latin-500-BOsU2yrk.woff2",
+      "assets/inter-v20-cyrillic_latin-600-C7BJIm-p.woff2",
+      "assets/inter-v20-cyrillic_latin-700-BkD5pCWO.woff2"
+    ]
+  },
+  "resources/fonts/inter-v20-cyrillic_latin-500.woff2": {
+    "file": "assets/inter-v20-cyrillic_latin-500-BOsU2yrk.woff2",
+    "src": "resources/fonts/inter-v20-cyrillic_latin-500.woff2"
+  },
+  "resources/fonts/inter-v20-cyrillic_latin-600.woff2": {
+    "file": "assets/inter-v20-cyrillic_latin-600-C7BJIm-p.woff2",
+    "src": "resources/fonts/inter-v20-cyrillic_latin-600.woff2"
+  },
+  "resources/fonts/inter-v20-cyrillic_latin-700.woff2": {
+    "file": "assets/inter-v20-cyrillic_latin-700-BkD5pCWO.woff2",
+    "src": "resources/fonts/inter-v20-cyrillic_latin-700.woff2"
+  },
+  "resources/fonts/inter-v20-cyrillic_latin-regular.woff2": {
+    "file": "assets/inter-v20-cyrillic_latin-regular-C_DEjFmn.woff2",
+    "src": "resources/fonts/inter-v20-cyrillic_latin-regular.woff2"
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-DFsnoHYp.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/gridjs.umd.js"
+    ],
+    "css": [
+      "assets/app-DkpJ-xS0.css"
+    ]
+  },
+  "resources/js/gridjs.umd.js": {
+    "file": "assets/gridjs.umd-7AGY2B2U.js",
+    "name": "gridjs.umd",
+    "src": "resources/js/gridjs.umd.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ]
+  }
+}
