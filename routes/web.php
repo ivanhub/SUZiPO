@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\ProtocolController;
-use App\Http\Controllers\CourseController;
+use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\TrainingTypeController;
 use App\Http\Controllers\ProfessionController;
@@ -222,6 +222,16 @@ Route::get('/protocols/{id}/json', [ProtocolController::class, 'getJson'])->name
 Route::get('/bookings', function () {return view('bookings.index'); })->name('bookings.index');
 
 // Маршруты для матриц
+Route::get('/api/courses-by-provider', [\App\Http\Controllers\Api\CourseController::class, 'getByProvider'])
+    ->name('api.courses.by-provider')
+    ->middleware('auth');
+
+// Сохранение нового курса
+Route::post('/api/courses', [CourseController::class, 'store'])
+    ->name('api.courses.store')
+    ->middleware('auth');
+
+
 Route::prefix('matrices')->name('matrices.')->group(function () {
     Route::resource('courses', MatrixCourseController::class);
 //Route::resource('courses', MatrixCourseController::class)->parameters(['course' => 'matrixCourse']);

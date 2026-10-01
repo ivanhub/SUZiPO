@@ -102,9 +102,9 @@
                             </select>
                         </div>
 
-<!-- Учебное заведение (провайдер) -->
-<div x-data="providerSelector()" class="relative">
-    <label class="block text-sm font-medium text-gray-700 mb-1">Учебное заведение (провайдер)</label>
+<!-- Учебное заведение -->
+<div x-data="providerSelector()" class="relative z-10">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Учебное заведение</label>
     
     <input type="hidden" name="provider_id" x-model="selectedId">
     <input type="hidden" name="new_provider_name" x-model="newProviderName">
@@ -178,11 +178,17 @@
                 return this.providers.some(p => p.name.toLowerCase() === this.search.toLowerCase());
             },
             selectProvider(provider) {
+    console.log('Выбран провайдер:', provider);
                 this.selectedId = provider.id;
                 this.selectedName = provider.name;
                 this.newProviderName = '';
                 this.open = false;
                 this.search = '';
+                
+                // Отправляем событие для загрузки курсов
+                document.dispatchEvent(new CustomEvent('provider-selected', {
+                    detail: { providerId: provider.id }
+                }));
             },
             addNewProvider() {
                 if (!this.search) return;
@@ -191,136 +197,476 @@
                     this.selectProvider(existing);
                     return;
                 }
+                
                 this.newProviderName = this.search;
                 this.selectedName = this.search;
                 this.selectedId = '';
                 this.open = false;
+                this.search = '';
+                
+                // Для нового провайдера показываем курсы из courses_urp
+                document.dispatchEvent(new CustomEvent('provider-selected', {
+                    detail: { providerId: null }
+                }));
             },
             init() {
-                if (this.selectedId) {
+                // НЕ загружаем курсы автоматически при инициализации
+                // Только если уже есть выбранный провайдер (например при редактировании)
+                if (this.selectedId && this.selectedId !== '') {
                     const selected = this.providers.find(p => p.id == this.selectedId);
                     if (selected) {
                         this.selectedName = selected.name;
+                        // Загружаем курсы только если провайдер выбран
+                        document.dispatchEvent(new CustomEvent('provider-selected', {
+                            detail: { providerId: selected.id }
+                        }));
                     }
                 }
             }
         }
     }
 </script>
-<!-- Наименование курса (тематика) -->
-<div x-data="courseSelector()" class="relative">
-    <label class="block text-sm font-medium text-gray-700 mb-1">Наименование курса (тематика)</label>
+
+
+<!-- Наименование курса -->
+<div x-data="courseSelector()" class="relative z-30">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Наименование курса</label>
     
     <input type="hidden" name="course_id" x-model="selectedId">
     <input type="hidden" name="new_course_name" x-model="newCourseName">
+    <input type="hidden" name="matrix_num" x-model="selectedMatrixNum">
     
     <div @click="open = !open; if(!open) search = ''" 
          class="w-full px-3 py-2 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white min-h-[38px]">
-        <span x-text="selectedName || '--- Выберите или введите курс ---'" 
+        <span x-text="selectedName || message" 
               class="text-sm" 
-              :class="{'text-gray-400': !selectedName}"></span>
+              :class="{'': !selectedName && !providerSelected}"></span>
     </div>
     
     <div x-show="open" 
          @click.away="open = false"
-         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg"
+         class="course-dropdown absolute z-30 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg"
          style="max-height: 450px; display: flex; flex-direction: column;">
         
-        <div class="sticky top-0 bg-white border-b border-gray-200 p-2 flex-shrink-0">
-            <input type="text" 
-                   x-model="search"
-                   placeholder="Поиск по курсам или введите новый..."
-                   class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                   @click.stop
-                   @keydown.enter.prevent="addNewCourse()">
-        </div>
+        <!-- Если провайдер не выбран -->
+        <template x-if="!providerSelected && !loading">
+            <div class="px-6 py-8 text-center">
+                <p class="text-base font-bold text-gray-700">Выберите учебное заведение</p>
+            </div>
+        </template>
         
-        <div class="overflow-y-auto flex-1" style="max-height: 350px;">
-            <!-- Кнопка "Добавить новый курс" -->
-            <div x-show="search && !isExistingCourse" 
-                 @click="addNewCourse()"
-                 class="px-3 py-3 cursor-pointer hover:bg-green-50 text-sm border-b border-green-200 bg-green-50 flex items-center"
-                 style="white-space: normal; word-wrap: break-word; line-height: 1.4;">
-                <span class="text-green-600 font-medium mr-2">+</span>
-                <span>Добавить новый курс: "<span x-text="search" class="font-semibold"></span>"</span>
-            </div>
-            
-            <template x-for="course in filteredCourses" :key="course.id">
-                <div @click="selectCourse(course)"
-                     class="px-3 py-2 cursor-pointer hover:bg-indigo-50 text-sm border-b border-gray-100 last:border-b-0"
-                     :class="{'bg-indigo-100': selectedId == course.id}"
-                     style="white-space: normal; word-wrap: break-word; line-height: 1.4;">
-                    <span x-text="course.name"></span>
+        <!-- Если загрузка -->
+        <template x-if="loading">
+            <div class="px-6 py-8 text-center">
+                <div class="inline-flex items-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-gray-600">Загрузка курсов...</span>
                 </div>
-            </template>
+            </div>
+        </template>
+        
+        <!-- Если провайдер выбран и курсы не найдены -->
+        <template x-if="providerSelected && !loading && courses.length === 0">
+            <div class="px-6 py-8 text-center text-gray-500">
+                Курсы не найдены
+            </div>
+        </template>
+
+        <!-- Если провайдер выбран и есть курсы -->
+        <template x-if="providerSelected && !loading && courses.length > 0">
+            <div>
+                <div class="sticky top-0 bg-white border-b border-gray-200 p-2 flex-shrink-0">
+                    <input type="text" 
+                           x-model="search"
+                           placeholder="Поиск по курсам или введите новый..."
+                           class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                           @click.stop
+                           @keydown.enter.prevent="addNewCourse()">
+                </div>
+                
+                <div class="overflow-y-auto flex-1" style="max-height: 350px;">
+                    <!-- Кнопка "Добавить новый курс" -->
+                    <div x-show="search && !isExistingCourse" 
+                         @click="addNewCourse()"
+                         class="px-3 py-3 cursor-pointer hover:bg-green-50 text-sm border-b border-green-200 bg-green-50 flex items-center"
+                         style="white-space: normal; word-wrap: break-word; line-height: 1.4;">
+                        <span class="text-green-600 font-medium mr-2">+</span>
+                        <span>Добавить новый курс: "<span x-text="search" class="font-semibold"></span>"</span>
+                    </div>
+                    
+                    <template x-for="course in filteredCourses" :key="course">
+                        <div @click="selectCourse(course)"
+                             class="px-3 py-2 cursor-pointer hover:bg-indigo-50 text-sm border-b border-gray-100 last:border-b-0"
+                             :class="{'bg-indigo-100': selectedName === course}"
+                             style="white-space: normal; word-wrap: break-word; line-height: 1.4;">
+                            <span x-text="course"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </div>
+
+{{-- МОДАЛЬНОЕ ОКНО С x-teleport --}}
+<template x-teleport="body">
+    <div x-show="showMatrixModal"
+         x-cloak
+         class="fixed inset-0 z-[99999] overflow-y-auto"
+         @click="showMatrixModal = false; open = false; $dispatch('close-provider-dropdown')"
+         style="display: none;">
             
-            <div x-show="filteredCourses.length === 0 && !search" class="px-3 py-4 text-sm text-gray-400 text-center">
-                Начните вводить название курса
+            <div class="flex items-center justify-center min-h-screen px-4">
+                {{-- Подложка --}}
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                     @click="showMatrixModal = false"></div>
+                
+                {{-- Само окно --}}
+                <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-auto p-6" @click.stop>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">
+                            Добавление нового курса
+                        </h3>
+                        <button @click="showMatrixModal = false"
+                                class="text-gray-400 hover:text-gray-500">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <p class="text-sm text-gray-600 mb-4">
+                        Выберите матрицу для добавления курса в справочник:
+                    </p>
+                    
+                    <div class="text-sm font-semibold text-gray-800 bg-gray-100 rounded p-3 mb-4">
+                        <span x-text="pendingCourseName"></span>
+                    </div>
+                    
+                    {{-- Выбор матрицы через radio --}}
+                    <div class="space-y-3">
+                        <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-indigo-50 transition">
+                            <input type="radio" 
+                                   name="matrix_select" 
+                                   value="matrix_courses" 
+                                   x-model="selectedMatrix"
+                                   class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                            <span class="ml-3 text-sm font-medium text-gray-700">Matrix Courses</span>
+                        </label>
+                        
+                        <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-green-50 transition">
+                            <input type="radio" 
+                                   name="matrix_select" 
+                                   value="matrix_dpo" 
+                                   x-model="selectedMatrix"
+                                   class="h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500">
+                            <span class="ml-3 text-sm font-medium text-gray-700">Matrix DPO</span>
+                        </label>
+                        
+                        <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-amber-50 transition">
+                            <input type="radio" 
+                                   name="matrix_select" 
+                                   value="matrix_ot" 
+                                   x-model="selectedMatrix"
+                                   class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500">
+                            <span class="ml-3 text-sm font-medium text-gray-700">Matrix OT</span>
+                        </label>
+                        
+                        <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-purple-50 transition">
+                            <input type="radio" 
+                                   name="matrix_select" 
+                                   value="matrix_po" 
+                                   x-model="selectedMatrix"
+                                   class="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500">
+                            <span class="ml-3 text-sm font-medium text-gray-700">Matrix PO</span>
+                        </label>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end space-x-2">
+                        <button @click="showMatrixModal = false"
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">
+                            Отмена
+                        </button>
+                        <button @click="saveSelectedMatrix(); open = false; $dispatch('close-provider-dropdown')"
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+                                :disabled="!selectedMatrix">
+                            Сохранить
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </template>
 </div>
 
 <script>
-    function courseSelector() {
-        return {
-            open: false,
-            search: '',
-            selectedId: '{{ old('course_id') }}',
-            selectedName: '',
-            newCourseName: '',
-            courses: [
-                @foreach($courses as $course)
-                    {id: '{{ $course->id }}', name: '{{ addslashes($course->course) }}'},
-                @endforeach
-            ],
-            get filteredCourses() {
-                if (!this.search) return this.courses;
-                return this.courses.filter(c => 
-                    c.name.toLowerCase().includes(this.search.toLowerCase())
-                );
-            },
-            get isExistingCourse() {
-                if (!this.search) return false;
-                return this.courses.some(c => c.name.toLowerCase() === this.search.toLowerCase());
-            },
-            selectCourse(course) {
-                this.selectedId = course.id;
-                this.selectedName = course.name;
-                this.newCourseName = '';
-                this.open = false;
-                this.search = '';
-            },
-            addNewCourse() {
-                if (!this.search) return;
-                
-                // Проверяем, существует ли уже такой курс
-                const existing = this.courses.find(c => c.name.toLowerCase() === this.search.toLowerCase());
-                if (existing) {
-                    this.selectCourse(existing);
-                    return;
-                }
-                
-                // Сохраняем название нового курса
-                this.newCourseName = this.search;
-                this.selectedName = this.search;
-                this.selectedId = '';
-                this.open = false;
-                
-                // Можно сразу отправить форму или показать сообщение
-                alert('Новый курс "' + this.search + '" будет создан при сохранении заявки.');
-            },
-            init() {
-                if (this.selectedId) {
-                    const selected = this.courses.find(c => c.id == this.selectedId);
-                    if (selected) {
-                        this.selectedName = selected.name;
+function courseSelector() {
+    return {
+        open: false,
+        search: '',
+        selectedId: null,
+        selectedName: '',
+        newCourseName: '',
+        courses: [],
+        loading: false,
+        providerSelected: false,
+        providerId: null,
+        message: '--- Выберите или введите курс ---',
+        
+        // Флаги для модального окна
+        showMatrixModal: false,
+        pendingCourseName: '',
+        selectedMatrix: null,  // Выбранная матрица
+	courseMatrixNums: {},  // 
+        selectedMatrixNum: null,  
+        isRnYuganskProvider: false,
+        
+        get filteredCourses() {
+            if (!this.search) return this.courses;
+            return this.courses.filter(c => 
+                c.toLowerCase().includes(this.search.toLowerCase())
+            );
+        },
+        
+        get isExistingCourse() {
+            if (!this.search) return false;
+            return this.courses.some(c => c.toLowerCase() === this.search.toLowerCase());
+        },
+        
+        async loadCourses(providerId) {
+            console.log('Загрузка курсов для провайдера:', providerId);
+            
+            this.providerId = providerId;
+            // Проверяем, является ли провайдер РН-Юганскнефтегаз (91, 92)
+            this.isRnYuganskProvider = [66, 67, 91, 92].includes(Number(providerId));
+            console.log('isRnYuganskProvider:', this.isRnYuganskProvider);
+            
+            // Сбрасываем состояние
+            this.loading = true;
+            this.open = true;
+            this.search = '';
+            this.selectedName = '';
+            this.selectedId = null;
+            this.newCourseName = '';
+            this.courses = [];
+	    this.courseMatrixNums = {};  // ← Добавляем объект для хранения matrix_num
+            
+            try {
+                const response = await fetch(`/api/courses-by-provider?provider_id=${providerId}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
                     }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки');
                 }
+                
+                const data = await response.json();
+                console.log('Получено курсов:', data.courses.length);
+	        this.courses = data.courses.map(c => c.name);
+
+	 // Сохраняем matrix_num для каждого курса
+        this.courseMatrixNums = {};
+        data.courses.forEach(c => {
+            this.courseMatrixNums[c.name] = c.matrix_num;
+        });
+        
+//                this.courses = data.courses;
+                this.providerSelected = true;
+            } catch (error) {
+                console.error('Ошибка загрузки курсов:', error);
+                this.courses = [];
+                this.providerSelected = false;
+            } finally {
+                this.loading = false;
             }
+        },
+        
+        selectCourse(course) {
+  console.log('Выбран курс:', course);
+    console.log('matrix_num:', this.courseMatrixNums[course]);
+            this.selectedName = course;
+            this.selectedId = null;
+	    this.newCourseName = course;  // ← Сохраняем название курса
+	    this.selectedMatrixNum = this.courseMatrixNums[course] || null;  // ← Устанавливаем matrix_num
+            this.open = false;
+            this.search = '';
+        },
+        
+addNewCourse() {
+    console.log('addNewCourse called');
+    console.log('search:', this.search);
+    console.log('isRnYuganskProvider:', this.isRnYuganskProvider);
+    
+    if (!this.search) return;
+    
+    const existing = this.courses.find(c => c.toLowerCase() === this.search.toLowerCase());
+    if (existing) {
+        this.selectCourse(existing);
+        return;
+    }
+    
+    // Если это РН-Юганскнефтегаз — показываем модальное окно
+    if (this.isRnYuganskProvider) {
+        console.log('Показываем модальное окно');
+        this.pendingCourseName = this.search;
+        this.newCourseName = this.search;  // ← Сохраняем название
+        this.selectedMatrix = null;  // ← Сбрасываем выбранную матрицу
+        this.showMatrixModal = true;
+        this.open = false;  // ← Закрываем выпадающий список
+    } else {
+        // Иначе сразу сохраняем в courses_urp
+        console.log('Сохраняем в courses_urp');
+        this.newCourseName = this.search;  // ← Сохраняем название
+        this.saveCourseToUrp(this.search);
+        this.open = false;  // ← Закрываем выпадающий список
+    }
+},
+ 
+        // ← сохраняем выбранную матрицу
+        async saveSelectedMatrix() {
+            if (!this.selectedMatrix) {
+                alert('Пожалуйста, выберите матрицу');
+                return;
+            }
+            
+            await this.saveCourseToMatrix(this.selectedMatrix);
+        },       
+async saveCourseToUrp(name) {
+    try {
+        console.log('saveCourseToUrp called:', name);
+
+        const response = await fetch('/api/courses', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                name: name,
+                provider_id: this.providerId,
+            })
+        });
+        
+        const data = await response.json();
+        console.log('Response:', data);
+        
+        if (data.success) {
+            // Добавляем курс в список
+            this.courses.push(name);
+            this.courses.sort();
+            
+  // Выбираем его и сохраняем название
+            this.selectedName = name;
+            this.newCourseName = name;  // ← Сохраняем название
+            this.selectedMatrixNum = data.matrix_num;  // ← Сохраняем matrix_num
+            this.selectedId = null;
+            this.open = false;
+
+            alert(data.message);
+        } else {
+            alert(data.error || 'Ошибка при сохранении курса');
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Ошибка при сохранении курса');
+    }
+},
+        
+async saveCourseToMatrix(matrix) {
+    try {
+
+
+        console.log('saveCourseToMatrix called:', matrix);
+        console.log('pendingCourseName:', this.pendingCourseName);
+        console.log('providerId:', this.providerId);
+        
+        const response = await fetch('/api/courses', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                name: this.pendingCourseName,
+                provider_id: this.providerId,
+                matrix: matrix,
+            })
+        });
+        
+        const data = await response.json();
+        console.log('Response:', data);
+        
+        if (data.success) {
+            console.log('matrix_num from server:', data.matrix_num);
+            // Добавляем курс в список
+            this.courses.push(this.pendingCourseName);
+            this.courses.sort();
+            
+
+      	   // Выбираем его и сохраняем название
+            this.selectedName = this.pendingCourseName;
+            this.newCourseName = this.pendingCourseName;  // ← Сохраняем название
+            this.selectedMatrixNum = data.matrix_num;  // ← Сохраняем matrix_num
+            this.selectedMatrix = matrix;
+     console.log('selectedMatrixNum:', this.selectedMatrixNum);
+            this.selectedId = null;
+            
+            // Закрываем модальное окно
+            this.showMatrixModal = false;
+            this.pendingCourseName = '';
+            this.open = false;  // ← Закрываем выпадающий список
+           
+            alert(data.message);
+        } else {
+            alert(data.error || 'Ошибка при сохранении курса');
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Ошибка при сохранении курса');
+    }
+},
+        reset() {
+            this.providerSelected = false;
+            this.courses = [];
+            this.selectedName = '';
+            this.selectedId = null;
+            this.newCourseName = '';
+            this.search = '';
+            this.loading = false;
+            this.providerId = null;
+            this.isRnYuganskProvider = false;
+            this.showMatrixModal = false;
+        },
+        
+        init() {
+            // Слушаем событие от провайдера
+            document.addEventListener('provider-selected', (event) => {
+                console.log('provider-selected event:', event.detail);
+                if (event.detail.providerId) {
+                    this.loadCourses(event.detail.providerId);
+                } else {
+                    this.reset();
+                }
+            });
+            
+            // Слушаем событие выбора матрицы
+            document.addEventListener('save-course', (event) => {
+                console.log('save-course event:', event.detail);
+                this.saveCourseToMatrix(event.detail.matrix);
+            });
         }
     }
+}
 </script>
+
 <!-- Место проведения (страна) -->
                         <div>
                             <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Место проведения (страна)</label>

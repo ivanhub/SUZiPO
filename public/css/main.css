@@ -36,3 +36,9 @@
   width: 100%;
   table-layout: fixed; /* Обязательно для фиксации колонок */
 }
+
+.course-dropdown {
+    position: absolute;
+    z-index: 10;
+    background: white;
+}

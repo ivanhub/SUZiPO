@@ -124,6 +124,7 @@ public function index(\Illuminate\Http\Request $httpRequest): View
             'new_provider_name' => 'nullable|string|max:500',
             'new_profession_name' => 'nullable|string|max:500',
             'req_prefix' => 'nullable|string|max:10',
+	    'matrix_num' => 'nullable|integer|in:1,2,3,4,5',
         ]);
 
         // Создание нового курса
@@ -265,10 +266,16 @@ unset($validated['req_prefix']);
             }
         }
 
+	$matrixCourses = [];
+	if (in_array($request->provider_id, [91, 92])) {
+	    $courseService = app(\App\Services\CourseService::class);
+	    $matrixCourses = $courseService->getCoursesByProvider($request->provider_id)->toArray();
+	}
         return view('requests.edit', compact(
             'request',
             'providers',
             'courses',
+            'matrixCourses',  
             'cities',
             'professions',
             'learnReasons',
@@ -309,6 +316,7 @@ unset($validated['req_prefix']);
             'curator_id' => 'nullable|exists:requests_curators,id',
             'new_course_name' => 'nullable|string|max:500',
             'new_profession_name' => 'nullable|string|max:500',
+	    'matrix_num' => 'nullable|integer|in:1,2,3,4,5',
         ]);
 
         if (!empty($validated['new_course_name'])) {

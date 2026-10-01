@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\Models\Concerns\HasActivity; 
 use Spatie\Activitylog\Support\LogOptions;
+//use App\Models\RequestHistory as RequestsHistory;
+use App\Models\RequestsHistory; 
 
 class Request extends Model
 {
@@ -35,6 +37,7 @@ class Request extends Model
         'production_break',
         'provider_id',
         'course_id',
+	'matrix_num',
         'country',
         'city_id',
         'profession_id',
@@ -219,7 +222,7 @@ protected static function booted(): void
 {
     static::updated(function ($request) {
         if ($request->getChanges()) {
-            RequestHistory::create([
+            RequestsHistory::create([
                 'request_id' => $request->id,
                 'user_id' => auth()->id(),
                 'action' => 'updated',

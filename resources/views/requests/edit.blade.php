@@ -91,82 +91,177 @@
                             </select>
                         </div>
 
-                        <!-- Учебное заведение (провайдер) -->
-                        <div x-data="editProviderSelector()" class="relative">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Учебное заведение (провайдер)</label>
-                            <input type="hidden" name="provider_id" x-model="selectedId">
-                            <input type="hidden" name="new_provider_name" x-model="newProviderName">
-                            <div @click="open = !open; if(!open) search = ''" 
-                                 class="w-full px-3 py-2 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white min-h-[38px]">
-                                <span x-text="selectedName || '--- Выберите или введите провайдера ---'" class="text-sm" :class="{'text-gray-400': !selectedName}"></span>
-                            </div>
-                            <div x-show="open" @click.away="open = false"
-                                 class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg"
-                                 style="max-height: 450px; display: flex; flex-direction: column;">
-                                <div class="sticky top-0 bg-white border-b border-gray-200 p-2 flex-shrink-0">
-                                    <input type="text" x-model="search" placeholder="Поиск по провайдерам или введите новый..."
-                                           class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                           @click.stop @keydown.enter.prevent="addNewProvider()">
-                                </div>
-                                <div class="overflow-y-auto flex-1" style="max-height: 350px;">
-                                    <div x-show="search && !isExistingProvider" @click="addNewProvider()"
-                                         class="px-3 py-3 cursor-pointer hover:bg-green-50 text-sm border-b border-green-200 bg-green-50 flex items-center">
-                                        <span class="text-green-600 font-medium mr-2">+</span>
-                                        <span>Добавить нового провайдера: "<span x-text="search" class="font-semibold"></span>"</span>
-                                    </div>
-                                    <template x-for="provider in filteredProviders" :key="provider.id">
-                                        <div @click="selectProvider(provider)"
-                                             class="px-3 py-2 cursor-pointer hover:bg-indigo-50 text-sm border-b border-gray-100 last:border-b-0"
-                                             :class="{'bg-indigo-100': selectedId == provider.id}"
-                                             style="white-space: normal; word-wrap: break-word; line-height: 1.4;">
-                                            <span x-text="provider.name"></span>
-                                        </div>
-                                    </template>
-                                    <div x-show="filteredProviders.length === 0 && !search" class="px-3 py-4 text-sm text-gray-400 text-center">
-                                        Начните вводить название провайдера
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+<!-- Учебное заведение (провайдер) -->
+<div x-data="editProviderSelector()" class="relative z-10">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Учебное заведение (провайдер)</label>
+    <input type="hidden" name="provider_id" x-model="selectedId">
+    <input type="hidden" name="new_provider_name" x-model="newProviderName">
+    <div @click="open = !open; if(!open) search = ''" 
+         class="w-full px-3 py-2 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white min-h-[38px]">
+        <span x-text="selectedName || '--- Выберите или введите провайдера ---'" class="text-sm" :class="{'text-gray-400': !selectedName}"></span>
+    </div>
+    <div x-show="open" @click.away="open = false"
+         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg"
+         style="max-height: 450px; display: flex; flex-direction: column;">
+        <div class="sticky top-0 bg-white border-b border-gray-200 p-2 flex-shrink-0">
+            <input type="text" x-model="search" placeholder="Поиск по провайдерам или введите новый..."
+                   class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                   @click.stop @keydown.enter.prevent="addNewProvider()">
+        </div>
+        <div class="overflow-y-auto flex-1" style="max-height: 350px;">
+            <div x-show="search && !isExistingProvider" @click="addNewProvider()"
+                 class="px-3 py-3 cursor-pointer hover:bg-green-50 text-sm border-b border-green-200 bg-green-50 flex items-center">
+                <span class="text-green-600 font-medium mr-2">+</span>
+                <span>Добавить нового провайдера: "<span x-text="search" class="font-semibold"></span>"</span>
+            </div>
+            <template x-for="provider in filteredProviders" :key="provider.id">
+                <div @click="selectProvider(provider)"
+                     class="px-3 py-2 cursor-pointer hover:bg-indigo-50 text-sm border-b border-gray-100 last:border-b-0"
+                     :class="{'bg-indigo-100': selectedId == provider.id}"
+                     style="white-space: normal; word-wrap: break-word; line-height: 1.4;">
+                    <span x-text="provider.name"></span>
+                </div>
+            </template>
+            <div x-show="filteredProviders.length === 0 && !search" class="px-3 py-4 text-sm text-gray-400 text-center">
+                Начните вводить название провайдера
+            </div>
+        </div>
+    </div>
+</div>
 
-                        <!-- Наименование курса (тематика) -->
-                        <div x-data="editCourseSelector()" class="relative">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Наименование курса (тематика)</label>
-                            <input type="hidden" name="course_id" x-model="selectedId">
-                            <input type="hidden" name="new_course_name" x-model="newCourseName">
-                            <div @click="open = !open; if(!open) search = ''" 
-                                 class="w-full px-3 py-2 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white min-h-[38px]">
-                                <span x-text="selectedName || '--- Выберите или введите курс ---'" class="text-sm" :class="{'text-gray-400': !selectedName}"></span>
-                            </div>
-                            <div x-show="open" @click.away="open = false"
-                                 class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg"
-                                 style="max-height: 450px; display: flex; flex-direction: column;">
-                                <div class="sticky top-0 bg-white border-b border-gray-200 p-2 flex-shrink-0">
-                                    <input type="text" x-model="search" placeholder="Поиск по курсам или введите новый..."
-                                           class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                           @click.stop @keydown.enter.prevent="addNewCourse()">
-                                </div>
-                                <div class="overflow-y-auto flex-1" style="max-height: 350px;">
-                                    <div x-show="search && !isExistingCourse" @click="addNewCourse()"
-                                         class="px-3 py-3 cursor-pointer hover:bg-green-50 text-sm border-b border-green-200 bg-green-50 flex items-center">
-                                        <span class="text-green-600 font-medium mr-2">+</span>
-                                        <span>Добавить новый курс: "<span x-text="search" class="font-semibold"></span>"</span>
-                                    </div>
-                                    <template x-for="course in filteredCourses" :key="course.id">
-                                        <div @click="selectCourse(course)"
-                                             class="px-3 py-2 cursor-pointer hover:bg-indigo-50 text-sm border-b border-gray-100 last:border-b-0"
-                                             :class="{'bg-indigo-100': selectedId == course.id}"
-                                             style="white-space: normal; word-wrap: break-word; line-height: 1.4;">
-                                            <span x-text="course.name"></span>
-                                        </div>
-                                    </template>
-                                    <div x-show="filteredCourses.length === 0 && !search" class="px-3 py-4 text-sm text-gray-400 text-center">
-                                        Начните вводить название курса
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+<!-- Наименование курса (тематика) -->
+<div x-data="editCourseSelector()" class="relative z-30">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Наименование курса (тематика)</label>
+    <input type="hidden" name="course_id" x-model="selectedId">
+    <input type="hidden" name="new_course_name" x-model="newCourseName">
+    <input type="hidden" name="matrix_num" x-model="selectedMatrixNum">
+    
+    <div @click="open = !open; if(!open) search = ''" 
+         class="w-full px-3 py-2 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white min-h-[38px]">
+        <span x-text="selectedName || message" class="text-sm" :class="{'': !selectedName && !providerSelected}"></span>
+    </div>
+    
+    <div x-show="open" @click.away="open = false"
+         class="course-dropdown absolute z-30 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg"
+         style="max-height: 450px; display: flex; flex-direction: column;">
+        
+        <!-- Если провайдер не выбран -->
+        <template x-if="!providerSelected && !loading">
+            <div class="px-6 py-8 text-center">
+                <p class="text-base font-bold text-gray-700">Выберите учебное заведение</p>
+            </div>
+        </template>
+        
+        <!-- Если загрузка -->
+        <template x-if="loading">
+            <div class="px-6 py-8 text-center">
+                <div class="inline-flex items-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-gray-600">Загрузка курсов...</span>
+                </div>
+            </div>
+        </template>
+        
+        <!-- Если провайдер выбран и курсы не найдены -->
+        <template x-if="providerSelected && !loading && courses.length === 0">
+            <div class="px-6 py-8 text-center text-gray-500">
+                Курсы не найдены
+            </div>
+        </template>
 
+        <!-- Если провайдер выбран и есть курсы -->
+        <template x-if="providerSelected && !loading && courses.length > 0">
+            <div>
+                <div class="sticky top-0 bg-white border-b border-gray-200 p-2 flex-shrink-0">
+                    <input type="text" x-model="search" placeholder="Поиск по курсам или введите новый..."
+                           class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                           @click.stop @keydown.enter.prevent="addNewCourse()">
+                </div>
+                <div class="overflow-y-auto flex-1" style="max-height: 350px;">
+                    <div x-show="search && !isExistingCourse" @click="addNewCourse()"
+                         class="px-3 py-3 cursor-pointer hover:bg-green-50 text-sm border-b border-green-200 bg-green-50 flex items-center"
+                         style="white-space: normal; word-wrap: break-word; line-height: 1.4;">
+                        <span class="text-green-600 font-medium mr-2">+</span>
+                        <span>Добавить новый курс: "<span x-text="search" class="font-semibold"></span>"</span>
+                    </div>
+                    <template x-for="course in filteredCourses" :key="course">
+                        <div @click="selectCourse(course)"
+                             class="px-3 py-2 cursor-pointer hover:bg-indigo-50 text-sm border-b border-gray-100 last:border-b-0"
+                             :class="{'bg-indigo-100': selectedName === course}"
+                             style="white-space: normal; word-wrap: break-word; line-height: 1.4;">
+                            <span x-text="course"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    {{-- МОДАЛЬНОЕ ОКНО --}}
+    <template x-teleport="body">
+        <div x-show="showMatrixModal"
+             x-cloak
+             class="fixed inset-0 z-[99999] overflow-y-auto"
+             @click="showMatrixModal = false; open = false; $dispatch('close-provider-dropdown')"
+             style="display: none;">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                     @click="showMatrixModal = false"></div>
+                <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-auto p-6" @click.stop>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">Добавление нового курса</h3>
+                        <button @click="showMatrixModal = false" class="text-gray-400 hover:text-gray-500">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-4">Выберите матрицу для добавления курса в справочник:</p>
+                    <div class="text-sm font-semibold text-gray-800 bg-gray-100 rounded p-3 mb-4">
+                        <span x-text="pendingCourseName"></span>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-indigo-50 transition">
+                            <input type="radio" name="matrix_select" value="matrix_courses" x-model="selectedMatrix"
+                                   class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                            <span class="ml-3 text-sm font-medium text-gray-700">Matrix Courses</span>
+                        </label>
+                        <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-green-50 transition">
+                            <input type="radio" name="matrix_select" value="matrix_dpo" x-model="selectedMatrix"
+                                   class="h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500">
+                            <span class="ml-3 text-sm font-medium text-gray-700">Matrix DPO</span>
+                        </label>
+                        <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-amber-50 transition">
+                            <input type="radio" name="matrix_select" value="matrix_ot" x-model="selectedMatrix"
+                                   class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500">
+                            <span class="ml-3 text-sm font-medium text-gray-700">Matrix OT</span>
+                        </label>
+                        <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-purple-50 transition">
+                            <input type="radio" name="matrix_select" value="matrix_po" x-model="selectedMatrix"
+                                   class="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500">
+                            <span class="ml-3 text-sm font-medium text-gray-700">Matrix PO</span>
+                        </label>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-2">
+                        <button @click="showMatrixModal = false"
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">
+                            Отмена
+                        </button>
+                        <button @click="saveSelectedMatrix(); open = false; $dispatch('close-provider-dropdown')"
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+                                :disabled="!selectedMatrix">
+                            Сохранить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
                         <!-- Место проведения (страна) -->
                         <div>
                             <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Место проведения (страна)</label>
@@ -445,95 +540,314 @@
     </div>
 
 <script>
-    function editProviderSelector() {
-        return {
-            open: false,
-            search: '',
-            selectedId: '{{ old('provider_id', $request->provider_id) }}',
-            selectedName: '',
-            newProviderName: '',
-            providers: [
-                @foreach($providers as $provider)
-                    {id: '{{ $provider->id }}', name: '{{ addslashes($provider->name) }}'},
-                @endforeach
-            ],
-            get filteredProviders() {
-                if (!this.search) return this.providers;
-                return this.providers.filter(p => p.name.toLowerCase().includes(this.search.toLowerCase()));
-            },
-            get isExistingProvider() {
-                if (!this.search) return false;
-                return this.providers.some(p => p.name.toLowerCase() === this.search.toLowerCase());
-            },
-            selectProvider(p) { 
-                this.selectedId = p.id; 
-                this.selectedName = p.name; 
-                this.newProviderName = ''; 
-                this.open = false; 
-                this.search = ''; 
-            },
-            addNewProvider() {
-                if (!this.search) return;
-                const existing = this.providers.find(p => p.name.toLowerCase() === this.search.toLowerCase());
-                if (existing) { this.selectProvider(existing); return; }
-                this.newProviderName = this.search; 
-                this.selectedName = this.search; 
-                this.selectedId = ''; 
-                this.open = false;
-            },
-            init() {
-                if (this.selectedId) {
-                    const s = this.providers.find(p => p.id == this.selectedId);
-                    if (s) this.selectedName = s.name;
-                }
-            }
-        }
-    }
 
-    function editCourseSelector() {
-        return {
-            open: false,
-            search: '',
-            selectedId: '{{ old('course_id', $request->course_id) }}',
-            selectedName: '',
-            newCourseName: '',
-            courses: [
-                @foreach($courses as $course)
-                    {id: '{{ $course->id }}', name: '{{ addslashes($course->course) }}'},
-                @endforeach
-            ],
-            get filteredCourses() {
-                if (!this.search) return this.courses;
-                return this.courses.filter(c => c.name.toLowerCase().includes(this.search.toLowerCase()));
-            },
-            get isExistingCourse() {
-                if (!this.search) return false;
-                return this.courses.some(c => c.name.toLowerCase() === this.search.toLowerCase());
-            },
-            selectCourse(c) { 
-                this.selectedId = c.id; 
-                this.selectedName = c.name; 
-                this.newCourseName = ''; 
-                this.open = false; 
-                this.search = ''; 
-            },
-            addNewCourse() {
-                if (!this.search) return;
-                const existing = this.courses.find(c => c.name.toLowerCase() === this.search.toLowerCase());
-                if (existing) { this.selectCourse(existing); return; }
-                this.newCourseName = this.search; 
-                this.selectedName = this.search; 
-                this.selectedId = ''; 
+function editProviderSelector() {
+    return {
+        open: false,
+        search: '',
+        selectedId: '{{ old('provider_id', $request->provider_id) }}',
+        selectedName: '',
+        newProviderName: '',
+        providers: [
+            @foreach($providers as $provider)
+                {id: '{{ $provider->id }}', name: '{{ addslashes($provider->name) }}'},
+            @endforeach
+        ],
+        get filteredProviders() {
+            if (!this.search) return this.providers;
+            return this.providers.filter(p => p.name.toLowerCase().includes(this.search.toLowerCase()));
+        },
+        get isExistingProvider() {
+            if (!this.search) return false;
+            return this.providers.some(p => p.name.toLowerCase() === this.search.toLowerCase());
+        },
+        selectProvider(p) { 
+            this.selectedId = p.id; 
+            this.selectedName = p.name; 
+            this.newProviderName = ''; 
+            this.open = false; 
+            this.search = ''; 
+            
+            // Отправляем событие для загрузки курсов
+            document.dispatchEvent(new CustomEvent('provider-selected', {
+                detail: { providerId: p.id }
+            }));
+        },
+        addNewProvider() {
+            if (!this.search) return;
+            const existing = this.providers.find(p => p.name.toLowerCase() === this.search.toLowerCase());
+            if (existing) { this.selectProvider(existing); return; }
+            this.newProviderName = this.search; 
+            this.selectedName = this.search; 
+            this.selectedId = ''; 
+            this.open = false;
+            
+            document.dispatchEvent(new CustomEvent('provider-selected', {
+                detail: { providerId: null }
+            }));
+        },
+        
+        // Закрываем выпадающий список при открытии модального окна
+        init() {
+            document.addEventListener('close-provider-dropdown', () => {
                 this.open = false;
-            },
-            init() {
-                if (this.selectedId) {
-                    const s = this.courses.find(c => c.id == this.selectedId);
-                    if (s) this.selectedName = s.name;
+            });
+            
+            // Если есть выбранный провайдер — показываем его название
+            if (this.selectedId && this.selectedId !== '') {
+                const s = this.providers.find(p => p.id == this.selectedId);
+                if (s) {
+                    this.selectedName = s.name;
+                    // Отправляем событие для загрузки курсов
+                    document.dispatchEvent(new CustomEvent('provider-selected', {
+                        detail: { providerId: this.selectedId }
+                    }));
                 }
             }
         }
     }
+}
+
+
+function editCourseSelector() {
+    return {
+        open: false,
+        search: '',
+        selectedId: '{{ old('course_id', $request->course_id) }}',
+        selectedName: '',
+        newCourseName: '',
+        courses: [],
+        loading: false,
+        providerSelected: false,
+        providerId: null,
+        message: '--- Выберите или введите курс ---',
+        
+        showMatrixModal: false,
+        pendingCourseName: '',
+        selectedMatrix: null,
+        courseMatrixNums: {},
+        selectedMatrixNum: '{{ $request->matrix_num }}' || null,
+        isRnYuganskProvider: false,
+        
+        get filteredCourses() {
+            if (!this.search) return this.courses;
+            return this.courses.filter(c => 
+                c.toLowerCase().includes(this.search.toLowerCase())
+            );
+        },
+        
+        get isExistingCourse() {
+            if (!this.search) return false;
+            return this.courses.some(c => c.toLowerCase() === this.search.toLowerCase());
+        },
+        
+async loadCourses(providerId) {
+    this.providerId = providerId;
+    this.isRnYuganskProvider = [91, 92].includes(Number(providerId));
+    
+    this.loading = true;
+    this.open = true;
+    this.search = '';
+    this.courses = [];
+    this.courseMatrixNums = {};
+    
+    try {
+        const response = await fetch(`/api/courses-by-provider?provider_id=${providerId}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            }
+        });
+        
+        const data = await response.json();
+        this.courses = data.courses.map(c => c.name);
+        data.courses.forEach(c => {
+            this.courseMatrixNums[c.name] = c.matrix_num;
+        });
+        
+        this.providerSelected = true;
+    } catch (error) {
+        console.error('Ошибка:', error);
+        this.courses = [];
+        this.providerSelected = false;
+    } finally {
+        this.loading = false;
+    }
+},        
+        selectCourse(course) {
+            this.selectedName = course;
+            this.selectedId = null;
+            this.newCourseName = course;
+            this.selectedMatrixNum = this.courseMatrixNums[course] || this.selectedMatrixNum;
+            this.open = false;
+            this.search = '';
+        },
+        
+        addNewCourse() {
+            if (!this.search) return;
+            
+            const existing = this.courses.find(c => c.toLowerCase() === this.search.toLowerCase());
+            if (existing) {
+                this.selectCourse(existing);
+                return;
+            }
+            
+            if (this.isRnYuganskProvider) {
+                this.pendingCourseName = this.search;
+                this.newCourseName = this.search;
+                this.selectedMatrix = null;
+                this.showMatrixModal = true;
+                this.open = false;
+            } else {
+                this.newCourseName = this.search;
+                this.saveCourseToUrp(this.search);
+                this.open = false;
+            }
+        },
+        
+        async saveSelectedMatrix() {
+            if (!this.selectedMatrix) {
+                alert('Пожалуйста, выберите матрицу');
+                return;
+            }
+            await this.saveCourseToMatrix(this.selectedMatrix);
+        },
+        
+        async saveCourseToUrp(name) {
+            try {
+                const response = await fetch('/api/courses', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        provider_id: this.providerId,
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.courses.push(name);
+                    this.courses.sort();
+                    
+                    this.selectedName = name;
+                    this.newCourseName = name;
+                    this.selectedMatrixNum = data.matrix_num;
+                    this.selectedId = null;
+                    this.open = false;
+                    
+                    alert(data.message);
+                } else {
+                    alert(data.error || 'Ошибка при сохранении курса');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Ошибка при сохранении курса');
+            }
+        },
+        
+        async saveCourseToMatrix(matrix) {
+            try {
+                const response = await fetch('/api/courses', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: this.pendingCourseName,
+                        provider_id: this.providerId,
+                        matrix: matrix,
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.courses.push(this.pendingCourseName);
+                    this.courses.sort();
+                    
+                    this.selectedName = this.pendingCourseName;
+                    this.newCourseName = this.pendingCourseName;
+                    this.selectedMatrixNum = data.matrix_num;
+                    this.selectedMatrix = matrix;
+                    this.selectedId = null;
+                    
+                    this.showMatrixModal = false;
+                    this.pendingCourseName = '';
+                    this.open = false;
+                    
+                    alert(data.message);
+                } else {
+                    alert(data.error || 'Ошибка при сохранении курса');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Ошибка при сохранении курса');
+            }
+        },
+        
+        reset() {
+            this.providerSelected = false;
+            this.courses = [];
+            this.selectedName = '';
+            this.selectedId = null;
+            this.newCourseName = '';
+            this.search = '';
+            this.loading = false;
+            this.providerId = null;
+            this.isRnYuganskProvider = false;
+            this.showMatrixModal = false;
+        },
+        
+init() {
+    document.addEventListener('provider-selected', (event) => {
+        if (event.detail.providerId) {
+            this.loadCourses(event.detail.providerId);
+        } else {
+            this.reset();
+        }
+    });
+    
+    document.addEventListener('close-provider-dropdown', () => {
+        this.open = false;
+    });
+    
+    // Если уже есть выбранный провайдер — загружаем курсы
+    const currentProviderId = '{{ $request->provider_id }}';
+    if (currentProviderId) {
+        this.loadCourses(Number(currentProviderId)).then(() => {
+            // После загрузки курсов устанавливаем выбранный курс
+            const currentCourseName = '{{ addslashes($request->course->course ?? $request->new_course_name ?? '') }}';
+            const courseId = '{{ $request->course_id }}';
+            const currentMatrixNum = '{{ $request->matrix_num }}';
+            
+            if (currentCourseName) {
+                // Устанавливаем выбранный курс
+                this.selectedName = currentCourseName;
+                this.newCourseName = currentCourseName;
+                this.selectedId = courseId || null;
+                
+                // Устанавливаем matrix_num
+                if (this.courseMatrixNums[currentCourseName]) {
+                    this.selectedMatrixNum = this.courseMatrixNums[currentCourseName];
+                } else if (currentMatrixNum) {
+                    this.selectedMatrixNum = currentMatrixNum;
+                }
+                
+                // Закрываем выпадающий список
+                this.open = false;
+            }
+        });
+    }
+}
+    }
+}
 
     function editCitySelector() {
         return {
