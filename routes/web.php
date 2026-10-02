@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\ProtocolController;
-use App\Http\Controllers\CourseController;
+use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\TrainingTypeController;
 use App\Http\Controllers\ProfessionController;
@@ -137,33 +137,44 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// Проверка доступности аудитории на дату
+// Получение занятых аудиторий на период
 Route::get('/api/available-audiences', function (Illuminate\Http\Request $request) {
-    $date = $request->get('date');
-    $excludeBookingId = $request->get('booking_id');
-
-    $query = Booking::whereDate('date', $date);
-    if ($excludeBookingId) {
-        $query->where('id', '!=', $excludeBookingId);
-    }
-
+    $startDate = $request->get('start_date');
+    $endDate = $request->get('end_date');
+    
+    $query = App\Models\Booking::where(function ($query) use ($startDate, $endDate) {
+        $query->whereBetween('start_date', [$startDate, $endDate])
+              ->orWhereBetween('end_date', [$startDate, $endDate])
+              ->orWhere(function ($query) use ($startDate, $endDate) {
+                  $query->where('start_date', '<=', $startDate)
+                        ->where('end_date', '>=', $endDate);
+              });
+    });
+    
     return $query->pluck('audience_id');
 });
 
+
 // Проверка доступности преподавателя на дату
+// Получение занятых преподавателей на период
 Route::get('/api/available-teachers', function (Illuminate\Http\Request $request) {
-    $date = $request->get('date');
-    $excludeBookingId = $request->get('booking_id');
-
-    $query = Booking::whereDate('date', $date);
-    if ($excludeBookingId) {
-        $query->where('id', '!=', $excludeBookingId);
-    }
-
+    $startDate = $request->get('start_date');
+    $endDate = $request->get('end_date');
+    
+    $query = App\Models\Booking::where(function ($query) use ($startDate, $endDate) {
+        $query->whereBetween('start_date', [$startDate, $endDate])
+              ->orWhereBetween('end_date', [$startDate, $endDate])
+              ->orWhere(function ($query) use ($startDate, $endDate) {
+                  $query->where('start_date', '<=', $startDate)
+                        ->where('end_date', '>=', $endDate);
+              });
+    });
+    
     return $query->pluck('teacher_id');
 });
 
-//Импорт сотрудников из SAP (xls)
+
+       //Импорт сотрудников из SAP (xls)
 Route::post('all-users-sap/import', [AllUserSapController::class, 'import'])->name('all-users-sap.import');
 Route::delete('all-users-sap/{allUserSap}/delete', [AllUserSapController::class, 'destroy'])->name('all-users-sap.delete');
 
@@ -173,10 +184,23 @@ Route::resource('all-users-sap', AllUserSapController::class)->parameters([
 
 // Route::post('requests/send-to-ooo', [RequestController::class, 'sendToOoo'])->name('requests.send-to-ooo');
 
-Route::resource('requests', RequestController::class);
+Route::resource('requests', RequestController::class)->middleware('auth');
 // ������� ��� �������� ��� ��������� �������� ������ � ���
 
+
+Route::post('requests/{id}/request-unlock', [RequestController::class, 'requestUnlock'])
+    ->name('requests.request-unlock')
+    ->middleware('auth');
+
+Route::get('requests/{id}/unlock', [RequestController::class, 'unlock'])->name('requests.unlock');
+
 Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
+
+
+// История изменений заявки
+Route::get('requests/{request}/history', [RequestController::class, 'history'])->name('requests.history');
+Route::post('requests/{request}/history/{activity}/rollback', [RequestController::class, 'rollback'])->name('requests.rollback');
+
 
 // Маршруты для сотрудников заявки
 Route::prefix('request-employees')->name('request-employees.')->group(function () {
@@ -208,6 +232,16 @@ Route::get('/bookings', function () {
 })->name('bookings.index');
 
 // Маршруты для матриц
+Route::get('/api/courses-by-provider', [\App\Http\Controllers\Api\CourseController::class, 'getByProvider'])
+    ->name('api.courses.by-provider')
+    ->middleware('auth');
+
+// Сохранение нового курса
+Route::post('/api/courses', [CourseController::class, 'store'])
+    ->name('api.courses.store')
+    ->middleware('auth');
+
+
 Route::prefix('matrices')->name('matrices.')->group(function () {
     Route::resource('courses', MatrixCourseController::class);
     //Route::resource('courses', MatrixCourseController::class)->parameters(['course' => 'matrixCourse']);

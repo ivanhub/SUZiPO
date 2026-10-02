@@ -32,11 +32,13 @@
                         <div class="flex items-center space-x-3">
                             <h2 class="text-lg font-semibold text-gray-900">Заявки на обучение</h2>
 
-                            <button type="submit" id="btn-mass-send"
-                                class="hidden inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 transition"
-                                onclick="return confirm('Отправить выбранные заявки в ООО?')">
-                                🚀 Отправить выбранные в ООО
-                            </button>
+@if(auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']))
+<button type="submit" id="btn-mass-send"
+    class="hidden inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 transition"
+    onclick="return confirm('Отправить выбранные заявки в ООО?')">
+    🚀 Отправить выбранные в ООО
+</button>
+@endif
                         </div>
 
                         <a href="{{ route('requests.create') }}"
@@ -74,25 +76,25 @@
                                 <!-- Чекбокс строки -->
 <!-- Измененный чекбокс внутри <tbody> -->
 <td class="px-2 py-4 whitespace-nowrap text-sm">
-    @if($request->status === 'Создана' && $request->employees_count > 0)
-    <!-- Добавлен атрибут form="mass-send-form" -->
+    @if(($request->status === 'Создана' || $request->status === 'created' || $request->status === 'urpedit') && $request->employees_count > 0)
     <input type="checkbox" name="request_ids[]" value="{{ $request->id }}" form="mass-send-form" class="request-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
     @else
-    <input type="checkbox" disabled class="rounded border-gray-200 bg-gray-100 cursor-not-allowed" title="{{ $request->status !== 'Создана' ? 'Заявка не в статусе Создана' : 'В заявке нет сотрудников' }}">
+    <input type="checkbox" disabled class="rounded border-gray-200 bg-gray-100 cursor-not-allowed" title="{{ ($request->status !== 'Создана' && $request->status !== 'created' && $request->status !== 'urpedit') ? 'Заявка не в статусе Создана' : 'В заявке нет сотрудников' }}">
     @endif
 </td>
-
 
                                 <td class="px-1 py-4 whitespace-nowrap text-sm text-gray-900">{{ $request->id }}</td>
                                 <td class="px-1 py-4 whitespace-nowrap">
                                     <span class="px-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                            @if($request->status === 'Создана') bg-yellow-100 text-yellow-800
-                                            @elseif($request->status === 'Отправлена') bg-blue-100 text-blue-800
-                                            @elseif($request->status === 'accepted') bg-green-100 text-green-800
-                                            @elseif($request->status === 'rejected') bg-red-100 text-red-800
-                                            @else bg-gray-100 text-gray-800
-                                            @endif">
-                                        {{ $request->status }}
+           @if($request->status === 'Создана' || $request->status === 'created' || $request->status === 'urpedit') bg-yellow-100 text-yellow-800
+            @elseif($request->status === 'Отправлена' || $request->status === 'sent') bg-blue-100 text-blue-800
+            @elseif($request->status === 'accepted') bg-green-100 text-green-800
+            @elseif($request->status === 'rejected') bg-red-100 text-red-800
+            @elseif($request->status === 'urpedit') bg-orange-100 text-orange-800
+            @elseif($request->status === 'in_progress') bg-purple-100 text-purple-800
+            @else bg-gray-100 text-gray-800
+            @endif">
+        {{ $request->status_label }}
                                     </span>
                                 </td>
                                 <td class="px-1 py-4 whitespace-nowrap text-sm text-gray-500">{{ $request->one_time ? 'Да' : 'Нет' }}</td>
@@ -106,7 +108,7 @@
                                     <div class="flex items-center space-x-2">
 
 <!-- Одиночная отправка -->
-@if($request->status === 'Создана' && $request->employees_count > 0)
+@if(auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']) && ($request->status === 'Создана' || $request->status === 'created' || $request->status === 'urpedit') && $request->employees_count > 0)
 <button type="button"
     class="text-blue-600 hover:text-blue-900 text-sm font-bold border border-blue-300 rounded px-1"
     title="Отправить одну заявку"
@@ -115,23 +117,40 @@
 </button>
 @endif
 
-                                        <!-- Посмотреть / Редактировать / Сотрудники -->
-                                        <a href="{{ route('requests.show', $request) }}" class="text-indigo-600 hover:text-indigo-900" title="Посмотреть">👁️</a>
-                                        <a href="{{ route('requests.edit', $request) }}" class="text-indigo-600 hover:text-indigo-900" title="Редактировать">✏️</a>
-                                        <a href="{{ route('request-employees.index', $request->id) }}" class="text-green-600 hover:text-green-900 relative" title="Сотрудники">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                            </svg>
+<!-- Посмотреть -->
+<a href="{{ route('requests.show', $request) }}" class="text-indigo-600 hover:text-indigo-900" title="Посмотреть">👁️</a>
+
+<!-- Редактировать - только для urp, urp admin, admin если статус "Создана" -->
+@if(auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']) || ($request->status !== 'Создана' && $request->status !== 'created' && $request->status !== 'urpedit'))
+<a href="{{ route('requests.edit', $request) }}" class="text-indigo-600 hover:text-indigo-900" title="Редактировать">✏️</a>
+@endif
+
+<!-- Сотрудники - только для urp, urp admin, admin если статус "Создана" -->
+@if(auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']) || ($request->status !== 'Создана' && $request->status !== 'created' && $request->status !== 'urpedit'))
+<a href="{{ route('request-employees.index', $request->id) }}" class="text-green-600 hover:text-green-900 relative" title="Сотрудники">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+    </svg>
+    @if($request->employees_count > 0)
+    <span class="absolute -top-2 -right-2 bg-green-500 text-white text-xs rounded-full px-1.5 py-0.5">{{ $request->employees_count }}</span>
+    @endif
+</a>
+@endif
                                             @if($request->employees_count > 0)
                                             <span class="absolute -top-2 -right-2 bg-green-500 text-white text-xs rounded-full px-1.5 py-0.5">{{ $request->employees_count }}</span>
                                             @endif
                                         </a>
-                                        <form action="{{ route('requests.destroy', $request) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900" title="Удалить" onclick="return confirm('Удалить?')">🗑️</button>
-                                        </form>
-                                    </div>
+
+<!-- Кнопка "Удалить" - только urp/urp admin если статус "Создана" или "На доработке" -->
+@if(auth()->user()->hasRole('admin') || 
+    (auth()->user()->hasAnyRole(['urp', 'urp admin']) && ($request->status === 'Создана' || $request->status === 'created' || $request->status === 'urpedit')) ||
+    (auth()->user()->hasAnyRole(['ooo', 'ooo admin', 'ooo chief']) && $request->status !== 'Создана' && $request->status !== 'created' && $request->status !== 'urpedit'))
+<form action="{{ route('requests.destroy', $request) }}" method="POST" class="inline">
+    @csrf
+    @method('DELETE')
+    <button type="submit" class="text-red-600 hover:text-red-900" title="Удалить" onclick="return confirm('Удалить?')">🗑️</button>
+</form>
+@endif                                    </div>
                                 </td>
                             </tr>
                             @empty

@@ -7,17 +7,27 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Spatie\Activitylog\Models\Concerns\HasActivity; 
 use Spatie\Activitylog\Support\LogOptions;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
+//use App\Models\RequestHistory as RequestsHistory;
+use App\Models\RequestsHistory; 
 
 class Request extends Model
 {
-    use HasFactory, LogsActivity; 
+    use HasFactory, HasActivity;
+
+    const STATUS_CREATED = 'created';
+    const STATUS_SENT = 'sent';
+    const STATUS_IN_PROGRESS = 'in_progress';
+    const STATUS_ACCEPTED = 'accepted';
+    const STATUS_REJECTED = 'rejected';
+    const STATUS_URP_EDIT = 'urpedit';
 
     protected $table = 'requests';
     protected $fillable = [
         'req_number', 
         'req_id',
+	'protection_requested', // для запроса снятия защиты
         'user_id',
         'status',
         'one_time',
@@ -29,6 +39,7 @@ class Request extends Model
         'production_break',
         'provider_id',
         'course_id',
+	'matrix_num',
         'country',
         'city_id',
         'profession_id',
@@ -51,22 +62,139 @@ class Request extends Model
         'issue_date' => 'date',
     ];
 
-    public function getActivitylogOptions(): LogOptions
+    /**
+ * Маппинг полей на русские названия
+ */
+public static function getFieldLabels(): array
+{
+    return [
+        'status' => 'Статус',
+        'start_date' => 'Дата начала обучения',
+        'end_date' => 'Дата окончания обучения',
+        'issue_date' => 'Дата оформления',
+        'course_id' => 'Курс',
+        'provider_id' => 'Провайдер',
+        'audience_id' => 'Аудитория',
+        'teacher_id' => 'Преподаватель',
+        'curator_id' => 'Куратор',
+        'education_form' => 'Форма образования',
+        'employee_type' => 'ИТР/рабочие',
+        'production_break' => 'С отрывом от производства',
+        'country' => 'Страна',
+        'city_id' => 'Город',
+        'profession_id' => 'Профессия',
+        'cost_profit' => 'Себестоимость/Прибыль',
+        'req_id' => 'Номер заявки',
+    ];
+}
+
+
+public function getActivitylogOptions(): LogOptions
     {
+            
+    return LogOptions::defaults()
+        ->logOnly([
+            'start_date',
+            'end_date',
+            'issue_date',
+            'course_id',
+            'provider_id',
+            'audience_id',
+            'teacher_id',
+            'curator_id',
+        ])
+        //->logFillable() 
+        ->logOnlyDirty()
+        ->dontLogEmptyChanges();
+
+
+    //     ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
+   //             'created' => 'Заявка успешно создана в системе',
+   //             'updated' => 'В параметры заявки внесены изменения',
+   //             'deleted' => 'Заявка была удалена',
+   //             default   => "{$eventName}"
+   //         });
+  
+
+          // ->setDescriptionForEvent(fn(string $eventName) => "Заявка была {$eventName}");*/
+
+
+/*
         return LogOptions::defaults()
-            // ->logAll()  
-            ->logFillable() 
-            // ->logOnly(['status', 'country'])
-            ->logOnlyDirty()
-            ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
-                'created' => 'Заявка успешно создана в системе',
-                'updated' => 'В параметры заявки внесены изменения',
-                'deleted' => 'Заявка была удалена',
-                default   => "{$eventName}"
-            });
+        ->logAll()
+        ->logOnlyDirty(); */
+        
+    }
+/**
+ * Форматирование значения поля для истории
+ */
+public static function formatFieldValue(string $field, mixed $value): string
+{
+    if ($value === null || $value === '') {
+        return '—';
     }
     
+    // Форматируем даты
+    if (in_array($field, ['start_date', 'end_date', 'issue_date'])) {
+        return \Carbon\Carbon::parse($value)->format('d.m.Y');
+    }
+    
+    // Форматируем преподавателя
+    if ($field === 'teacher_id') {
+        $teacher = \App\Models\RequestsTeachers::find($value);
+        return $teacher ? $teacher->fio : 'ID: ' . $value;
+    }
+    
+    // Форматируем куратора
+    if ($field === 'curator_id') {
+        $curator = \App\Models\RequestsCurator::find($value);
+        return $curator ? $curator->fio : 'ID: ' . $value;
+    }
+    
+    // Форматируем курс
+    if ($field === 'course_id') {
+        $course = \App\Models\RequestsCourse::find($value);
+        return $course ? $course->course : 'ID: ' . $value;
+    }
+    
+    // Форматируем провайдера
+    if ($field === 'provider_id') {
+        $provider = \App\Models\RequestsProvider::find($value);
+        return $provider ? $provider->name : 'ID: ' . $value;
+    }
+    
+    // Форматируем аудиторию
+    if ($field === 'audience_id') {
+        $audience = \App\Models\RequestsAudience::find($value);
+        return $audience ? $audience->number . ' (' . $audience->location . ')' : 'ID: ' . $value;
+    }
+
+    // Форматируем сотрудника
+if ($field === 'employee_id') {
+    $employee = \App\Models\RequestEmployee::find($value);
+    return $employee ? $employee->full_name . ' (таб. №' . $employee->tab_number . ')' : 'ID: ' . $value;
+}
+    
+    return (string)$value;
+}
+
+   public static function getStatuses(): array
+    {
+        return [
+            self::STATUS_CREATED => 'Создана',
+            self::STATUS_SENT => 'Отправлена',
+            self::STATUS_IN_PROGRESS => 'В работе',
+            self::STATUS_URP_EDIT => 'На доработке',
+            self::STATUS_ACCEPTED => 'Принята',
+            self::STATUS_REJECTED => 'Отклонена',
+        ];
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return self::getStatuses()[$this->status] ?? $this->status;
+    }
+
     public function protocols(): HasMany { return $this->hasMany(AppProtocol::class, 'prot_num', 'req_id'); }
 
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
@@ -95,7 +223,35 @@ class Request extends Model
 
     public function curator(): BelongsTo { return $this->belongsTo(RequestsCurator::class); }
 
-    public function employees(): HasMany { return $this->hasMany(RequestEmployee::class); }
+    /**
+     * Сотрудники заявки
+     */
+    public function employees(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(RequestEmployee::class); }
 
     public function activities(): MorphMany { return $this->morphMany(\Spatie\Activitylog\Models\Activity::class, 'subject'); }
+
+
+
+protected static function booted(): void
+{
+    static::updated(function ($request) {
+        if ($request->getChanges()) {
+            RequestsHistory::create([
+                'request_id' => $request->id,
+                'user_id' => auth()->id(),
+                'action' => 'updated',
+                'changes' => [
+                    'old' => $request->getOriginal(),
+                    'new' => $request->getChanges(),
+                ],
+            ]);
+        }
+    });
+}
+
+
+public function rollbacks(): \Illuminate\Database\Eloquent\Relations\HasMany
+{
+    return $this->hasMany(RequestRollback::class);
+}
  }

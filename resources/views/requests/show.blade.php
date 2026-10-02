@@ -4,30 +4,52 @@
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-semibold text-gray-900">Просмотр заявки #{{ $request->id }}</h2>
-                    <div class="flex space-x-2">
-                        <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
-                        <a href="{{ route('request-employees.index', $request->id) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Сотрудники</a>
-                        <a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
-                    </div>
+<div class="flex space-x-2">
+    <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
+    <a href="{{ route('request-employees.index', $request->id) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Сотрудники</a>
+@if(!(auth()->user()->hasAnyRole(['urp', 'urp admin']) && $request->status === 'in_progress'))
+<a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
+@endif
+
+<!-- Кнопка запроса снятия защиты (только для ooo, ooo admin, ooo chief) -->
+@if(auth()->user() && auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']) && $request->start_date && \Carbon\Carbon::parse($request->start_date)->diffInHours(now()) < 48 && $request->status !== 'Создана' && $request->status !== 'created' && $request->status !== 'urpedit')
+<form action="{{ route('requests.request-unlock', $request->id) }}" method="POST" class="inline">
+    @csrf
+    <button type="submit" 
+            class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition"
+            onclick="return confirm('Отправить запрос на снятие защиты?')">
+        🔓 Запросить снять защиту
+    </button>
+</form>
+@endif
+
+<!--  Kнопкa "История изменений" -->
+@if(auth()->user()->hasAnyRole(['admin', 'ooo chief']))
+<a href="{{ route('requests.history', $request->id) }}" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">🕐 История</a>
+@endif
+
+</div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                    <!-- Статус -->
-                    <div>
-                        <h3 class="text-sm font-medium text-gray-500">Статус</h3>
-                        <p class="mt-1 text-sm text-gray-900">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                @if($request->status === 'draft') bg-yellow-100 text-yellow-800
-                                @elseif($request->status === 'sent') bg-blue-100 text-blue-800
-                                @elseif($request->status === 'accepted') bg-green-100 text-green-800
-                                @elseif($request->status === 'rejected') bg-red-100 text-red-800
-                                @else bg-gray-100 text-gray-800
-                                @endif">
-                                {{ $request->status }}
-                            </span>
-                        </p>
-                    </div>
+                    
+<!-- Статус -->
+<div>
+    <h3 class="text-sm font-medium text-gray-500">Статус</h3>
+    <p class="mt-1 text-sm text-gray-900">
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+            @if($request->status === 'Создана' || $request->status === 'created') bg-yellow-100 text-yellow-800
+            @elseif($request->status === 'Отправлена' || $request->status === 'sent') bg-blue-100 text-blue-800
+            @elseif($request->status === 'in_progress') bg-purple-100 text-purple-800
+            @elseif($request->status === 'urpedit') bg-orange-100 text-orange-800
+            @elseif($request->status === 'accepted') bg-green-100 text-green-800
+            @elseif($request->status === 'rejected') bg-red-100 text-red-800
+            @else bg-gray-100 text-gray-800
+            @endif">
+            {{ $request->status_label }}
+        </span>
+    </p>
+</div>
 
                     <!-- Одноразовая заявка -->
                     <div>
@@ -154,100 +176,213 @@
                             <h3 class="text-sm font-medium text-gray-500">Куратор группы</h3>
                             <p class="mt-1 text-sm text-gray-900">{{ $request->curator->fio ?? '—' }}</p>
                         </div>
+<div>
+    <h3 class="text-sm font-medium text-gray-500">Резерв</h3>
+    <p class="mt-1 text-sm text-gray-900">
+        @if(isset($reserve) && $reserve !== null)
+            {{ $reserve }}
+        @else
+            —
+        @endif
+    </p>
+</div>
+                </div>
+
+
+<!-- История изменений -->
+<div class="mt-8 pt-6 border-t border-gray-200">
+    <h3 class="text-md font-semibold text-gray-900 mb-4">История изменений</h3>
+    
+    @php
+        $fieldLabels = \App\Models\Request::getFieldLabels();
+        $isOooGroup = auth()->user()->hasAnyRole(['ooo', 'ooo admin', 'ooo chief']);
+    @endphp
+    
+    @if($request->activities->count() > 0)
+        <div class="space-y-4">
+            @foreach($request->activities->reverse() as $activity)
+                @php
+                    $changes = $activity->attribute_changes;
+                    $isUrpEdit = $request->status === 'urpedit';
+                @endphp
+                
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 
+                    {{ $isUrpEdit && $isOooGroup ? 'border-red-300 bg-red-50' : '' }}">
+                    <div class="flex justify-between items-start">
                         <div>
-                            <h3 class="text-sm font-medium text-gray-500">Резерв</h3>
-                            <p class="mt-1 text-sm text-gray-900">
-                                @if(isset($reserve) && $reserve !== null)
-                                {{ $reserve }}
-                                @else
-                                —
-                                @endif
+                            <p class="text-sm font-medium text-gray-900">
+                                Внесенные изменения
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                {{ $activity->created_at->format('d.m.Y H:i') }}
+                                • {{ $activity->causer->name ?? 'Система' }}
                             </p>
                         </div>
+                        @if($isUrpEdit && $isOooGroup)
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Изменено при доработке</span>
+                        @endif
                     </div>
-
-                    <div class="mt-6 flex justify-end space-x-2">
-                        <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
-                        <a href="{{ route('request-employees.index', $request->id) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Сотрудники</a>
-                        <a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="card mt-4">
-            <div class="card-header bg-light">
-                <h4 class="mb-0">История изменений заявки</h4>
-            </div>
-            <div class="card-body">
-                @if($request->activities->isEmpty())
-                <p class="text-muted mb-0">По этой заявке изменений пока не зафиксировано.</p>
-                @else
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th style="width: 15%">Дата и время</th>
-                                <th style="width: 15%">Кто изменил</th>
-                                <th style="width: 25%">Действие</th>
-                                <th style="width: 45%">Что именно изменилось</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($request->activities as $activity)
-                            @php
-                            // Декодируем строку JSON из поля attribute_changes в массив PHP
-                            $changes = json_decode($activity->attribute_changes, true) ?? [];
-                            $attributes = $changes['attributes'] ?? [];
-                            $oldValues = $changes['old'] ?? [];
-                            @endphp
-                            <tr>
-                                <td>{{ $activity->created_at->format('d.m.Y H:i:s') }}</td>
-                                <td>
-                                    {{-- Выводим имя пользователя, если causer существует --}}
-                                    @if($activity->causer)
-                                    <strong>{{ $activity->causer->name ?? $activity->causer->fio ?? 'ID: ' . $activity->causer_id }}</strong>
-                                    @else
-                                    <span class="text-muted">Не указан</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <span class="badge bg-info text-dark">
-                                        {{ $activity->description }}
+                    
+                    @if($changes && isset($changes['old']))
+                        <div class="mt-3 text-xs space-y-1">
+                            @foreach($changes['old'] as $field => $oldValue)
+                                @php
+                                    $newValue = $changes['attributes'][$field] ?? null;
+                                    $fieldLabel = $fieldLabels[$field] ?? $field;
+                                    $oldFormatted = \App\Models\Request::formatFieldValue($field, $oldValue);
+                                    $newFormatted = \App\Models\Request::formatFieldValue($field, $newValue);
+                                @endphp
+                                <div class="flex justify-between items-center bg-white rounded px-2 py-1">
+                                    <span class="text-gray-500 font-medium">{{ $fieldLabel }}:</span>
+                                    <span class="ml-4 flex items-center space-x-2">
+                                        <span class="text-red-600 line-through">{{ $oldFormatted }}</span>
+                                        →
+                                        <span class="text-green-600">{{ $newFormatted }}</span>
                                     </span>
-                                </td>
-                                <td>
-                                    @if(!empty($attributes))
-                                    <ul class="mb-0 ps-3">
-                                        @foreach($attributes as $field => $newValue)
-                                        @php
-                                        $oldValue = $oldValues[$field] ?? null;
-
-                                        // Если поле относится к датам, форматируем его в d-m-Y
-                                        if (in_array($field, ['start_date', 'end_date', 'issue_date', 'created_at', 'updated_at'])) {
-                                        $oldValue = $oldValue ? \Carbon\Carbon::parse($oldValue)->format('d-m-Y') : '—';
-                                        $newValue = $newValue ? \Carbon\Carbon::parse($newValue)->format('d-m-Y') : '—';
-                                        }
-                                        @endphp
-                                        <li class="mb-1">
-                                            <strong class="text-secondary">{{ $field }}:</strong>
-                                            <span class="text-danger"><del>{{ $oldValue ?? '—' }}</del></span>
-                                            &rarr;
-                                            <span class="text-success"><strong>{{ $newValue ?? '—' }}</strong></span>
-                                        </li>
-                                        @endforeach
-                                    </ul>
-                                    @else
-                                    <span class="text-muted">—</span>
-                                    @endif
-                                </td>
-
-                            </tr>
+                                </div>
                             @endforeach
-                        </tbody>
-                    </table>
+                        </div>
+                    @endif
                 </div>
-                @endif
+            @endforeach
+        </div>
+    @else
+        <p class="text-sm text-gray-500">История изменений пуста</p>
+    @endif
+</div>
+
+<!-- История изменений сотрудников -->
+<div class="mt-8 pt-6 border-t border-gray-200">
+    <h3 class="text-md font-semibold text-gray-900 mb-4">История изменений сотрудников</h3>
+    
+    @php
+        $employeeFieldLabels = [
+            'tab_number' => 'Таб. номер',
+            'last_name' => 'Фамилия',
+            'first_name' => 'Имя',
+            'middle_name' => 'Отчество',
+            'birth_date' => 'Дата рождения',
+            'gender' => 'Пол',
+            'gender_key' => 'Ключ пола',
+            'pfr_certificate' => 'Свид. ПФР',
+            'position' => 'Должность',
+            'rank' => 'Разряд',
+            'level_4_name' => 'Уровень 4',
+            'level_3_name' => 'Уровень 3',
+            'duv_b' => 'ДУвБ',
+            'mvz' => 'МВЗ',
+            'employee_category' => 'Категория',
+            'absence_start_date' => 'Дата начала отсутствия',
+            'absence_end_date' => 'Дата окончания отсутствия',
+            'absence_reason' => 'Причина отсутствия',
+            'absence_type' => 'Форма обучения',
+            'distance_learning_date' => 'Дата заочного обучения',
+            'fulltime_learning_date' => 'Дата очного обучения',
+            'note' => 'Примечание',
+            'document_issue_date' => 'Дата выдачи документа',
+            'reissue_period' => 'Периодичность',
+            'status' => 'Статус',
+        ];
+        
+        $employeeActivities = \Spatie\Activitylog\Models\Activity::where('subject_type', \App\Models\RequestEmployee::class)
+            ->whereIn('subject_id', $request->employees->pluck('id'))
+            ->orderBy('created_at', 'desc')
+            ->get();
+    @endphp
+    
+    @if($employeeActivities->count() > 0)
+        <div class="space-y-4">
+            @foreach($employeeActivities as $activity)
+                @php
+        // Находим сотрудника по subject_id
+        $activityEmployee = $request->employees->firstWhere('id', $activity->subject_id);
+        $employeeName = $activityEmployee 
+            ? $activityEmployee->full_name . ($activityEmployee->tab_number ? ' (таб. №' . $activityEmployee->tab_number . ')' : ' (ручной ввод)')
+            : 'Сотрудник #' . $activity->subject_id;
+    @endphp
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div class="flex justify-between items-start">
+                        <div>
+                <p class="text-sm font-medium text-gray-900">
+                    @if($activity->description === 'created')
+                        Добавлен сотрудник: {{ $employeeName }}
+                    @elseif($activity->description === 'updated')
+                        Обновлены данные сотрудника: {{ $employeeName }}
+                    @elseif($activity->description === 'deleted')
+                        Удален сотрудник: {{ $employeeName }}
+                    @else
+                        {{ $activity->description }}: {{ $employeeName }}
+                    @endif
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                    {{ $activity->created_at->format('d.m.Y H:i') }}
+                    • {{ $activity->causer->name ?? 'Система' }}
+                </p>
+            </div>
+                    </div>
+                    
+@if($activity->attribute_changes && isset($activity->attribute_changes['old']))
+    <div class="mt-3 text-xs space-y-1">
+        @foreach($activity->attribute_changes['old'] as $field => $oldValue)
+            @php
+                $newValue = $activity->attribute_changes['attributes'][$field] ?? null;
+                $fieldLabel = $employeeFieldLabels[$field] ?? $field;
+                
+                // Форматирование дат
+                $dateFields = ['absence_start_date', 'absence_end_date', 'distance_learning_date', 'fulltime_learning_date', 'document_issue_date', 'birth_date'];
+                
+                if (in_array($field, $dateFields)) {
+                    $oldValue = $oldValue ? \Carbon\Carbon::parse($oldValue)->format('d.m.Y') : null;
+                    $newValue = $newValue ? \Carbon\Carbon::parse($newValue)->format('d.m.Y') : null;
+                }
+            @endphp
+            @if($oldValue !== $newValue)
+            <div class="flex justify-between items-center bg-white rounded px-2 py-1">
+                <span class="text-gray-500 font-medium">{{ $fieldLabel }}:</span>
+                <span class="ml-4 flex items-center space-x-2">
+                    <span class="text-red-600 line-through">{{ $oldValue ?: '—' }}</span>
+                    →
+                    <span class="text-green-600">{{ $newValue ?: '—' }}</span>
+                </span>
+            </div>
+            @endif
+        @endforeach
+    </div>
+@endif
+                </div>
+            @endforeach
+        </div>
+    @else
+        <p class="text-sm text-gray-500">История изменений сотрудников пуста</p>
+    @endif
+</div>
+
+<div class="mt-6 flex justify-end space-x-2">
+    <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Назад к списку</a>
+    <a href="{{ route('request-employees.index', $request->id) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Сотрудники</a>
+@if(!(auth()->user()->hasAnyRole(['urp', 'urp admin']) && $request->status === 'in_progress'))
+<a href="{{ route('requests.edit', $request) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Редактировать</a>
+@endif
+
+<!-- Кнопка запроса снятия защиты (только для ooo, ooo admin, ooo chief) -->
+@if(auth()->user() && auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']) && $request->start_date && \Carbon\Carbon::parse($request->start_date)->diffInHours(now()) < 48 && $request->status !== 'Создана' && $request->status !== 'created' && $request->status !== 'urpedit')
+<form action="{{ route('requests.request-unlock', $request->id) }}" method="POST" class="inline">
+    @csrf
+    <button type="submit" 
+            class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition"
+            onclick="return confirm('Отправить запрос на снятие защиты?')">
+        🔓 Запросить снять защиту
+    </button>
+</form>
+@endif
+
+<!--  Kнопкa "История изменений" -->
+@if(auth()->user()->hasAnyRole(['admin', 'ooo chief']))
+<a href="{{ route('requests.history', $request->id) }}" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">🕐 История</a>
+@endif
+
+</div>
             </div>
         </div>
-
+    </div>
 </x-layouts.app-with-sidebar>

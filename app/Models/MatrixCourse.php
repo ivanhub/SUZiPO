@@ -1,13 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class MatrixCourse extends Model
+final class MatrixCourse extends Model
 {
     use HasFactory;
+
+    protected $table = 'matrix_courses';
 
     protected $fillable = [
         'program',
