@@ -33,7 +33,6 @@ Thumbs.db
 /vendor/
 /node_modules/
 /public/storage
-/public/build/
 /bootstrap/cache/*
 !/bootstrap/cache/.gitignore
 /storage/framework/cache/data/*
