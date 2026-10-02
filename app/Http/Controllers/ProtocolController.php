@@ -188,17 +188,21 @@ class ProtocolController extends Controller
 
         $learningTypeName = $protocol->demand?->learningType?->name ?? 'Курсы';
 
+        $refCurators = DB::table('ref_curators')
+            ->orderBy('fio')
+            ->get();
+
         // Подгружаем справочник аудиторий для ручного выбора на вкладке "Отчет"
         $audiences = \App\Models\RequestsAudience::orderBy('number')->get();
         // Подгружаем справочник преподавателей для множественного выбора
         $teachers = \App\Models\RequestsTeachers::orderBy('fio')->get();
+        $report = \App\Models\UcExtReport::where('id_protocol', $id)->first();
 
-        return view('protocols.report.create', compact('protocol', 'learningTypeName', 'audiences', 'teachers'));
+        return view('protocols.report.create', compact('protocol', 'learningTypeName', 'audiences', 'teachers', 'refCurators', 'report'));
     }
 
     public function storeReport(\Illuminate\Http\Request $request)
     {
-        // Базовая валидация входящих полей
         $validated = $request->validate([
             'id_protocol' => 'required',
             'order_num' => 'nullable|string|max:255',
@@ -206,55 +210,78 @@ class ProtocolController extends Controller
             'curator_id' => 'nullable|string',
         ]);
 
-        // Извлекаем протокол со списками сотрудников для проведения финальных расчетов
         $protocol = \App\Models\AppProtocol::with('demand.employees')->findOrFail($request->id_protocol);
         $employees = collect($protocol->demand?->employees ?? []);
 
-        // Формируем массив для записи строго по столбцам таблицы uc_ext_report
+        $inputResults = $request->input('results', []);
+
+        $noShowCount = 0;
+        $noPassedCount = 0;
+
+        $programHours = (int)($request->input('program_hours') ?? $protocol->program_hours ?? 0);
+
+        foreach ($employees as $employee) {
+            $empId = $employee->id;
+            
+            // Берем данные строки сотрудника из формы, если их нет — ставим дефолты
+            $status = $inputResults[$empId]['status'] ?? 'удовлетворительно';
+            $hoursFact = isset($inputResults[$empId]['hours_fact']) ? (int)$inputResults[$empId]['hours_fact'] : $programHours;
+
+            // 1. Логика ТЗ: Неявку считать, если фактическое кол-во часов равно 0 или выбран статус неявка
+            if ($hoursFact === 0 || $status === 'неявка') {
+                $noShowCount++;
+                $noPassedCount++; // Неявившийся автоматически считается не сдавшим
+                continue;
+            }
+
+            // 2. Логика ТЗ: Не сдали – при неудовлетворительной оценке или частичной неявке (фактические часы < часов по программе)
+            if ($status === 'неудовлетворительно' || $hoursFact < $programHours) {
+                $noPassedCount++;
+            }
+        }
+
+        $totalWorkers = $employees->count();
+        $showCount    = $totalWorkers - $noShowCount; // явки = всего - неявки
+        $passedCount  = $totalWorkers - $noPassedCount; // сдали = всего - не сдало
+
         $reportData = [
-            'id_report'       => (string) Str::uuid(), // Генерируем уникальный текстовый ID
             'id_protocol'     => $protocol->prot_id,
-            'specialist'      => auth()->user()->name ?? 'Специалист ООО',
+            'specialist'      => $request->input('user_oo_fio') ?? auth()->user()->name ?? 'Специалист ООО',
             'numbergroup'     => $protocol->prot_num,
             
-            // Категории должностей (считаем автоматически из коллекции)
-            'countworker'     => $employees->where('position_type', 'Рабочий')->count(),
-            'countleader'     => $employees->where('position_type', 'Руководитель')->count(),
-            'countspecialist' => $employees->where('position_type', 'Специалист')->count(),
+            'countworker'     => $employees->where('position', 'Рабочий')     ->count(),
+            'countleader'     => $employees->where('position', 'Руководитель')->count(),
+            'countspecialist' => $employees->where('position', 'Специалист')  ->count(),
             
-            // Заглушки для явок/неявок до реализации логики вкладки оценок
-            'Show'            => $employees->count(), 
-            'noshow'          => 0,
-            'passed'          => $employees->count(),
-            'nopassed'        => 0,
+            'Show'            => $showCount, 
+            'noshow'          => $noShowCount,
+            'passed'          => $passedCount,
+            'nopassed'        => $noPassedCount,
             
-            // Формы обучения
             'fulltime'        => str_contains(mb_strtolower($protocol->demand?->education_form), 'очн') ? $employees->count() : 0,
             'distance'        => str_contains(mb_strtolower($protocol->demand?->education_form), 'дист') ? $employees->count() : 0,
             
-            // Подсчет по признаку пола
             'countwoman'      => $employees->where('gender', 'Ж')->count(),
             'countman'        => $employees->where('gender', 'М')->count(),
             
-            // Группы предприятий по типам затрат
             'countung'        => $employees->where('company_type', 'РН-ЮНГ')->count(),
             'countservise'    => $employees->where('company_type', 'Сервис')->count(),
             'countothercomp'  => $employees->where('company_type', 'Прочие')->count(),
             'countcash'       => $employees->where('company_type', 'Наличные')->count(),
             
-            // Ручные реквизиты и справочники
             'teacher1'        => $protocol->demand?->teacher?->fio ?? '—',
             'specialistuc'    => $protocol->demand?->curator?->fio ?? '—',
             'curatorurp'      => $protocol->demand?->curator?->fio ?? '—',
-            'audiencenumber'  => $request->audience_id ?? '—',
+            'audiencenumber'  => $request->input('audience_id') ?? '—',
         ];
 
-        // Физически записываем строку в базу PostgreSQL
-        UcExtReport::create($reportData);
+        UcExtReport::updateOrCreate(
+            ['id_protocol' => $protocol->prot_id],
+            array_merge(['id_report' => (string) \Illuminate\Support\Str::uuid()], $reportData)
+        );
 
-        // Возвращаем пользователя в реестр с зеленым уведомлением об успехе
         return redirect()->route('protocols.index')
-            ->with('success', "Отчет по протоколу № {$protocol->prot_num} успешно сохранен в базу данных.");
+            ->with('success', "Отчет по протоколу № {$protocol->prot_num} успешно сохранен. Показатели: Явок - {$showCount}, Неявок - {$noShowCount}, Сдали - {$passedCount}.");
     }
 
     public function create()
@@ -280,6 +307,23 @@ class ProtocolController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+     public function searchOrders(\Illuminate\Http\Request $request)
+    {
+        $search = $request->query('q');
+        
+        if (empty($search)) {
+            return response()->json([]);
+        }
+
+        $orders = \Illuminate\Support\Facades\DB::table('orders')
+            ->where('order_number', 'LIKE', "%{$search}%")
+            ->select('id', 'order_number', 'order_date')
+            ->limit(5)
+            ->get();
+
+        return response()->json($orders);
     }
 
     public function getJson($id)

@@ -45,7 +45,7 @@ class RequestController extends Controller
         }
 
         // $userDept = auth()->user()->department; // 'УРП' или 'УЦ'
-        $userDept = 'УЦ'; // для теста
+        $userDept = 'УРП'; // для теста
         $isUrp = (mb_strtoupper($userDept) === 'УРП');
 
         $nextGlobalNumbers = [
@@ -193,7 +193,7 @@ class RequestController extends Controller
         // $lastRequest = RequestModel::where('req_id', 'LIKE', "%-{$prefix}")
 
         // $userDept = auth()->user()->department;
-        $userDept = 'УЦ';
+        $userDept = 'УРП';
         $isUrp = (mb_strtoupper($userDept) === 'УРП');
 
         if ($isUrp) {

@@ -39,7 +39,6 @@
             <!-- СОДЕРЖИМОЕ ВКЛАДКИ 1: ОТЧЕТ -->
             <div x-show="activeTab === 'report'" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
 
-                <!-- ИНФОРМАЦИОННЫЙ БЛОК (Поля из заявки, которые скрыты из формы ввода, но нужны для просмотра) -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; padding: 12px; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; color: #4b5563;">
                     <div><b>Вид обучения:</b> <span class="text-gray-900 font-semibold">{{ $protocol->demand?->learningType?->name ?? '—' }}</span></div>
                     <div><b>Форма обучения:</b> <span class="text-gray-900 font-semibold">{{ $protocol->demand?->education_form ?? 'дистанционное' }}</span></div>
@@ -52,18 +51,71 @@
                     <!-- Ряд 1: Ф.И.О. специалиста ООО -->
                     <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px;">
                         <label style="font-weight: 500; color: #374151;">Ф.И.О. специалиста:</label>
-                        <select name="user_oo_id" style="width: 100%; max-width:385px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; background-color: #ffffff; height: 34px;">
-                            <option value="{{ auth()->id() }}">{{ auth()->user()->name ?? 'Заковырин Т.Ю.' }}</option>
+                        <select name="user_oo_fio" style="width: 100%; max-width:385px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; background-color: #ffffff; height: 34px; font-size: 13px;">
+                            <option value="">— Выберите специалиста ООО —</option>
+                            @foreach($refCurators as $curator)
+                            <option value="{{ $curator->fio }}"
+                                {{ (isset($report) && $report->specialist == $curator->fio) || (!isset($report) && auth()->user()->name == $curator->fio) ? 'selected' : '' }}>
+                                {{ $curator->fio }}
+                            </option>
+                            @endforeach
                         </select>
                     </div>
 
+
                     <!-- Ряд 2: Распоряжение № / Приказ № -->
-                    <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px;">
+                    <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px; position: relative;">
                         <label style="font-weight: 500; color: #374151;">Распоряжение №/ Приказ №:</label>
-                        <div style="display: flex; gap: 6px; align-items: center;">
-                            <input type="text" name="order_num" value="{{ $protocol->order_num }}" style="width: 100%; max-width: 180px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; height: 34px;">
+                        <div style="display: flex; gap: 6px; align-items: center; position: relative;"
+                            x-data="{ 
+                                searchStr: '{{ $protocol->order_num }}', 
+                                suggestions: [], 
+                                openList: false,
+                                fetchOrders() {
+                                    if(this.searchStr.length < 1) { this.suggestions = []; this.openList = false; return; }
+                                    fetch(`/api/orders/search?q=${encodeURIComponent(this.searchStr)}`)
+                                        .then(r => r.json())
+                                        .then(data => {
+                                            this.suggestions = data;
+                                            this.openList = this.suggestions.length > 0;
+                                        });
+                                },
+                                selectOrder(order) {
+                                    this.searchStr = order.order_number;
+                                    document.getElementById('order_date_input').value = order.order_date;
+                                    this.openList = false;
+                                }
+                             }"
+                            @click.away="openList = false">
+
+                            <!-- Текстовое поле ввода номера -->
+                            <div style="position: relative; width: 100%; max-width: 180px;">
+                                <input type="text" name="order_num" autocomplete="off"
+                                    x-model="searchStr"
+                                    @input.debounce.250ms="fetchOrders()"
+                                    @focus="if(searchStr.length > 0) fetchOrders()"
+                                    style="width: 100%; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; height: 34px; box-sizing: border-box;">
+
+                                <!-- Абсолютный выпадающий список совпадений -->
+                                <div x-show="openList"
+                                    style="position: absolute; top: 38px; left: 0; width: 280px; background: #ffffff; border: 1px solid #d1d5db; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 99999; max-height: 200px; overflow-y: auto;"
+                                    x-cloak>
+                                    <template x-for="order in suggestions" :key="order.id">
+                                        <div @click="selectOrder(order)"
+                                            style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f3f4f6; transition: background 0.15s;"
+                                            onmouseover="this.style.backgroundColor='#f3f4f6'"
+                                            onmouseout="this.style.backgroundColor='#ffffff'">
+                                            <div style="font-weight: 600; color: #111827;" x-text="order.order_number"></div>
+                                            <div style="font-size: 10px; color: #6b7280;" x-text="`от ${new Date(order.order_date).toLocaleDateString('ru-RU')}`"></div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
                             <span style="padding: 5px 10px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; font-weight: 600; font-size: 11px; height: 34px; display: flex; align-items: center;">от</span>
-                            <input type="date" name="order_date" value="{{ $protocol->order_date }}" style="width: 160px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; height: 34px;">
+
+                            <!-- Поле даты с уникальным id для автоподстановки -->
+                            <input type="date" name="order_date" id="order_date_input" value="{{ $protocol->order_date }}" style="width: 160px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; height: 34px;">
                         </div>
                     </div>
 
@@ -74,10 +126,10 @@
                             <div style="display: flex; gap: 6px; align-items: center;">
                                 <input type="text" name="prot_num" value="{{ $protocol->prot_num }}" readonly style="width: 100%; max-width: 180px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; background-color: #f9fafb; font-bold; height: 34px; cursor: not-allowed;">
                                 <span style="padding: 5px 10px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; font-weight: 600; font-size: 11px; height: 34px; display: flex; align-items: center;">от</span>
-                                <input type="date" name="prot_date" value="{{ $protocol->date_end }}" style="width: 160px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; height: 34px;">
+                                <input type="date" name="prot_date" value="{{ $protocol->prot_date }}" style="width: 160px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; height: 34px;">
                                 <label style="display: inline-flex; align-items: center; gap: 4px; margin-left: 12px; font-weight: 600;"><input type="checkbox" name="is_ctkk" value="1"> ЦТКК</label>
                             </div>
-                            <!-- Линейка чекбоксов ЕИСОТ со скрина формы -->
+                            <!-- Линейка чекбоксов ЕИСОТ -->
                             <div style="display: flex; gap: 16px; font-size: 11px; color: #4b5563; flex-wrap: wrap; margin-top: 2px;">
                                 <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;"><input type="checkbox" name="not_required_eisot" value="1"> не требуется проверка знаний в ЕИСОТ</label>
                                 <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;"><input type="checkbox" name="is_main_eisot" value="1"> Основной протокол (ЕИСОТ)</label>
@@ -100,13 +152,13 @@
                         </div>
                     </div>
 
-                    <!-- Ряд 5: Фактическая дата начала (для титульного) -->
+                    <!-- Ряд 5: Фактическая дата начала -->
                     <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px;">
                         <label style="font-weight: 500; color: #374151;">Фактическая Дата начала обучения (для титульного):</label>
                         <input type="date" name="start_date_fact" value="{{ $protocol->date_start }}" style="width: 160px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; height: 34px;">
                     </div>
 
-                    <!-- Блок Часов по программе (Ультракомпактные числовые селекты h-[34px]) -->
+                    <!-- Блок Часов по программе -->
                     <div style="display: grid; grid-template-columns: 240px 1fr; gap: 12px; border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
                         <label style="font-weight: 600; color: #111827; margin-top: 6px;">Распределение учебных часов:</label>
                         <div style="display: flex; flex-direction: column; gap: 8px; max-width: 320px;">
@@ -118,26 +170,26 @@
                         </div>
                     </div>
 
-                    <!-- Блок: Категория обучаемых (Авторасчет по сотрудникам группы) -->
+                    <!-- Блок: Категория обучаемых -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
                         <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Категория обучаемых</span>
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Рабочие</label>
-                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position_type', 'Рабочий')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
+                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position', 'Рабочий')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
                             </div>
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Руководители</label>
-                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position_type', 'Руководитель')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
+                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position', 'Руководитель')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
                             </div>
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Специалисты</label>
-                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position_type', 'Специалист')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
+                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position', 'Специалист')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Блок: Группы предприятий (Авторасчет по компаниям сотрудников) -->
+                    <!-- Блок: Группы предприятий -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
                         <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Группы предприятий</span>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
@@ -177,14 +229,10 @@
                             <option value="{{ $protocol->demand?->curator_id }}">{{ $protocol->demand?->curator?->fio ?? '—' }}</option>
                         </select>
                     </div>
-
                 </div>
-            </div> {{-- Закрывающий тег вкладки Отчет --}}
+            </div>
 
-
-
-
-            <!-- СОДЕРЖИМОЕ ВКЛАДКИ 2: СПИСОК (Универсальная таблица сотрудников) -->
+            <!-- СОДЕРЖИМОЕ ВКЛАДКИ 2: СПИСОК -->
             <div x-show="activeTab === 'list'" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" x-cloak>
                 <div style="margin-bottom: 16px; display: flex; align-items: center;">
                     <h3 style="font-size: 15px; font-weight: 700; margin: 0; color: #111827;">Реестр обучаемых сотрудников (согласно заявке)</h3>
@@ -292,7 +340,7 @@
                                 <td style="border-right: 1px solid #a1a1a1; padding: 6px; font-size: 10px;">{{ $employee->department ?? '—' }}</td>
                                 <td style="border-right: 1px solid #a1a1a1; padding: 6px; font-size: 10px;">{{ $employee->company ?? '—' }}</td>
 
-                                <!-- Поля ввода ИНПУТОВ оценок для сохранения в БД (Специалист ООО заполняет прямо тут!) -->
+                                <!-- Поля ввода ИНПУТОВ оценок для сохранения в БД -->
                                 <td style="border-right: 1px solid #a1a1a1; padding: 4px; text-align: center;">
                                     <select name="results[{{ $employee->id }}][status]" style="width: 100%; padding: 2px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px;">
                                         <option value="удовлетворительно">удовлетворительно</option>

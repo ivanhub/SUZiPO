@@ -195,6 +195,9 @@ Route::get('/protocols/{id}/report/create', [ProtocolController::class, 'createR
 Route::post('/protocols/export-excel', [ProtocolController::class, 'exportExcel'])->name('protocols.export-excel');
 Route::post('/protocols/report/store', [ProtocolController::class, 'storeReport'])->name('protocols.report.store');
 
+// Поиск по номеру договора (Orders)
+Route::get('/api/orders/search', [ProtocolController::class, 'searchOrders'])->name('api.orders.search');
+
 
 
 

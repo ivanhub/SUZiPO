@@ -7,6 +7,12 @@
             <p style="font-size: 13px; color: #6b7280; margin: 0;">Система управления заявками и протоколами обучения (СУЗиПО)</p>
         </div>
 
+        @if(session('success'))
+            <div style="padding: 12px 16px; background-color: #d1fae5; border: 1px solid #10b981; color: #065f46; border-radius: 6px; font-size: 13px; margin-bottom: 20px; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+                ✅ {{ session('success') }}
+            </div>
+        @endif
+
         <!-- Горизонтальные табы-переключатели со счетчиками -->
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px; font-size: 13px; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; overflow-x: auto; white-space: nowrap;">
             <span @click="switchTab('all')"
