@@ -261,6 +261,36 @@
             </div>
         </div>
     </template>
+
+<!-- Информация о выбранном курсе -->
+<div x-show="selectedName !== '' && selectedMatrixNum !== 5" 
+     x-cloak
+     class="mt-2 p-3 bg-gray-50 rounded-md border border-gray-200">
+    <div class="text-xs font-medium text-gray-500 mb-2">Информация о курсе</div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+        <div class="flex justify-between px-2 py-1 bg-white rounded">
+            <span class="text-gray-500">Объем учебной нагрузки:</span>
+            <span class="font-medium" x-text="courseInfo.hours || '—'"></span>
+        </div>
+        <div class="flex justify-between px-2 py-1 bg-white rounded">
+            <span class="text-gray-500">Теоретическое обучение:</span>
+            <span class="font-medium" x-text="courseInfo.theory_hours || '—'"></span>
+        </div>
+        <div class="flex justify-between px-2 py-1 bg-white rounded">
+            <span class="text-gray-500">Самост. подготовка:</span>
+            <span class="font-medium" x-text="courseInfo.self_study_hours || '—'"></span>
+        </div>
+        <div class="flex justify-between px-2 py-1 bg-white rounded">
+            <span class="text-gray-500">Производ.-практич.:</span>
+            <span class="font-medium" x-text="courseInfo.practical_hours || '—'"></span>
+        </div>
+        <div class="flex justify-between px-2 py-1 bg-white rounded">
+            <span class="text-gray-500">Разряд:</span>
+            <span class="font-medium" x-text="courseInfo.rank || '—'"></span>
+        </div>
+    </div>
+</div>
+
 </div>
                         <!-- Место проведения (страна) -->
                         <div>
@@ -592,6 +622,7 @@ function editProviderSelector() {
             document.addEventListener('close-provider-dropdown', () => {
                 this.open = false;
             });
+
             
             // Если есть выбранный провайдер — показываем его название
             if (this.selectedId && this.selectedId !== '') {
@@ -621,6 +652,8 @@ function editCourseSelector() {
         providerSelected: false,
         providerId: null,
         message: '--- Выберите или введите курс ---',
+	courseInfo: {},        
+	courseInfoMap: {},     
         
         showMatrixModal: false,
         pendingCourseName: '',
@@ -663,6 +696,13 @@ async loadCourses(providerId) {
         this.courses = data.courses.map(c => c.name);
         data.courses.forEach(c => {
             this.courseMatrixNums[c.name] = c.matrix_num;
+this.courseInfoMap[c.name] = {
+    hours: c.hours,
+    theory_hours: c.theory_hours,
+    self_study_hours: c.self_study_hours,
+    practical_hours: c.practical_hours,
+    rank: c.rank,
+};
         });
         
         this.providerSelected = true;
@@ -679,6 +719,7 @@ async loadCourses(providerId) {
             this.selectedId = null;
             this.newCourseName = course;
             this.selectedMatrixNum = this.courseMatrixNums[course] || this.selectedMatrixNum;
+	    this.courseInfo = this.courseInfoMap[course] || {};
             this.open = false;
             this.search = '';
         },
@@ -809,6 +850,7 @@ init() {
     document.addEventListener('provider-selected', (event) => {
         if (event.detail.providerId) {
             this.loadCourses(event.detail.providerId);
+
         } else {
             this.reset();
         }
@@ -839,7 +881,7 @@ init() {
                 } else if (currentMatrixNum) {
                     this.selectedMatrixNum = currentMatrixNum;
                 }
-                
+                this.courseInfo = this.courseInfoMap[currentCourseName] || {};
                 // Закрываем выпадающий список
                 this.open = false;
             }

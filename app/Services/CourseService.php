@@ -40,46 +40,74 @@ final class CourseService
     {
         $courses = collect();
 
-
- // matrix_courses (matrix_num = 3)
+        // matrix_courses (matrix_num = 3)
         $courses = $courses->merge(
             MatrixCourse::query()
                 ->whereNotNull('program_name')
-                ->pluck('program_name')
-                ->map(fn($name) => ['name' => $name, 'matrix_num' => 3])
+                ->get()
+                ->map(fn($course) => [
+                    'name' => $course->program_name,
+                    'matrix_num' => 3,
+                    'hours' => $course->hours,
+                    'theory_hours' => $course->theory_hours,
+                    'self_study_hours' => $course->self_study_hours,
+                    'practical_hours' => $course->practical_hours,
+                    'rank' => null,
+                ])
         );
 
         // matrix_dpo (matrix_num = 1)
         $courses = $courses->merge(
             MatrixDpo::query()
                 ->whereNotNull('program_name')
-                ->pluck('program_name')
-                ->map(fn($name) => ['name' => $name, 'matrix_num' => 1])
+                ->get()
+                ->map(fn($course) => [
+                    'name' => $course->program_name,
+                    'matrix_num' => 1,
+                    'hours' => $course->total_hours,
+                    'theory_hours' => $course->theoretical_hours,
+                    'self_study_hours' => $course->self_study_hours,
+                    'practical_hours' => $course->practical_hours,
+                    'rank' => null,
+                ])
         );
 
         // matrix_ot (matrix_num = 4)
         $courses = $courses->merge(
             MatrixOt::query()
                 ->whereNotNull('program_name')
-                ->pluck('program_name')
-                ->map(fn($name) => ['name' => $name, 'matrix_num' => 4])
+                ->get()
+                ->map(fn($course) => [
+                    'name' => $course->program_name,
+                    'matrix_num' => 4,
+                    'hours' => $course->total_hours,
+                    'theory_hours' => $course->fulltime_theoretical_hours + $course->distance_theoretical_hours,
+                    'self_study_hours' => null,
+                    'practical_hours' => $course->practical_hours,
+                    'rank' => null,
+                ])
         );
 
         // matrix_po (matrix_num = 2)
         $courses = $courses->merge(
             MatrixPo::query()
                 ->whereNotNull('profession_name')
-                ->pluck('profession_name')
-                ->map(fn($name) => ['name' => $name, 'matrix_num' => 2])
+                ->get()
+                ->map(fn($course) => [
+                    'name' => $course->profession_name,
+                    'matrix_num' => 2,
+                    'hours' => $course->hours,
+                    'theory_hours' => $course->theory_hours,
+                    'self_study_hours' => $course->self_study_hours,
+                    'practical_hours' => $course->practical_hours,
+                    'rank' => $course->rank,
+                ])
         );
-
 
         // Убираем дубликаты и null, сортируем
         return $courses
             ->filter()
-//            ->unique()
-//            ->sort()
-	    ->unique('name')
+            ->unique('name')
             ->sortBy('name')
             ->values();
     }
@@ -91,13 +119,18 @@ final class CourseService
     {
         return CoursesUrp::query()
             ->whereNotNull('name')
-            ->pluck('name')
-//            ->filter()
-	    ->map(fn($name) => ['name' => $name, 'matrix_num' => 5])
+            ->get()
+            ->map(fn($course) => [
+                'name' => $course->name,
+                'matrix_num' => 5,
+                'hours' => null,
+                'theory_hours' => null,
+                'self_study_hours' => null,
+                'practical_hours' => null,
+                'rank' => null,
+            ])
             ->unique('name')
             ->sortBy('name')
-//            ->unique()
-//            ->sort()
             ->values();
     }
 }

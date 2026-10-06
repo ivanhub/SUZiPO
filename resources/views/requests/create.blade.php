@@ -441,6 +441,38 @@
             </div>
         </div>
     </template>
+
+
+<!-- Информация о выбранном курсе -->
+<div x-show="selectedName !== '' && selectedMatrixNum !== 5" 
+     x-cloak
+     class="mt-2 p-3 bg-gray-50 rounded-md border border-gray-200">
+    <div class="text-xs font-medium text-gray-500 mb-2">Информация о курсе</div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+        <div class="flex justify-between px-2 py-1 bg-white rounded">
+            <span class="text-gray-500">Объем учебной нагрузки:</span>
+            <span class="font-medium" x-text="courseInfo.hours || '—'"></span>
+        </div>
+        <div class="flex justify-between px-2 py-1 bg-white rounded">
+            <span class="text-gray-500">Теоретическое обучение:</span>
+            <span class="font-medium" x-text="courseInfo.theory_hours || '—'"></span>
+        </div>
+        <div class="flex justify-between px-2 py-1 bg-white rounded">
+            <span class="text-gray-500">Самост. подготовка:</span>
+            <span class="font-medium" x-text="courseInfo.self_study_hours || '—'"></span>
+        </div>
+        <div class="flex justify-between px-2 py-1 bg-white rounded">
+            <span class="text-gray-500">Производ.-практич.:</span>
+            <span class="font-medium" x-text="courseInfo.practical_hours || '—'"></span>
+        </div>
+        <div class="flex justify-between px-2 py-1 bg-white rounded">
+            <span class="text-gray-500">Разряд:</span>
+            <span class="font-medium" x-text="courseInfo.rank || '—'"></span>
+        </div>
+    </div>
+</div>
+
+
 </div>
 
 <script>
@@ -456,6 +488,8 @@ function courseSelector() {
         providerSelected: false,
         providerId: null,
         message: '--- Выберите или введите курс ---',
+	courseInfo: {},        
+	courseInfoMap: {},     
         
         // Флаги для модального окна
         showMatrixModal: false,
@@ -494,6 +528,7 @@ function courseSelector() {
             this.newCourseName = '';
             this.courses = [];
 	    this.courseMatrixNums = {};  // ← Добавляем объект для хранения matrix_num
+	    this.courseInfoMap = {};  // для отображения информации по выбранному курсу
             
             try {
                 const response = await fetch(`/api/courses-by-provider?provider_id=${providerId}`, {
@@ -513,8 +548,17 @@ function courseSelector() {
 
 	 // Сохраняем matrix_num для каждого курса
         this.courseMatrixNums = {};
+        this.courseInfoMap = {};  
         data.courses.forEach(c => {
             this.courseMatrixNums[c.name] = c.matrix_num;
+		this.courseInfoMap[c.name] = {          
+	                hours: c.hours,
+	                theory_hours: c.theory_hours,
+	                self_study_hours: c.self_study_hours,
+	                practical_hours: c.practical_hours,
+	                rank: c.rank,
+	        };
+
         });
         
 //                this.courses = data.courses;
@@ -529,12 +573,13 @@ function courseSelector() {
         },
         
         selectCourse(course) {
-  console.log('Выбран курс:', course);
+    console.log('Выбран курс:', course);
     console.log('matrix_num:', this.courseMatrixNums[course]);
             this.selectedName = course;
             this.selectedId = null;
 	    this.newCourseName = course;  // ← Сохраняем название курса
 	    this.selectedMatrixNum = this.courseMatrixNums[course] || null;  // ← Устанавливаем matrix_num
+            this.courseInfo = this.courseInfoMap[course] || {};  
             this.open = false;
             this.search = '';
         },
@@ -607,6 +652,13 @@ async saveCourseToUrp(name) {
             this.selectedName = name;
             this.newCourseName = name;  // ← Сохраняем название
             this.selectedMatrixNum = data.matrix_num;  // ← Сохраняем matrix_num
+	    this.courseInfo = {
+                hours: data.course_info?.hours ?? null,
+                theory_hours: data.course_info?.theory_hours ?? null,
+                self_study_hours: data.course_info?.self_study_hours ?? null,
+                practical_hours: data.course_info?.practical_hours ?? null,
+                rank: data.course_info?.rank ?? null,
+            };
             this.selectedId = null;
             this.open = false;
 
@@ -657,7 +709,8 @@ async saveCourseToMatrix(matrix) {
             this.newCourseName = this.pendingCourseName;  // ← Сохраняем название
             this.selectedMatrixNum = data.matrix_num;  // ← Сохраняем matrix_num
             this.selectedMatrix = matrix;
-     console.log('selectedMatrixNum:', this.selectedMatrixNum);
+  		   console.log('selectedMatrixNum:', this.selectedMatrixNum);
+            this.courseInfo = data.course_info || {};
             this.selectedId = null;
             
             // Закрываем модальное окно
@@ -707,6 +760,7 @@ async saveCourseToMatrix(matrix) {
     }
 }
 </script>
+
 
 <!-- Место проведения (страна) -->
                         <div>
