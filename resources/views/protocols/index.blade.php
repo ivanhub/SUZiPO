@@ -1,6 +1,22 @@
 <x-layouts.app-with-sidebar>
     <div class="max-w-full mx-auto p-6" style="font-family: system-ui, -apple-system, sans-serif; background-color: #fafafa; min-height: 100vh;" x-data="protocolsComponent()">
 
+        <!-- Блок УЗ-->
+        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 8px 14px; background-color: #f9fafb; font-size: 12px; color: #4b5563;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #6b7280;">Учетная запись:</span>
+                <strong style="color: #111827; font-weight: 600;">{{ auth()->user()->name ?? auth()->user()->email ?? 'Гость' }}</strong>
+            </div>
+            <div style="width: 1px; height: 14px; background-color: #e5e7eb;"></div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #6b7280;">Доступ (Роль):</span>
+                <span style="padding: 2px 8px; background-color: #e0e7ff; color: #4338ca; border-radius: 4px; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.03em;">
+                    {{ auth()->user()->roles->pluck('name')->implode(', ') ?: 'Обычный пользователь' }}
+                </span>
+            </div>
+        </div>
+
+
         <!-- Верхний заголовок системы как на скрине -->
         <div style="margin-bottom: 24px;">
             <h1 style="font-size: 22px; font-weight: 700; color: #111827; margin: 0 0 4px 0;">Реестр протоколов обучения</h1>
@@ -8,9 +24,9 @@
         </div>
 
         @if(session('success'))
-            <div style="padding: 12px 16px; background-color: #d1fae5; border: 1px solid #10b981; color: #065f46; border-radius: 6px; font-size: 13px; margin-bottom: 20px; font-weight: 500; display: flex; align-items: center; gap: 8px;">
-                ✅ {{ session('success') }}
-            </div>
+        <div style="padding: 12px 16px; background-color: #d1fae5; border: 1px solid #10b981; color: #065f46; border-radius: 6px; font-size: 13px; margin-bottom: 20px; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+            ✅ {{ session('success') }}
+        </div>
         @endif
 
         <!-- Горизонтальные табы-переключатели со счетчиками -->

@@ -174,7 +174,6 @@ class ProtocolController extends Controller
 
     public function createReport($id)
     {
-        // Подтягиваем протокол со всеми вложенными справочниками и сотрудниками заявки
         $protocol = \App\Models\AppProtocol::with([
             'demand.course',
             'demand.provider',
@@ -182,11 +181,13 @@ class ProtocolController extends Controller
             'demand.curator',
             'demand.profession',
             'demand.audience',
+            'demand.educationType',
             'demand.learningType', 
             'demand.employees'     
         ])->findOrFail($id);
 
-        $learningTypeName = $protocol->demand?->learningType?->name ?? 'Курсы';
+        $matrixNum = $protocol->demand?->matrix_num;
+        $learningTypeName =$protocol->demand?->educationType?->name ?? 'курсы';
 
         $refCurators = DB::table('ref_curators')
             ->orderBy('fio')
@@ -195,10 +196,11 @@ class ProtocolController extends Controller
         // Подгружаем справочник аудиторий для ручного выбора на вкладке "Отчет"
         $audiences = \App\Models\RequestsAudience::orderBy('number')->get();
         // Подгружаем справочник преподавателей для множественного выбора
+        $refCurators = \Illuminate\Support\Facades\DB::table('ref_curators')->orderBy('fio')->get();
         $teachers = \App\Models\RequestsTeachers::orderBy('fio')->get();
         $report = \App\Models\UcExtReport::where('id_protocol', $id)->first();
 
-        return view('protocols.report.create', compact('protocol', 'learningTypeName', 'audiences', 'teachers', 'refCurators', 'report'));
+        return view('protocols.report.create', compact('protocol', 'learningTypeName', 'audiences', 'teachers', 'refCurators', 'report', 'matrixNum'));
     }
 
     public function storeReport(\Illuminate\Http\Request $request)

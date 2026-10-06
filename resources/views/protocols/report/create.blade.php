@@ -35,7 +35,7 @@
         <!-- ОТЧЕТ -->
         <form action="{{ route('protocols.report.store') }}" method="POST">
             @csrf
-
+            <input type="hidden" name="id_protocol" value="{{ $protocol->prot_id }}">
             <!-- СОДЕРЖИМОЕ ВКЛАДКИ 1: ОТЧЕТ -->
             <div x-show="activeTab === 'report'" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
 
@@ -176,15 +176,15 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Рабочие</label>
-                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position', 'Рабочий')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
+                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position_type', 'Рабочий')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
                             </div>
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Руководители</label>
-                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position', 'Руководитель')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
+                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position_type', 'Руководитель')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
                             </div>
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Специалисты</label>
-                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position', 'Специалист')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
+                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position_type', 'Специалист')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
                             </div>
                         </div>
                     </div>

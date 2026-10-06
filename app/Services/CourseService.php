@@ -40,7 +40,6 @@ final class CourseService
     {
         $courses = collect();
 
-
  // matrix_courses (matrix_num = 3)
         $courses = $courses->merge(
             MatrixCourse::query()

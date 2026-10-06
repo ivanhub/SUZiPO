@@ -29,37 +29,37 @@ use Carbon\CarbonPeriod;
 class RequestController extends Controller
 {
 
-public function index(\Illuminate\Http\Request $httpRequest): View
-{
-    // Маппинг английских статусов (из URL) на русские (в БД)
-    $statusMap = [
-        'created' => 'Создана',
-        'sent' => 'Отправлена',
-        'in_progress' => 'in_progress', // если в БД уже используется английский
-        'urpedit' => 'urpedit',         // если в БД уже используется английский
-        'accepted' => 'accepted',
-        'rejected' => 'rejected',
-    ];
-    
-    $statusFilter = $httpRequest->get('status');
-    
-    // Маппим английский на русский
-    $status = $statusMap[$statusFilter] ?? null;
-    
-    // Если статус не найден в мапе - используем как есть
-    if (!$status && $statusFilter) {
-        $status = $statusFilter;
+    public function index(\Illuminate\Http\Request $httpRequest): View
+    {
+        // Маппинг английских статусов (из URL) на русские (в БД)
+        $statusMap = [
+            'created' => 'Создана',
+            'sent' => 'Отправлена',
+            'in_progress' => 'in_progress', // если в БД уже используется английский
+            'urpedit' => 'urpedit',         // если в БД уже используется английский
+            'accepted' => 'accepted',
+            'rejected' => 'rejected',
+        ];
+
+        $statusFilter = $httpRequest->get('status');
+
+        // Маппим английский на русский
+        $status = $statusMap[$statusFilter] ?? null;
+
+        // Если статус не найден в мапе - используем как есть
+        if (!$status && $statusFilter) {
+            $status = $statusFilter;
+        }
+
+        $requests = RequestModel::with(['user', 'provider', 'course', 'city'])
+            ->withCount('employees')
+            ->when($status, function ($query, $status) {
+                return $query->where('status', $status);
+            })
+            ->paginate(15);
+
+        return view('requests.index', compact('requests'));
     }
-    
-    $requests = RequestModel::with(['user', 'provider', 'course', 'city'])
-        ->withCount('employees')
-        ->when($status, function ($query, $status) {
-            return $query->where('status', $status);
-        })
-        ->paginate(15);
-    
-    return view('requests.index', compact('requests'));
-}
 
 
     public function create(): View
@@ -70,9 +70,9 @@ public function index(\Illuminate\Http\Request $httpRequest): View
         }
 
         // $userDept = auth()->user()->department; // 'УРП' или 'УЦ'
-       //  $userDept = 'УЦ'; // для теста
-       $isUrp = auth()->user()->hasAnyRole(['urp', 'urp admin']);
-      //if ($user->hasAnyRole(['urp', 'urp admin', 'admin']))  $isUrp = (mb_strtoupper($userDept) === 'УРП');
+        //  $userDept = 'УЦ'; // для теста
+        $isUrp = auth()->user()->hasAnyRole(['urp', 'urp admin']);
+        //if ($user->hasAnyRole(['urp', 'urp admin', 'admin']))  $isUrp = (mb_strtoupper($userDept) === 'УРП');
 
         $nextGlobalNumbers = [
             'ЮНГ' => $this->getNextNumberForPrefix('ЮНГ'),
@@ -112,7 +112,7 @@ public function index(\Illuminate\Http\Request $httpRequest): View
             'audiences',
             'teachers',
             'curators',
-            'isUrp', 
+            'isUrp',
             'nextGlobalNumbers',
             'nextPrefixNumbers'
         ));
@@ -124,10 +124,10 @@ public function index(\Illuminate\Http\Request $httpRequest): View
             $maxNumber = RequestModel::where('req_id', 'LIKE', '%-ЮНГ')
                 ->max('req_number');
         } else {
-            $maxNumber = RequestModel::where(function($query) {
-                    $query->where('req_id', 'LIKE', '%-ЮЛ')
-                          ->orWhere('req_id', 'LIKE', '%-ФЛ');
-                })
+            $maxNumber = RequestModel::where(function ($query) {
+                $query->where('req_id', 'LIKE', '%-ЮЛ')
+                    ->orWhere('req_id', 'LIKE', '%-ФЛ');
+            })
                 ->max('req_number');
         }
 
@@ -160,7 +160,7 @@ public function index(\Illuminate\Http\Request $httpRequest): View
             'new_provider_name' => 'nullable|string|max:500',
             'new_profession_name' => 'nullable|string|max:500',
             'req_prefix' => 'nullable|string|max:10',
-	    'matrix_num' => 'nullable|integer|in:1,2,3,4,5',
+            'matrix_num' => 'nullable|integer|in:1,2,3,4,5',
         ]);
 
         // Создание нового курса
@@ -219,22 +219,15 @@ public function index(\Illuminate\Http\Request $httpRequest): View
         // $userDept = auth()->user()->department;
         //$userDept = 'УЦ';
         //$isUrp = (mb_strtoupper($userDept) === 'УРП');
-	$isUrp = auth()->user()->hasAnyRole(['urp', 'urp admin']);
-	$isAdmin = auth()->user()->hasRole('admin');
+        $isUrp = auth()->user()->hasAnyRole(['urp', 'urp admin']);
+        $isAdmin = auth()->user()->hasRole('admin');
 
         if ($isUrp) {
-            $prefix = 'ЮНГ'; 
+            $prefix = 'ЮНГ';
         } else {
             $prefix = in_array($validated['req_prefix'], ['ЮЛ', 'ФЛ']) ? $validated['req_prefix'] : 'ЮЛ';
         }
-	
 
-        //if ($isAdmin) {
-        //    $prefix = in_array($validated['req_prefix'], ['ЮНГ','ЮЛ', 'ФЛ']) ? $validated['req_prefix'] : 'ЮЛ';
-        //}
-	
-
-	
         $nextGlobalNumber = $this->getNextNumberForPrefix($prefix);
 
         $validated['req_number'] = $nextGlobalNumber;
@@ -242,7 +235,7 @@ public function index(\Illuminate\Http\Request $httpRequest): View
             ->count();
         $nextPrefixNumber = $prefixCount + 1;
         $validated['req_id'] = "{$nextPrefixNumber}-{$prefix}";
-        
+
         unset($validated['req_prefix']);
         $trainingRequest = RequestModel::create($validated);
         $action = $request->input('action');
@@ -272,9 +265,22 @@ public function index(\Illuminate\Http\Request $httpRequest): View
 
     public function show(RequestModel $request): View
     {
-        $request->load(['user', 'provider', 'course', 'city', 'profession',
-                        'learnReason', 'learningResource', 'learningType', 
-                        'eventType', 'discipline', 'audience', 'teacher', 'curator', 'activities']);
+        $request->load([
+            'user',
+            'provider',
+            'course',
+            'city',
+            'profession',
+            'learnReason',
+            'learningResource',
+            'learningType',
+            'eventType',
+            'discipline',
+            'audience',
+            'teacher',
+            'curator',
+            'activities'
+        ]);
         $reserve = null;
         if ($request->audience_id) {
             $seats = $request->audience ? $request->audience->seats : null;
@@ -290,7 +296,7 @@ public function index(\Illuminate\Http\Request $httpRequest): View
 
     public function edit(RequestModel $request): View
     {
-	// Проверка доступа
+        // Проверка доступа
         $this->checkEditAccess($request);
 
         $providers = RequestsProvider::orderBy('name')->get();
@@ -316,16 +322,16 @@ public function index(\Illuminate\Http\Request $httpRequest): View
             }
         }
 
-	$matrixCourses = [];
-	if (in_array($request->provider_id, [91, 92])) {
-	    $courseService = app(\App\Services\CourseService::class);
-	    $matrixCourses = $courseService->getCoursesByProvider($request->provider_id)->toArray();
-	}
+        $matrixCourses = [];
+        if (in_array($request->provider_id, [91, 92])) {
+            $courseService = app(\App\Services\CourseService::class);
+            $matrixCourses = $courseService->getCoursesByProvider($request->provider_id)->toArray();
+        }
         return view('requests.edit', compact(
             'request',
             'providers',
             'courses',
-            'matrixCourses',  
+            'matrixCourses',
             'cities',
             'professions',
             'learnReasons',
@@ -366,7 +372,7 @@ public function index(\Illuminate\Http\Request $httpRequest): View
             'curator_id' => 'nullable|exists:requests_curators,id',
             'new_course_name' => 'nullable|string|max:500',
             'new_profession_name' => 'nullable|string|max:500',
-	    'matrix_num' => 'nullable|integer|in:1,2,3,4,5',
+            'matrix_num' => 'nullable|integer|in:1,2,3,4,5',
         ]);
 
         if (!empty($validated['new_course_name'])) {
@@ -391,51 +397,51 @@ public function index(\Illuminate\Http\Request $httpRequest): View
         $requestModel = RequestModel::findOrFail($id);
 
 
-    // Проверка доступа
-    $this->checkEditAccess($requestModel);
-    
-    // Проверяем, была ли заявка в статусе "Отправлена"
-    $wasSent = $requestModel->status === 'Отправлена' || $requestModel->status === 'sent';
-    
-    // Сохраняем старые данные
-    $oldData = $requestModel->toArray();
+        // Проверка доступа
+        $this->checkEditAccess($requestModel);
+
+        // Проверяем, была ли заявка в статусе "Отправлена"
+        $wasSent = $requestModel->status === 'Отправлена' || $requestModel->status === 'sent';
+
+        // Сохраняем старые данные
+        $oldData = $requestModel->toArray();
 
         // Сохраняем старого куратора
         $oldCuratorId = $requestModel->curator_id;
 
-// Преобразование дат в формат Y-m-d
-if (!empty($validated['start_date'])) {
-    $validated['start_date'] = Carbon::parse($validated['start_date'])->format('Y-m-d');
-} else {
-    $validated['start_date'] = null;
-}
+        // Преобразование дат в формат Y-m-d
+        if (!empty($validated['start_date'])) {
+            $validated['start_date'] = Carbon::parse($validated['start_date'])->format('Y-m-d');
+        } else {
+            $validated['start_date'] = null;
+        }
 
-if (!empty($validated['end_date'])) {
-    $validated['end_date'] = Carbon::parse($validated['end_date'])->format('Y-m-d');
-} else {
-    $validated['end_date'] = null;
-}
+        if (!empty($validated['end_date'])) {
+            $validated['end_date'] = Carbon::parse($validated['end_date'])->format('Y-m-d');
+        } else {
+            $validated['end_date'] = null;
+        }
 
-if (!empty($validated['issue_date'])) {
-    $validated['issue_date'] = Carbon::parse($validated['issue_date'])->format('Y-m-d');
-} else {
-    $validated['issue_date'] = null;
-}
+        if (!empty($validated['issue_date'])) {
+            $validated['issue_date'] = Carbon::parse($validated['issue_date'])->format('Y-m-d');
+        } else {
+            $validated['issue_date'] = null;
+        }
 
         $requestModel->update($validated);
 
-    // Если заявка была отправлена и её редактирует группа ooo/ooo admin/ooo chief
-    if ($wasSent && auth()->user()->hasAnyRole(['ooo', 'ooo admin', 'ooo chief'])) {
-        // Меняем статус на "В работе"
-        $requestModel->update(['status' => 'in_progress']);
-    }
-    
+        // Если заявка была отправлена и её редактирует группа ooo/ooo admin/ooo chief
+        if ($wasSent && auth()->user()->hasAnyRole(['ooo', 'ooo admin', 'ooo chief'])) {
+            // Меняем статус на "В работе"
+            $requestModel->update(['status' => 'in_progress']);
+        }
 
 
-	// Отправляем уведомление новому куратору
-	  if ($requestModel->curator_id) {
-	      $this->notifyCuratorAssigned($requestModel);
-	  }
+
+        // Отправляем уведомление новому куратору
+        if ($requestModel->curator_id) {
+            $this->notifyCuratorAssigned($requestModel);
+        }
         // Создание или обновление бронирования
         if ($requestModel->audience_id && $requestModel->teacher_id && $requestModel->start_date) {
             $this->createOrUpdateBooking($requestModel);
@@ -571,7 +577,7 @@ if (!empty($validated['issue_date'])) {
     /*
      * Массовая или одиночная отправка заявок в ООО с созданием протоколов
      */
-  public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Http\RedirectResponse
+    public function sendToOoo(\Illuminate\Http\Request $httpRequest): \Illuminate\Http\RedirectResponse
     {
         // Извлекаем массив пришедших ID заявок из запроса
         $requestIds = $httpRequest->input('request_ids', []);
@@ -580,89 +586,57 @@ if (!empty($validated['issue_date'])) {
             return redirect()->back()->with('error', 'Не выбрано ни одной заявки для отправки.');
         }
 
-    // Выбираем заявки со статусом "Создана" ИЛИ "urpedit"
-    $requests = \App\Models\Request::whereIn('id', $requestIds)
-        //->where('status', 'Создана')
-	->whereIn('status', ['Создана', 'urpedit', 'created'])
-        ->withCount('employees') // Добавляем подсчет сотрудников
-        ->get();
+        // Выбираем заявки со статусом "Создана" ИЛИ "urpedit"
+        $requests = \App\Models\Request::whereIn('id', $requestIds)
+            //->where('status', 'Создана')
+            ->whereIn('status', ['Создана', 'urpedit', 'created'])
+            ->withCount('employees') // Добавляем подсчет сотрудников
+            ->get();
 
 
 
-  if ($requests->isEmpty()) {
-    return redirect()->back()->with('error', 'Выбранные заявки уже отправлены или не могут быть обработаны.');
-}
+        if ($requests->isEmpty()) {
+            return redirect()->back()->with('error', 'Выбранные заявки уже отправлены или не могут быть обработаны.');
+        }
 
-// ПРОВЕРКА: есть ли заявки без сотрудников
-$requestsWithoutEmployees = $requests->filter(function ($request) {
-    return $request->employees_count == 0;
-});
+        // ПРОВЕРКА: есть ли заявки без сотрудников
+        $requestsWithoutEmployees = $requests->filter(function ($request) {
+            return $request->employees_count == 0;
+        });
 
-if ($requestsWithoutEmployees->isNotEmpty()) {
-    $numbers = $requestsWithoutEmployees->pluck('req_id')->implode(', ');
+        if ($requestsWithoutEmployees->isNotEmpty()) {
+            $numbers = $requestsWithoutEmployees->pluck('req_id')->implode(', ');
 
-    return redirect()
-        ->back()
-        ->with('error', "Заявки без сотрудников не могут быть отправлены: {$numbers}. Добавьте сотрудников в эти заявки.");
-}
+            return redirect()
+                ->back()
+                ->with('error', "Заявки без сотрудников не могут быть отправлены: {$numbers}. Добавьте сотрудников в эти заявки.");
+        }
 
-// Выполняем операции атомарно в транзакции
-\Illuminate\Support\Facades\DB::transaction(function () use ($requests) {
-    foreach ($requests as $request) {
-
-        // 1. Обновляем статус самой заявки
-        $request->update([
-            'status' => 'in_progress'
-        ]);
-
-		 //Тестовый лог при отправке в ООО
-                activity()
-                    ->performedOn($request)
-                    ->causedBy(auth()->user())
-                    ->log('Заявка отправлена в ООО, создан протокол');
-
-        // 2. Создаем протокол в таблице app_protocols
-        $request->protocols()->create([
-            'prot_num'       => $request->req_id,
-            'prot_status'    => 1,
-            'prot_date'      => now(),
-            'id_user_create' => auth()->id() ?? 1,
-            'date_edit'      => now(),
-            'id_user_edit'   => auth()->id() ?? 1,
-            'date_start'     => $request->start_date ?? now(),
-            'date_end'       => $request->end_date ?? now()->addDays(5),
-            'row_version'    => 1,
-        ]);
-    }
-});
-
-        // Выполняем операции атомарно в транзакции
         \Illuminate\Support\Facades\DB::transaction(function () use ($requests) {
             foreach ($requests as $request) {
 
-                // 1. Обновляем статус самой заявки
                 $request->update([
                     'status' => 'Отправлена'
                 ]);
 
-                //Тестовый лог при отправке в ООО
                 activity()
                     ->performedOn($request)
                     ->causedBy(auth()->user())
                     ->log('Заявка отправлена в ООО, создан протокол');
 
-                // 2. Создаем протокол в таблице app_protocols
-                $request->protocols()->create([
-                    'prot_num'       => $request->req_id,
-                    'prot_status'    => 1,
-                    'prot_date'      => now(),
-                    'id_user_create' => auth()->id() ?? 1,
-                    'date_edit'      => now(),
-                    'id_user_edit'   => auth()->id() ?? 1,
-                    'date_start'     => $request->start_date ?? now(),
-                    'date_end'       => $request->end_date ?? now()->addDays(5),
-                    'row_version'    => 1,
-                ]);
+                \App\Models\AppProtocol::firstOrCreate(
+                    ['prot_num' => $request->req_id], 
+                    [
+                        'prot_status'    => 1, // Статус "В работе"
+                        'prot_date'      => now(),
+                        'id_user_create' => auth()->id() ?? 1,
+                        'date_edit'      => now(),
+                        'id_user_edit'   => auth()->id() ?? 1,
+                        'date_start'     => $request->start_date ?? now(),
+                        'date_end'       => $request->end_date ?? now()->addDays(5),
+                        'row_version'    => 1,
+                    ]
+                );
             }
         });
 
@@ -716,164 +690,164 @@ if ($requestsWithoutEmployees->isNotEmpty()) {
     }
 
 
-/**
- * Проверка, заблокирована ли заявка (менее 48 часов до начала)
- */
-private function isRequestLocked(RequestModel $requestModel): bool
-{
-    if (!$requestModel->start_date) {
-        return false;
-    }
-    
-    $startDate = Carbon::parse($requestModel->start_date);
-    $now = Carbon::now();
-    
-    // Заблокирована если до начала менее 48 часов и статус не urpedit
-    return $startDate->diffInHours($now) < 48 && $requestModel->status !== 'urpedit';
-}
+    /**
+     * Проверка, заблокирована ли заявка (менее 48 часов до начала)
+     */
+    private function isRequestLocked(RequestModel $requestModel): bool
+    {
+        if (!$requestModel->start_date) {
+            return false;
+        }
 
-/**
- * Проверка доступа к редактированию заявки
- */
-private function checkEditAccess(RequestModel $requestModel): ?\Illuminate\Http\RedirectResponse
-{
-    $user = auth()->user();
-      
-    // Если пользователь не авторизован - редирект на логин
-    if (!$user) {
-        return redirect()->route('login');
+        $startDate = Carbon::parse($requestModel->start_date);
+        $now = Carbon::now();
+
+        // Заблокирована если до начала менее 48 часов и статус не urpedit
+        return $startDate->diffInHours($now) < 48 && $requestModel->status !== 'urpedit';
     }
-    
-    // Админ имеет полный доступ
-    if ($user->hasRole('admin')) {
+
+    /**
+     * Проверка доступа к редактированию заявки
+     */
+    private function checkEditAccess(RequestModel $requestModel): ?\Illuminate\Http\RedirectResponse
+    {
+        $user = auth()->user();
+
+        // Если пользователь не авторизован - редирект на логин
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Админ имеет полный доступ
+        if ($user->hasRole('admin')) {
+            return null;
+        }
+
+        // Если заявка в статусе "Создана" - только urp, urp admin, admin могут редактировать
+        if ($requestModel->status === 'Создана' || $requestModel->status === 'created') {
+            if (!$user->hasAnyRole(['urp', 'urp admin', 'admin'])) {
+                abort(403, 'У вас нет прав на редактирование заявки в статусе "Создана"');
+            }
+        }
+
+        // Если заявка отправлена - только ooo, ooo admin, ooo chief могут редактировать
+        if ($requestModel->status === 'Отправлена' || $requestModel->status === 'sent') {
+            if (!$user->hasAnyRole(['ooo', 'ooo admin', 'ooo chief'])) {
+                abort(403, 'У вас нет прав на редактирование отправленной заявки');
+            }
+        }
+
+        // Если статус urpedit - только urp, urp admin могут редактировать
+        if ($requestModel->status === 'urpedit') {
+            if (!$user->hasAnyRole(['urp', 'urp admin', 'admin'])) {
+                abort(403, 'Заявка на доработке. Доступ разрешен только группам URP и URP Admin');
+            }
+        }
+
+        // Если заявка заблокирована (48 часов) - только ooo, ooo admin, ooo chief могут видеть
+        if ($this->isRequestLocked($requestModel)) {
+            if (!$user->hasAnyRole(['ooo', 'ooo admin', 'ooo chief'])) {
+                abort(403, 'Заявка заблокирована за 48 часов до начала обучения. Обратитесь к администратору.');
+            }
+        }
+
         return null;
     }
 
-// Если заявка в статусе "Создана" - только urp, urp admin, admin могут редактировать
-if ($requestModel->status === 'Создана' || $requestModel->status === 'created') {
-    if (!$user->hasAnyRole(['urp', 'urp admin', 'admin'])) {
-        abort(403, 'У вас нет прав на редактирование заявки в статусе "Создана"');
-    }
-}
-    
-    // Если заявка отправлена - только ooo, ooo admin, ooo chief могут редактировать
-    if ($requestModel->status === 'Отправлена' || $requestModel->status === 'sent') {
-        if (!$user->hasAnyRole(['ooo', 'ooo admin', 'ooo chief'])) {
-            abort(403, 'У вас нет прав на редактирование отправленной заявки');
+    /**
+     * Запрос снятия защиты с заявки
+     */
+    public function requestUnlock(int $id): RedirectResponse
+    {
+        $user = auth()->user();
+        $requestModel = RequestModel::findOrFail($id);
+
+        \Illuminate\Support\Facades\Log::info('requestUnlock - user', [
+            'email' => $user->email,
+            'roles' => $user->roles->pluck('name')->implode(', '),
+            'request_id' => $requestModel->id,
+            'start_date' => $requestModel->start_date,
+            'is_locked' => $this->isRequestLocked($requestModel),
+        ]);
+
+
+        // Только urp, urp admin могут запросить
+        if (!$user->hasAnyRole(['urp', 'urp admin'])) {
+            \Illuminate\Support\Facades\Log::error('requestUnlock - NO PERMISSION');
+            abort(403, 'У вас нет прав на запрос снятия защиты');
         }
-    }
-    
-    // Если статус urpedit - только urp, urp admin могут редактировать
-    if ($requestModel->status === 'urpedit') {
-        if (!$user->hasAnyRole(['urp', 'urp admin', 'admin'])) {
-            abort(403, 'Заявка на доработке. Доступ разрешен только группам URP и URP Admin');
+
+        // Заявка должна быть заблокирована
+        if (!$this->isRequestLocked($requestModel)) {
+            \Illuminate\Support\Facades\Log::error('requestUnlock - NOT LOCKED');
+            return redirect()->back()->with('error', 'Заявка не заблокирована');
         }
-    }
-    
-    // Если заявка заблокирована (48 часов) - только ooo, ooo admin, ooo chief могут видеть
-    if ($this->isRequestLocked($requestModel)) {
-        if (!$user->hasAnyRole(['ooo', 'ooo admin', 'ooo chief'])) {
-            abort(403, 'Заявка заблокирована за 48 часов до начала обучения. Обратитесь к администратору.');
+
+        \Illuminate\Support\Facades\Log::info('requestUnlock - OK, sending emails');
+
+
+        // Отмечаем запрос
+        $requestModel->update(['protection_requested' => true]);
+
+        // Отправляем email всем пользователям с ролью ooo admin
+        $adminUsers = \App\Models\User::role('ooo admin')->get();
+
+        if ($adminUsers->isEmpty()) {
+            return redirect()->back()->with('error', 'Не незначен ответственный от ООО');
         }
-    }
-    
-    return null;
-}
 
-/**
- * Запрос снятия защиты с заявки
- */
-public function requestUnlock(int $id): RedirectResponse
-{
-    $user = auth()->user();
-    $requestModel = RequestModel::findOrFail($id);
-    
-    \Illuminate\Support\Facades\Log::info('requestUnlock - user', [
-        'email' => $user->email,
-        'roles' => $user->roles->pluck('name')->implode(', '),
-        'request_id' => $requestModel->id,
-        'start_date' => $requestModel->start_date,
-        'is_locked' => $this->isRequestLocked($requestModel),
-    ]);
+        foreach ($adminUsers as $admin) {
+            $unlockUrl = route('requests.unlock', $requestModel->id);
 
-    
-  // Только urp, urp admin могут запросить
-    if (!$user->hasAnyRole(['urp', 'urp admin'])) {
-        \Illuminate\Support\Facades\Log::error('requestUnlock - NO PERMISSION');
-        abort(403, 'У вас нет прав на запрос снятия защиты');
-    }
-    
-    // Заявка должна быть заблокирована
-    if (!$this->isRequestLocked($requestModel)) {
-        \Illuminate\Support\Facades\Log::error('requestUnlock - NOT LOCKED');
-        return redirect()->back()->with('error', 'Заявка не заблокирована');
-    }
-    
-    \Illuminate\Support\Facades\Log::info('requestUnlock - OK, sending emails');
-    
-
-    // Отмечаем запрос
-    $requestModel->update(['protection_requested' => true]);
-    
-    // Отправляем email всем пользователям с ролью ooo admin
-    $adminUsers = \App\Models\User::role('ooo admin')->get();
-
-  if ($adminUsers->isEmpty()) {
-        return redirect()->back()->with('error', 'Не незначен ответственный от ООО');
-    }
-    
-    foreach ($adminUsers as $admin) {
-        $unlockUrl = route('requests.unlock', $requestModel->id);
-        
-        $subject = "Запрос на снятие защиты с заявки #{$requestModel->req_id}";
-        $message = "
+            $subject = "Запрос на снятие защиты с заявки #{$requestModel->req_id}";
+            $message = "
             <h2>Запрос на снятие защиты</h2>
             <p>Пользователь <strong>{$user->name}</strong>, роль <strong>{$user->roles->pluck('name')->implode(', ')}</strong></p>
             <p>просит снять защиту с заявки <strong>#{$requestModel->req_id}</strong></p>
             <p><a href='{$unlockUrl}' target='_blank'  rel='noopener noreferrer'>Снять защиту</a></p>
         ";
-        
-        \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($admin, $subject) {
-            $mail->to($admin->email)->subject($subject);
-        });
-    }
-    
-    return redirect()->back()->with('success', 'Запрос на снятие защиты отправлен');
-}
 
-/**
- * Снятие защиты с заявки (через ссылку из email)
- */
-public function unlock(int $id): RedirectResponse
-{
-    $user = auth()->user();
-    $requestModel = RequestModel::findOrFail($id);    
-    // Только urp, urp admin могут снять защиту
-    if (!$user->hasAnyRole(['urp', 'urp admin', 'admin'])) {
-        abort(403, 'У вас нет прав на снятие защиты');
-    }
-    
-    // Меняем статус на urpedit
-    $requestModel->update([
-        'status' => 'urpedit',
-        'protection_requested' => false,
-    ]);
-    
-    return redirect()->route('requests.edit', $requestModel->id)
-        ->with('success', 'Защита снята. Заявка переведена в статус "На доработке".');
-}
+            \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($admin, $subject) {
+                $mail->to($admin->email)->subject($subject);
+            });
+        }
 
-private function notifyCuratorAssigned(RequestModel $requestModel): void
-{
-    $curator = $requestModel->curator;
-    
-    if (!$curator || !$curator->email) {
-        return;
+        return redirect()->back()->with('success', 'Запрос на снятие защиты отправлен');
     }
-    
-    $subject = "Вас назначили куратором заявки #{$requestModel->id}";
-    
-$message = "
+
+    /**
+     * Снятие защиты с заявки (через ссылку из email)
+     */
+    public function unlock(int $id): RedirectResponse
+    {
+        $user = auth()->user();
+        $requestModel = RequestModel::findOrFail($id);
+        // Только urp, urp admin могут снять защиту
+        if (!$user->hasAnyRole(['urp', 'urp admin', 'admin'])) {
+            abort(403, 'У вас нет прав на снятие защиты');
+        }
+
+        // Меняем статус на urpedit
+        $requestModel->update([
+            'status' => 'urpedit',
+            'protection_requested' => false,
+        ]);
+
+        return redirect()->route('requests.edit', $requestModel->id)
+            ->with('success', 'Защита снята. Заявка переведена в статус "На доработке".');
+    }
+
+    private function notifyCuratorAssigned(RequestModel $requestModel): void
+    {
+        $curator = $requestModel->curator;
+
+        if (!$curator || !$curator->email) {
+            return;
+        }
+
+        $subject = "Вас назначили куратором заявки #{$requestModel->id}";
+
+        $message = "
     <h2>Назначение куратором</h2>
     <p><strong>Номер заявки:</strong> #{$requestModel->id}</p>
     <p><strong>Курс:</strong> " . ($requestModel->course->course ?? '—') . "</p>
@@ -881,198 +855,197 @@ $message = "
     <p><strong>Дата окончания:</strong> " . ($requestModel->end_date ? $requestModel->end_date->format('d.m.Y') : '—') . "</p>
     <hr>
     <p>Вы были назначены куратором данной группы.</p>
-";    
-    \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($curator, $subject) {
-        $mail->to($curator->email)->subject($subject);
-    });
-}
-
-/**
- * Показать историю изменений заявки
- */
-/**
- * Показать историю изменений заявки
- */
-public function history(RequestModel $request, \Illuminate\Http\Request $httpRequest): View
-{
-    // Проверка доступа
-    $user = auth()->user();
-    if (!$user->hasAnyRole(['admin', 'ooo chief'])) {
-        abort(403, 'У вас нет прав на просмотр истории изменений');
+";
+        \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($curator, $subject) {
+            $mail->to($curator->email)->subject($subject);
+        });
     }
 
-    // Получаем все активности по заявке
-    $requestActivities = \Spatie\Activitylog\Models\Activity::where('subject_type', RequestModel::class)
-        ->where('subject_id', $request->id);
-    
-    // Получаем все активности по сотрудникам заявки
-    $employeeIds = $request->employees->pluck('id');
-    $employeeActivities = \Spatie\Activitylog\Models\Activity::where('subject_type', \App\Models\RequestEmployee::class)
-        ->whereIn('subject_id', $employeeIds);
-    
-    // Объединяем активности без проверки дубликатов JSON (для PostgreSQL)
-    $allActivities = $requestActivities->unionAll($employeeActivities)
-        ->orderBy('created_at', 'desc')
-        ->paginate(20);
-    
-    // Загружаем causer
-    $allActivities->load('causer');
-
-    // Маппинг полей для сотрудников (так как в Request у вас только для заявок)
-    $employeeLabels = [
-        'tab_number' => 'Таб. номер',
-        'last_name' => 'Фамилия',
-        'first_name' => 'Имя',
-        'middle_name' => 'Отчество',
-        'position' => 'Должность',
-        'absence_start_date' => 'Дата начала отсутствия',
-        'absence_end_date' => 'Дата окончания отсутствия',
-        'absence_reason' => 'Причина отсутствия',
-        'absence_type' => 'Форма обучения',
-        'note' => 'Примечание',
-        'document_issue_date' => 'Дата выдачи документа',
-        'reissue_period' => 'Периодичность',
-    ];
-
-    // Форматируем данные логов с помощью ваших бэкенд-функций перед отправкой в Blade
-    $allActivities->getCollection()->transform(function ($activity) use ($employeeLabels) {
-        $formattedChanges = [
-            'labels' => [],
-            'old' => [],
-            'attributes' => []
-        ];
-
-        $changes = $activity->attribute_changes;
-        $isEmployee = $activity->subject_type === \App\Models\RequestEmployee::class;
-        $labelsSource = $isEmployee ? $employeeLabels : \App\Models\Request::getFieldLabels();
-
-        // Запоминаем ФИО сотрудника, если это лог сотрудника
-        if ($isEmployee) {
-            $attrs = $changes['attributes'] ?? [];
-            $activity->employee_fio = trim(($attrs['last_name'] ?? '') . ' ' . ($attrs['first_name'] ?? '') . ' ' . ($attrs['middle_name'] ?? ''));
+    /**
+     * Показать историю изменений заявки
+     */
+    /**
+     * Показать историю изменений заявки
+     */
+    public function history(RequestModel $request, \Illuminate\Http\Request $httpRequest): View
+    {
+        // Проверка доступа
+        $user = auth()->user();
+        if (!$user->hasAnyRole(['admin', 'ooo chief'])) {
+            abort(403, 'У вас нет прав на просмотр истории изменений');
         }
 
-        // Обрабатываем старые и новые значения информационных полей
-        if (isset($changes['attributes'])) {
-            foreach ($changes['attributes'] as $field => $newValue) {
-                if ($field === 'status' || $field === 'request_id') continue;
+        // Получаем все активности по заявке
+        $requestActivities = \Spatie\Activitylog\Models\Activity::where('subject_type', RequestModel::class)
+            ->where('subject_id', $request->id);
 
-                $oldValue = $changes['old'][$field] ?? null;
+        // Получаем все активности по сотрудникам заявки
+        $employeeIds = $request->employees->pluck('id');
+        $employeeActivities = \Spatie\Activitylog\Models\Activity::where('subject_type', \App\Models\RequestEmployee::class)
+            ->whereIn('subject_id', $employeeIds);
 
-                // Используем ваш метод форматирования значений из модели Request
-                // (Для дат сотрудников добавим базовую обработку, если они приходят с таймзоной)
-                if ($isEmployee && in_array($field, ['absence_start_date', 'absence_end_date', 'document_issue_date'])) {
-                    $formattedOld = $oldValue ? \Carbon\Carbon::parse($oldValue)->format('d.m.Y') : '—';
-                    $formattedNew = $newValue ? \Carbon\Carbon::parse($newValue)->format('d.m.Y') : '—';
-                } else {
-                    $formattedOld = \App\Models\Request::formatFieldValue($field, $oldValue);
-                    $formattedNew = \App\Models\Request::formatFieldValue($field, $newValue);
+        // Объединяем активности без проверки дубликатов JSON (для PostgreSQL)
+        $allActivities = $requestActivities->unionAll($employeeActivities)
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        // Загружаем causer
+        $allActivities->load('causer');
+
+        // Маппинг полей для сотрудников (так как в Request у вас только для заявок)
+        $employeeLabels = [
+            'tab_number' => 'Таб. номер',
+            'last_name' => 'Фамилия',
+            'first_name' => 'Имя',
+            'middle_name' => 'Отчество',
+            'position' => 'Должность',
+            'absence_start_date' => 'Дата начала отсутствия',
+            'absence_end_date' => 'Дата окончания отсутствия',
+            'absence_reason' => 'Причина отсутствия',
+            'absence_type' => 'Форма обучения',
+            'note' => 'Примечание',
+            'document_issue_date' => 'Дата выдачи документа',
+            'reissue_period' => 'Периодичность',
+        ];
+
+        // Форматируем данные логов с помощью ваших бэкенд-функций перед отправкой в Blade
+        $allActivities->getCollection()->transform(function ($activity) use ($employeeLabels) {
+            $formattedChanges = [
+                'labels' => [],
+                'old' => [],
+                'attributes' => []
+            ];
+
+            $changes = $activity->attribute_changes;
+            $isEmployee = $activity->subject_type === \App\Models\RequestEmployee::class;
+            $labelsSource = $isEmployee ? $employeeLabels : \App\Models\Request::getFieldLabels();
+
+            // Запоминаем ФИО сотрудника, если это лог сотрудника
+            if ($isEmployee) {
+                $attrs = $changes['attributes'] ?? [];
+                $activity->employee_fio = trim(($attrs['last_name'] ?? '') . ' ' . ($attrs['first_name'] ?? '') . ' ' . ($attrs['middle_name'] ?? ''));
+            }
+
+            // Обрабатываем старые и новые значения информационных полей
+            if (isset($changes['attributes'])) {
+                foreach ($changes['attributes'] as $field => $newValue) {
+                    if ($field === 'status' || $field === 'request_id') continue;
+
+                    $oldValue = $changes['old'][$field] ?? null;
+
+                    // Используем ваш метод форматирования значений из модели Request
+                    // (Для дат сотрудников добавим базовую обработку, если они приходят с таймзоной)
+                    if ($isEmployee && in_array($field, ['absence_start_date', 'absence_end_date', 'document_issue_date'])) {
+                        $formattedOld = $oldValue ? \Carbon\Carbon::parse($oldValue)->format('d.m.Y') : '—';
+                        $formattedNew = $newValue ? \Carbon\Carbon::parse($newValue)->format('d.m.Y') : '—';
+                    } else {
+                        $formattedOld = \App\Models\Request::formatFieldValue($field, $oldValue);
+                        $formattedNew = \App\Models\Request::formatFieldValue($field, $newValue);
+                    }
+
+                    $formattedChanges['labels'][$field] = $labelsSource[$field] ?? $field;
+                    $formattedChanges['old'][$field] = $formattedOld;
+                    $formattedChanges['attributes'][$field] = $formattedNew;
                 }
+            }
 
-                $formattedChanges['labels'][$field] = $labelsSource[$field] ?? $field;
-                $formattedChanges['old'][$field] = $formattedOld;
-                $formattedChanges['attributes'][$field] = $formattedNew;
+            $activity->formatted_changes = $formattedChanges;
+            return $activity;
+        });
+
+        return view('requests.history', compact('request', 'allActivities'));
+    }
+
+
+    /**
+     * Откат изменений
+     */
+    public function rollback(RequestModel $request, \Spatie\Activitylog\Models\Activity $activity): RedirectResponse
+    {
+        // Проверка доступа
+        $user = auth()->user();
+        if (!$user->hasAnyRole(['admin', 'ooo chief'])) {
+            abort(403, 'У вас нет прав на откат изменений');
+        }
+
+        // Проверяем что активность относится к этой заявке
+        if ($activity->subject_type === RequestModel::class && $activity->subject_id !== $request->id) {
+            abort(404, 'Изменение не найдено');
+        }
+
+        if ($activity->subject_type === \App\Models\RequestEmployee::class) {
+            $employee = \App\Models\RequestEmployee::find($activity->subject_id);
+            if (!$employee || $employee->request_id !== $request->id) {
+                abort(404, 'Изменение не найдено');
             }
         }
 
-        $activity->formatted_changes = $formattedChanges;
-        return $activity;
-    });
-    
-    return view('requests.history', compact('request', 'allActivities'));
-}
+        // Выполняем откат
+        $changes = $activity->attribute_changes;
 
-
-/**
- * Откат изменений
- */
-public function rollback(RequestModel $request, \Spatie\Activitylog\Models\Activity $activity): RedirectResponse
-{
-    // Проверка доступа
-    $user = auth()->user();
-    if (!$user->hasAnyRole(['admin', 'ooo chief'])) {
-        abort(403, 'У вас нет прав на откат изменений');
-    }
-    
-    // Проверяем что активность относится к этой заявке
-    if ($activity->subject_type === RequestModel::class && $activity->subject_id !== $request->id) {
-        abort(404, 'Изменение не найдено');
-    }
-    
-    if ($activity->subject_type === \App\Models\RequestEmployee::class) {
-        $employee = \App\Models\RequestEmployee::find($activity->subject_id);
-        if (!$employee || $employee->request_id !== $request->id) {
-            abort(404, 'Изменение не найдено');
+        if (!$changes || !isset($changes['old'])) {
+            return redirect()->back()->with('error', 'Невозможно откатить это изменение');
         }
-    }
-    
-    // Выполняем откат
-    $changes = $activity->attribute_changes;
-    
-    if (!$changes || !isset($changes['old'])) {
-        return redirect()->back()->with('error', 'Невозможно откатить это изменение');
-    }
-    
-    // ОТКАТ ДЛЯ ЗАЯВКИ
-    if ($activity->subject_type === RequestModel::class) {
-        // Сохраняем текущее состояние для лога отката
-        $currentState = $request->toArray();
-        
-        // Применяем старые значения
-        $request->update($changes['old']);
-        
-        // Логируем откат
-        activity()
-            ->performedOn($request)
-            ->causedBy($user)
-            ->withProperties([
-                'attributes' => $changes['old'],
-                'old' => $currentState,
-                'rollback_of' => $activity->id,
-            ])
-            ->log('Откат изменений');
-        
-        return redirect()->back()->with('success', 'Изменения откачены успешно');
-    }
-    
-    // ОТКАТ ДЛЯ СОТРУДНИКА
-    if ($activity->subject_type === \App\Models\RequestEmployee::class) {
-        $employee = \App\Models\RequestEmployee::find($activity->subject_id);
-        
-        if (!$employee) {
-            // Сотрудник был удален - возвращаем его
-            $oldData = $changes['old'];
-            $oldData['request_id'] = $request->id;
-            $employee = \App\Models\RequestEmployee::create($oldData);
-            
-            activity()
-                ->performedOn($employee)
-                ->causedBy($user)
-                ->withProperties(['rollback_of' => $activity->id])
-                ->log('Восстановлен сотрудник после отката');
-        } else {
+
+        // ОТКАТ ДЛЯ ЗАЯВКИ
+        if ($activity->subject_type === RequestModel::class) {
             // Сохраняем текущее состояние для лога отката
-            $currentState = $employee->toArray();
-            
+            $currentState = $request->toArray();
+
             // Применяем старые значения
-            $employee->update($changes['old']);
-            
+            $request->update($changes['old']);
+
             // Логируем откат
             activity()
-                ->performedOn($employee)
+                ->performedOn($request)
                 ->causedBy($user)
                 ->withProperties([
                     'attributes' => $changes['old'],
                     'old' => $currentState,
                     'rollback_of' => $activity->id,
                 ])
-                ->log('Откат изменений сотрудника');
-        }
-        
-        return redirect()->back()->with('success', 'Изменения сотрудника откачены успешно');
-    }
-    
-    return redirect()->back()->with('error', 'Не удалось откатить изменения');
-}
+                ->log('Откат изменений');
 
+            return redirect()->back()->with('success', 'Изменения откачены успешно');
+        }
+
+        // ОТКАТ ДЛЯ СОТРУДНИКА
+        if ($activity->subject_type === \App\Models\RequestEmployee::class) {
+            $employee = \App\Models\RequestEmployee::find($activity->subject_id);
+
+            if (!$employee) {
+                // Сотрудник был удален - возвращаем его
+                $oldData = $changes['old'];
+                $oldData['request_id'] = $request->id;
+                $employee = \App\Models\RequestEmployee::create($oldData);
+
+                activity()
+                    ->performedOn($employee)
+                    ->causedBy($user)
+                    ->withProperties(['rollback_of' => $activity->id])
+                    ->log('Восстановлен сотрудник после отката');
+            } else {
+                // Сохраняем текущее состояние для лога отката
+                $currentState = $employee->toArray();
+
+                // Применяем старые значения
+                $employee->update($changes['old']);
+
+                // Логируем откат
+                activity()
+                    ->performedOn($employee)
+                    ->causedBy($user)
+                    ->withProperties([
+                        'attributes' => $changes['old'],
+                        'old' => $currentState,
+                        'rollback_of' => $activity->id,
+                    ])
+                    ->log('Откат изменений сотрудника');
+            }
+
+            return redirect()->back()->with('success', 'Изменения сотрудника откачены успешно');
+        }
+
+        return redirect()->back()->with('error', 'Не удалось откатить изменения');
+    }
 }
