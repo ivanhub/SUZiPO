@@ -24,7 +24,13 @@
         </div>
 
         @if(session('success'))
-        <div style="padding: 12px 16px; background-color: #d1fae5; border: 1px solid #10b981; color: #065f46; border-radius: 6px; font-size: 13px; margin-bottom: 20px; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+        <div x-data="{ show: true }"
+            x-show="show"
+            x-init="setTimeout(() => show = false, 4000)"
+            x-transition:leave="transition ease-in duration-300"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            style="padding: 12px 16px; background-color: #d1fae5; border: 1px solid #10b981; color: #065f46; border-radius: 6px; font-size: 13px; margin-bottom: 20px; font-weight: 500; display: flex; align-items: center; gap: 8px;">
             ✅ {{ session('success') }}
         </div>
         @endif

@@ -200,10 +200,26 @@ class ProtocolController extends Controller
         $teachers = \App\Models\RequestsTeachers::orderBy('fio')->get();
         $report = \App\Models\UcExtReport::where('id_protocol', $id)->first();
 
-        return view('protocols.report.create', compact('protocol', 'learningTypeName', 'audiences', 'teachers', 'refCurators', 'report', 'matrixNum'));
+        $allComissionMembers = \App\Models\ComissionMember::orderBy('fio')->get();
+        $currentComission = \App\Models\ProtocolComission::where('protocol_id', $id)->get();
+
+        $savedResults = \Illuminate\Support\Facades\DB::table('uc_ext_studentsprotocol')
+            ->where('id_protocol', $id)
+            ->get()
+            ->keyBy('id_students');
+
+        $allComissionMembers = \App\Models\ComissionMember::orderBy('fio')->get();
+        $currentComission = \App\Models\ProtocolComission::where('protocol_id', $id)->get();
+
+
+
+        return view('protocols.report.create', compact(
+            'protocol', 'learningTypeName', 'audiences',
+            'teachers', 'refCurators', 'report', 'matrixNum',
+            'allComissionMembers', 'currentComission', 'savedResults'));
     }
 
-    public function storeReport(\Illuminate\Http\Request $request)
+    public function storeReport(Request $request)
     {
         $validated = $request->validate([
             'id_protocol' => 'required',
@@ -214,31 +230,95 @@ class ProtocolController extends Controller
 
         $protocol = \App\Models\AppProtocol::with('demand.employees')->findOrFail($request->id_protocol);
         $employees = collect($protocol->demand?->employees ?? []);
-
         $inputResults = $request->input('results', []);
 
         $noShowCount = 0;
         $noPassedCount = 0;
-
         $programHours = (int)($request->input('program_hours') ?? $protocol->program_hours ?? 0);
 
         foreach ($employees as $employee) {
-            $empId = $employee->id;
+            // Идентификатор студента в старой системе (берем id_student, если пустой - берем id)
+            $idStudents = $employee->id_student ?? $employee->id;
             
-            // Берем данные строки сотрудника из формы, если их нет — ставим дефолты
-            $status = $inputResults[$empId]['status'] ?? 'удовлетворительно';
-            $hoursFact = isset($inputResults[$empId]['hours_fact']) ? (int)$inputResults[$empId]['hours_fact'] : $programHours;
+            $statusInput   = $inputResults[$idStudents]['status'] ?? 'зачет'; // зачет/незачет/удовлетворительно/неявка
+            $practiceMark  = $inputResults[$idStudents]['practice_mark'] ?? null;
+            $assignedRank  = $inputResults[$idStudents]['assigned_rank'] ?? null;
+            $testResult    = $inputResults[$idStudents]['test_result'] ?? null;
+            $eisotNum      = $inputResults[$idStudents]['eisot_num'] ?? null;
+            $startFact     = $inputResults[$idStudents]['start_fact'] ?? $protocol->date_start;
+            $endFact       = $inputResults[$idStudents]['end_fact'] ?? $protocol->date_end;
+            $hoursFact     = isset($inputResults[$idStudents]['hours_fact']) ? (int)$inputResults[$idStudents]['hours_fact'] : $programHours;
 
-            // 1. Логика ТЗ: Неявку считать, если фактическое кол-во часов равно 0 или выбран статус неявка
-            if ($hoursFact === 0 || $status === 'неявка') {
+            // Неявку считать, если фактическое кол-во часов равно 0 или выбран статус неявка
+            if ($hoursFact === 0 || $statusInput === 'неявка') {
                 $noShowCount++;
-                $noPassedCount++; // Неявившийся автоматически считается не сдавшим
+                $noPassedCount++;
+                $flagPassed = 'неявка';
                 continue;
+            } elseif ($statusInput === 'неудовлетворительно' || $statusInput === 'незачет' || $hoursFact < $programHours) {
+                $noPassedCount++;
+                $flagPassed = 'не сдал';
+            } else {
+                $flagPassed = 'сдал';
             }
 
-            // 2. Логика ТЗ: Не сдали – при неудовлетворительной оценке или частичной неявке (фактические часы < часов по программе)
-            if ($status === 'неудовлетворительно' || $hoursFact < $programHours) {
-                $noPassedCount++;
+            $fioFact     = $employee->last_name ?? $employee->fio ?? $employee->name ?? '—';
+            $staffFact   = $employee->position ?? '—';
+            $departFact  = $employee->department ?? '—';
+            $companyFact = $employee->company ?? '—';
+            $gradeFact   = $employee->rank ?? null;
+
+            $regNumber = is_numeric($eisotNum) ? (int)$eisotNum : null;
+            $docNumber = !is_numeric($eisotNum) ? $eisotNum : null;
+
+            $existing = \Illuminate\Support\Facades\DB::table('uc_ext_studentsprotocol')
+                ->where('id_protocol', $protocol->prot_id)
+                ->where('id_students', $idStudents)
+                ->first();
+
+            if ($existing) {
+                \Illuminate\Support\Facades\DB::table('uc_ext_studentsprotocol')
+                    ->where('id_studentprotocol', $existing->id_studentprotocol)
+                    ->update([
+                        'markitog'        => $statusInput,
+                        'status'          => $statusInput,
+                        'markpract'       => $practiceMark,
+                        'assignedgrade'   => $assignedRank,
+                        'resulttest'      => $testResult,
+                        'regnumber'       => $regNumber,
+                        'documentnumber'  => $docNumber,
+                        'begindatefact'   => $startFact,
+                        'enddatefact'     => $endFact,
+                        'counthourfact'   => (float)$hoursFact,
+                        'flagpassed'      => $flagPassed,
+                        'fiofact'         => $fioFact,
+                        'stafffact'       => $staffFact,
+                        'departfact'      => $departFact,
+                        'namecompanyfact' => $companyFact,
+                        'gradefact'       => $gradeFact,
+                    ]);
+            } else {
+                \Illuminate\Support\Facades\DB::table('uc_ext_studentsprotocol')->insert([
+                    'id_studentprotocol' => (string) \Illuminate\Support\Str::uuid(),
+                    'id_protocol'       => $protocol->prot_id,
+                    'id_students'       => $idStudents,
+                    'markitog'          => $statusInput,
+                    'status'            => $statusInput,
+                    'markpract'         => $practiceMark,
+                    'assignedgrade'     => $assignedRank,
+                    'resulttest'        => $testResult,
+                    'regnumber'         => $regNumber,
+                    'documentnumber'    => $docNumber,
+                    'begindatefact'     => $startFact,
+                    'enddatefact'       => $endFact,
+                    'counthourfact'     => (float)$hoursFact,
+                    'flagpassed'        => $flagPassed,
+                    'fiofact'           => $fioFact,
+                    'stafffact'         => $staffFact,
+                    'departfact'        => $departFact,
+                    'namecompanyfact'   => $companyFact,
+                    'gradefact'         => $gradeFact,
+                ]);
             }
         }
 
@@ -282,8 +362,58 @@ class ProtocolController extends Controller
             array_merge(['id_report' => (string) \Illuminate\Support\Str::uuid()], $reportData)
         );
 
+        // \App\Models\ProtocolComission::where('protocol_id', $protocol->prot_id)->delete();
+        \App\Models\UcExtCommissionprotocol::where('id_protocol', $protocol->prot_id)->delete();
+
+        // Председатель
+        $chairmanFio = $request->input('comission.chairman_id');
+        $dbChairman = \Illuminate\Support\Facades\DB::table('comission_members')->where('fio', $chairmanFio)->first();
+        if ($dbChairman) {
+            \App\Models\UcExtCommissionprotocol::create([
+                'id_compr'          => (string) \Illuminate\Support\Str::uuid(),
+                'id_protocol'       => $protocol->prot_id,
+                'id_listcommission' => $dbChairman->id,
+                'fio'               => $dbChairman->fio,
+                'staff'             => $dbChairman->position,
+                'note'              => 'Председатель',
+                'sortorder'         => 1,
+            ]);
+        }
+
+        // Заместитель
+        $deputyFio = $request->input('comission.deputy_id');
+        $dbDeputy = \Illuminate\Support\Facades\DB::table('comission_members')->where('fio', $deputyFio)->first();
+        if ($dbDeputy) {
+            \App\Models\UcExtCommissionprotocol::create([
+                'id_compr'          => (string) \Illuminate\Support\Str::uuid(),
+                'id_protocol'       => $protocol->prot_id,
+                'id_listcommission' => $dbDeputy->id,
+                'fio'               => $dbDeputy->fio,
+                'staff'             => $dbDeputy->position,
+                'note'              => 'Заместитель председателя',
+                'sortorder'         => 2,
+            ]);
+        }
+
+        // Члены комиссии
+        $memberIds = $request->input('comission.members', []);
+        foreach ($memberIds as $index => $mId) {
+            $dbMember = \Illuminate\Support\Facades\DB::table('comission_members')->find($mId);
+            if ($dbMember) {
+                \App\Models\UcExtCommissionprotocol::create([
+                    'id_compr'          => (string) \Illuminate\Support\Str::uuid(),
+                    'id_protocol'       => $protocol->prot_id,
+                    'id_listcommission' => $dbMember->id,
+                    'fio'               => $dbMember->fio,
+                    'staff'             => $dbMember->position,
+                    'note'              => 'Член комиссии',
+                    'sortorder'         => 3 + $index,
+                ]);
+            }
+        }
+
         return redirect()->route('protocols.index')
-            ->with('success', "Отчет по протоколу № {$protocol->prot_num} успешно сохранен. Показатели: Явок - {$showCount}, Неявок - {$noShowCount}, Сдали - {$passedCount}.");
+            ->with('success', "Отчет по протоколу № {$protocol->prot_num} успешно сохранен.");
     }
 
     public function create()

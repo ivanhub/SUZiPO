@@ -200,9 +200,8 @@
                          x-transition:enter-start="opacity-0 transform -translate-y-2"
                          x-transition:enter-end="opacity-100 transform translate-y-0"
                          class="mt-1 ml-8 space-y-1 max-h-48 overflow-y-auto">
-                        <a href="{{ route('directories.countries') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Страны</a>
                         <a href="{{ route('directories.reasons-non-certification') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Причины не аттестации</a>
-			<a href="{{ route('directories.providers.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Учебные заведения</a>
+			            <a href="{{ route('directories.providers.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Учебные заведения</a>
                         <a href="{{ route('directories.courses.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Курсы</a>
                         <a href="{{ route('directories.cities.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Города</a>
                         <a href="{{ route('directories.professions.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Профессии</a>
