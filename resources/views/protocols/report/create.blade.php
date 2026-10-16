@@ -83,7 +83,6 @@
                         </select>
                     </div>
 
-
                     <!-- Ряд 2: Распоряжение № / Приказ № -->
                     <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px; position: relative;">
                         <label style="font-weight: 500; color: #374151;">Распоряжение №/ Приказ №:</label>
@@ -211,41 +210,54 @@
                     </div>
 
                     <!-- Блок: Результаты обучения и пол -->
+                                        <!-- Блок: Результаты обучения и пол (Синхронизация с БД) -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
                         <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Результаты обучения и пол</span>
-
+                        
+                        <!-- Сетка показателей из Excel-шаблона -->
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 12px;">
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Явилось на экзамены</label>
-                                <input type="number" readonly
-                                    value="{{ count($protocol->demand?->employees ?? []) }}"
-                                    style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #111827;">
+                                <input type="number" readonly 
+                                       value="{{ $report ? $report->Show : count($protocol->demand?->employees ?? []) }}" 
+                                       style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #111827;">
                             </div>
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Не явилось (неявка)</label>
-                                <input type="number" readonly value="0" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #b91c1c;">
+                                <input type="number" readonly 
+                                       value="{{ $report ? $report->noshow : 0 }}" 
+                                       style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #b91c1c;">
                             </div>
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Сдали</label>
-                                <input type="number" readonly value="{{ count($protocol->demand?->employees ?? []) }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #059669;">
+                                <input type="number" readonly 
+                                       value="{{ $report ? $report->passed : count($protocol->demand?->employees ?? []) }}" 
+                                       style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #059669;">
                             </div>
                         </div>
 
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Не сдали</label>
-                                <input type="number" readonly value="0" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #b91c1c;">
+                                <input type="number" readonly 
+                                       value="{{ $report ? $report->nopassed : 0 }}" 
+                                       style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #b91c1c;">
                             </div>
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Кол-во мужчин</label>
-                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('gender', 'М')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
+                                <input type="number" readonly 
+                                       value="{{ $report ? $report->countman : collect($protocol->demand?->employees)->where('gender', 'М')->count() }}" 
+                                       style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
                             </div>
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Кол-во женщин</label>
-                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('gender', 'Ж')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
+                                <input type="number" readonly 
+                                       value="{{ $report ? $report->countwoman : collect($protocol->demand?->employees)->where('gender', 'Ж')->count() }}" 
+                                       style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
                             </div>
                         </div>
                     </div>
+
 
                     <!-- Блок: Группы предприятий -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
@@ -608,10 +620,18 @@
                         </thead>
                         <tbody>
                             @forelse($protocol->demand?->employees ?? [] as $index => $employee)
-                            @php
-                                $studentId = $employee->id_student ?? $employee->id;
-                                $dbRow = $savedResults->get($studentId);
-                            @endphp
+                                @php
+                                    $empSnilsRaw = $employee->pfr_certificate ?? ''; 
+                                    $empSnilsClean = !empty($empSnilsRaw) ? preg_replace('/[^0-9]/', '', $empSnilsRaw) : '';
+                                    $empTabNum = (string)($employee->tab_number ?? ''); 
+
+                                    $dbRow = null;
+                                    if (!empty($empSnilsClean)) { $dbRow = $savedResults->get($empSnilsClean); }
+                                    if (!$dbRow && !empty($empTabNum)) { $dbRow = $savedResults->get($empTabNum); }
+                                    if (!$dbRow) { $dbRow = $savedResults->get((string)$employee->id); }
+
+                                    $studentKey = $employee->id; 
+                                @endphp
                             <tr style="border-bottom: 1px solid #7f8c8d; height: 36px;">
                                 <td style="border-right: 1px solid #7f8c8d; padding: 6px; text-align: center; color: #6b7280;">{{ $index + 1 }}</td>
                                 <td style="border-right: 1px solid #7f8c8d; padding: 6px; text-align: center;">{{ $employee->tab_num ?? '—' }}</td>
@@ -621,7 +641,7 @@
 
                                 <!-- 6. Динамический селект Итогового зачета -->
                                 <td style="border-right: 1px solid #7f8c8d; padding: 4px; text-align: center;">
-                                    <select name="results[{{ $studentId }}][status]" style="width: 100%; padding: 3px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px;">
+                                    <select name="results[{{ $employee }}][status]" style="width: 100%; padding: 3px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px;">
                                         <option value="зачет" {{ ($dbRow?->markitog ?? 'зачет') == 'зачет' ? 'selected' : '' }}>зачет</option>
                                         <option value="незачет" {{ ($dbRow?->markitog ?? '') == 'незачет' ? 'selected' : '' }}>незачет</option>
                                         <option value="неявка" {{ ($dbRow?->markitog ?? '') == 'неявка' ? 'selected' : '' }}>неявка</option>
@@ -631,7 +651,7 @@
                                 <!-- 7. Динамический инпут Оценки за практику -->
                                 <td style="border-right: 1px solid #7f8c8d; padding: 4px;">
                                     <input type="text" name="results[{{ $employee->id }}][practice_mark]"
-                                        value="{{ $dbRow?->markpract ?? '' }}"
+                                        value="{{ $dbRow?->markpractic ?? '' }}"
                                         placeholder="отл / 5" style="width: 100%; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
                                 </td>
 
@@ -646,7 +666,7 @@
 
                                 <!-- 10. Динамический результат тестирования (%) -->
                                 <td style="border-right: 1px solid #7f8c8d; padding: 4px;">
-                                        <input type="text" name="results[{{ $studentId }}][test_result]" 
+                                        <input type="text" name="results[{{ $employee }}][test_result]" 
                                                value="{{ $dbRow?->resulttest ?? '' }}"
                                                placeholder="90%" style="width: 100%; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center; font-weight: 600;">
                                 </td>
@@ -654,13 +674,13 @@
                                 <td style="border-right: 1px solid #7f8c8d; padding: 6px; text-align: center; color: #9ca3af; font-size: 10px; font-style: italic;">место подписи</td>
 
                                 <td style="border-right: 1px solid #7f8c8d; padding: 4px; text-align: center;">
-                                    <input type="date" name="results[{{ $studentId }}][start_fact]" value="{{ $dbRow?->begindatefact ?? $protocol->date_start ? \Carbon\Carbon::parse($dbRow?->begindatefact ?? $protocol->date_start)->format('Y-m-d') : '' }}" style="width: 100%; padding: 2px; font-size: 10px; border: 1px solid #d1d5db; border-radius: 4px;">
+                                    <input type="date" name="results[{{ $employee }}][start_fact]" value="{{ $dbRow?->begindatefact ?? $protocol->date_start ? \Carbon\Carbon::parse($dbRow?->begindatefact ?? $protocol->date_start)->format('Y-m-d') : '' }}" style="width: 100%; padding: 2px; font-size: 10px; border: 1px solid #d1d5db; border-radius: 4px;">
                                 </td>
                                 <td style="border-right: 1px solid #7f8c8d; padding: 4px; text-align: center;">
-                                    <input type="date" name="results[{{ $studentId }}][end_fact]" value="{{ $dbRow?->enddatefact ?? $protocol->date_end ? \Carbon\Carbon::parse($dbRow?->enddatefact ?? $protocol->date_end)->format('Y-m-d') : '' }}" style="width: 100%; padding: 2px; font-size: 10px; border: 1px solid #d1d5db; border-radius: 4px;">
+                                    <input type="date" name="results[{{ $employee }}][end_fact]" value="{{ $dbRow?->enddatefact ?? $protocol->date_end ? \Carbon\Carbon::parse($dbRow?->enddatefact ?? $protocol->date_end)->format('Y-m-d') : '' }}" style="width: 100%; padding: 2px; font-size: 10px; border: 1px solid #d1d5db; border-radius: 4px;">
                                 </td>
                                 <td style="padding: 4px; text-align: center;">
-                                    <input type="number" name="results[{{ $studentId }}][hours_fact]" value="{{ (int)($dbRow?->counthourfact ?? $protocol->program_hours ?? 0) }}" style="width: 55px; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
+                                    <input type="number" name="results[{{ $employee }}][hours_fact]" value="{{ (int)($dbRow?->counthourfact ?? $protocol->program_hours ?? 0) }}" style="width: 55px; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
                                 </td>
 
                             </tr>

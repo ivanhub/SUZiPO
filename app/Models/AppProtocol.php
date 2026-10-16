@@ -13,16 +13,26 @@ class AppProtocol extends Model
     protected $with = ['demand'];
 
     protected $fillable = [
-        'prot_id',        
-        'prot_num',       
-        'prot_status',    
-        'prot_date',      
-        'id_user_create', 
+        'prot_id',
+        'prot_num',
+        'prot_status',
+        'prot_date',
+        'id_user_create',
         'date_edit',
         'id_user_edit',
         'date_start',
         'date_end',
         'row_version', 
+        'order_num',
+        'order_date',
+        'group_num', 
+        'dem_id',
+        'Cost',
+        'costvat',
+        'typedoc_id',
+        'hoursbyprogram',
+        'theoryhours',
+        'practicehours',
     ];
 
     protected static function booted()

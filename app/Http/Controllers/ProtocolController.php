@@ -123,15 +123,13 @@ class ProtocolController extends Controller
                 'prot_status' => $p->prot_status,
                 'teacher_id' => $p->demand?->teacher_id ?? null,
                 'learning_type_id' => $p->demand?->learning_type_id ?? null,
+                'date_end' => $p->date_end ? \Carbon\Carbon::parse($p->date_end)->format('Y-m-d') : null,
             ];
         })->toArray();
 
         return view('protocols.index', compact('protocols', 'totalCount', 'counts', 'popupTeachers', 'popupLearningTypes', 'jsonProtocols'));
     }
 
-    /**
-     * Сохранение правок из Pop-up окна
-     */
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -151,10 +149,11 @@ class ProtocolController extends Controller
 
         $protocol = AppProtocol::findOrFail($id);
 
+        $protocol->prot_num        = $request->input('group_num');
         $protocol->group_num       = $request->input('group_num');
         $protocol->order_num       = $request->input('order_num');
         $protocol->order_date      = $request->input('order_date');
-        $protocol->prot_date       = $request->input('prot_date') ?? now();
+        $protocol->prot_date       = $request->input('prot_date') ?? now()->format('Y-m-d');
         $protocol->prot_status     = $request->input('flagapproved');
 
         $protocol->Cost            = $request->input('Cost');
@@ -200,18 +199,36 @@ class ProtocolController extends Controller
         $teachers = \App\Models\RequestsTeachers::orderBy('fio')->get();
         $report = \App\Models\UcExtReport::where('id_protocol', $id)->first();
 
-        $allComissionMembers = \App\Models\ComissionMember::orderBy('fio')->get();
-        $currentComission = \App\Models\ProtocolComission::where('protocol_id', $id)->get();
-
-        $savedResults = \Illuminate\Support\Facades\DB::table('uc_ext_studentsprotocol')
+        $rawSavedResults = \Illuminate\Support\Facades\DB::table('uc_ext_studentsprotocol')
             ->where('id_protocol', $id)
-            ->get()
-            ->keyBy('id_students');
+            ->get();
+
+        $savedResults = collect();
+        foreach ($rawSavedResults as $row) {
+            $studentInfo = \Illuminate\Support\Facades\DB::table('uc_ext_students')
+                ->where('id_student', $row->id_students)
+                ->first();
+            
+            $key = null;
+
+            if ($studentInfo && !empty($studentInfo->snils)) { $key = preg_replace('/[^0-9]/', '', $studentInfo->snils); }
+            if (empty($key) && $studentInfo && !empty($studentInfo->personnelnumber)) { $key = (string)$studentInfo->personnelnumber; }
+            if (empty($key)) { 
+                $matchedEmp = $protocol->demand?->employees->first(function($emp) use ($row) {
+                    $fio = trim(($emp->last_name ?? '') . ' ' . ($emp->first_name ?? '') . ' ' . ($emp->middle_name ?? ''));
+                    return trim($fio) === trim($row->fiofact);
+                });
+                
+                $key = $matchedEmp ? (string)$matchedEmp->id : (string)$row->id_students; 
+            }
+            if (!empty($key)) { $savedResults->put($key, $row); }
+        }
 
         $allComissionMembers = \App\Models\ComissionMember::orderBy('fio')->get();
         $currentComission = \App\Models\ProtocolComission::where('protocol_id', $id)->get();
 
-
+        $allComissionMembers = \App\Models\ComissionMember::orderBy('fio')->get();
+        $currentComission = \App\Models\ProtocolComission::where('protocol_id', $id)->get();
 
         return view('protocols.report.create', compact(
             'protocol', 'learningTypeName', 'audiences',
@@ -230,31 +247,105 @@ class ProtocolController extends Controller
 
         $protocol = \App\Models\AppProtocol::with('demand.employees')->findOrFail($request->id_protocol);
         $employees = collect($protocol->demand?->employees ?? []);
-        $inputResults = $request->input('results', []);
+        $rawResults = $request->input('results', []);
+        $inputResults = [];
+
+        foreach ($rawResults as $key => $values) {
+            $targetId = null;
+            if (is_numeric($key)) {
+                $targetId = (int)$key;
+            } elseif (is_string($key) && str_contains($key, '"id":')) {
+                $decoded = json_decode($key, true);
+                if (isset($decoded['id'])) { 
+                    $targetId = (int)$decoded['id']; 
+                }
+            }
+            
+            if ($targetId && is_array($values)) {
+                $inputResults[$targetId] = array_merge($inputResults[$targetId] ?? [], $values);
+            }
+        }
 
         $noShowCount = 0;
         $noPassedCount = 0;
         $programHours = (int)($request->input('program_hours') ?? $protocol->program_hours ?? 0);
 
-        foreach ($employees as $employee) {
-            // Идентификатор студента в старой системе (берем id_student, если пустой - берем id)
-            $idStudents = $employee->id_student ?? $employee->id;
-            
-            $statusInput   = $inputResults[$idStudents]['status'] ?? 'зачет'; // зачет/незачет/удовлетворительно/неявка
-            $practiceMark  = $inputResults[$idStudents]['practice_mark'] ?? null;
-            $assignedRank  = $inputResults[$idStudents]['assigned_rank'] ?? null;
-            $testResult    = $inputResults[$idStudents]['test_result'] ?? null;
-            $eisotNum      = $inputResults[$idStudents]['eisot_num'] ?? null;
-            $startFact     = $inputResults[$idStudents]['start_fact'] ?? $protocol->date_start;
-            $endFact       = $inputResults[$idStudents]['end_fact'] ?? $protocol->date_end;
-            $hoursFact     = isset($inputResults[$idStudents]['hours_fact']) ? (int)$inputResults[$idStudents]['hours_fact'] : $programHours;
+        $cleanSnils = function($value) {
+            return !empty($value) ? preg_replace('/[^0-9]/', '', $value) : null;
+        };
 
-            // Неявку считать, если фактическое кол-во часов равно 0 или выбран статус неявка
+        foreach ($employees as $employee) {
+            $empId = $employee->id; 
+            
+            // $personnelNumber = $employee->tab_num ?? $employee->personnel_number ?? null;
+            // $empSnilsRaw     = $employee->snils ?? null;
+            // $empSnilsClean   = $cleanSnils($empSnilsRaw);
+
+            $personnelNumber = $employee->tab_number ?? null; 
+            $empSnilsRaw     = $employee->pfr_certificate ?? null; 
+            $empSnilsClean   = $cleanSnils($empSnilsRaw);
+
+            $fioFact = trim($employee->last_name ?? $employee->fio ?? $employee->name ?? '');
+            if (!empty($employee->first_name)) {
+                $fioFact = trim(($employee->last_name ?? '') . ' ' . ($employee->first_name ?? '') . ' ' . ($employee->middle_name ?? ''));
+            }
+
+            $birthDate = $employee->birth_date ?? null;
+            $idStudents = null;
+            
+            // поиск по СНИЛС
+            if (!empty($empSnilsClean)) {
+                $oldStudent = DB::table('uc_ext_students')
+                    ->whereNotNull('snils')
+                    ->whereRaw("regexp_replace(snils, '[^0-9]', '', 'g') = ?", [$empSnilsClean])
+                    ->first();
+                
+                if ($oldStudent) { $idStudents = $oldStudent->id_student; }
+            }
+
+            // поиск по табельному
+            if (!$idStudents && !empty($personnelNumber)) {
+                $oldStudent = DB::table('uc_ext_students')
+                    ->where('personnelnumber', (string)$personnelNumber)
+                    ->first();
+                
+                if ($oldStudent) { $idStudents = $oldStudent->id_student; }
+            }
+
+            if (!$idStudents && !empty($fioFact)) {
+                $oldStudent = DB::table('uc_ext_students')->where('fullname', 'LIKE', "%{$fioFact}%")->first();
+                if ($oldStudent) { $idStudents = $oldStudent->id_student; }
+            }
+
+            if (!$idStudents) {
+                $idStudents = (string) \Illuminate\Support\Str::uuid();
+                
+                DB::table('uc_ext_students')->insert([
+                    'id_student'      => $idStudents,
+                    'personnelnumber' => $personnelNumber,
+                    'fullname'        => $fioFact,
+                    'dateofbirth'     => $birthDate,
+                    'snils'           => $empSnilsRaw,
+                    'gender'          => $employee->gender ?? null,
+                    'staff'           => $employee->position ?? 'Внешний слушатель',
+                    'department'      => $employee->department ?? '—',
+                    'namecompany'     => $employee->company ?? 'Сторонняя организация',
+                ]);
+            }
+
+            $statusInput   = $inputResults[$empId]['status'] ?? 'зачет';
+            $practiceMark  = !empty($inputResults[$empId]['practice_mark']) ? $inputResults[$empId]['practice_mark'] : null;
+            $assignedRank  = !empty($inputResults[$empId]['assigned_rank']) ? $inputResults[$empId]['assigned_rank'] : null;
+            $testResult    = !empty($inputResults[$empId]['test_result']) ? $inputResults[$empId]['test_result'] : null;
+            $eisotNum      = !empty($inputResults[$empId]['eisot_num']) ? $inputResults[$empId]['eisot_num'] : null;
+            $startFact     = !empty($inputResults[$empId]['start_fact']) ? $inputResults[$empId]['start_fact'] : $protocol->date_start;
+            $endFact       = !empty($inputResults[$empId]['end_fact']) ? $inputResults[$empId]['end_fact'] : $protocol->date_end;
+            $hoursFact     = isset($inputResults[$empId]['hours_fact']) ? (int)$inputResults[$empId]['hours_fact'] : $programHours;
+
             if ($hoursFact === 0 || $statusInput === 'неявка') {
                 $noShowCount++;
                 $noPassedCount++;
                 $flagPassed = 'неявка';
-                continue;
             } elseif ($statusInput === 'неудовлетворительно' || $statusInput === 'незачет' || $hoursFact < $programHours) {
                 $noPassedCount++;
                 $flagPassed = 'не сдал';
@@ -262,27 +353,22 @@ class ProtocolController extends Controller
                 $flagPassed = 'сдал';
             }
 
-            $fioFact     = $employee->last_name ?? $employee->fio ?? $employee->name ?? '—';
-            $staffFact   = $employee->position ?? '—';
-            $departFact  = $employee->department ?? '—';
-            $companyFact = $employee->company ?? '—';
-            $gradeFact   = $employee->rank ?? null;
-
             $regNumber = is_numeric($eisotNum) ? (int)$eisotNum : null;
             $docNumber = !is_numeric($eisotNum) ? $eisotNum : null;
 
-            $existing = \Illuminate\Support\Facades\DB::table('uc_ext_studentsprotocol')
+            // Запись индивидуальных результатов в uc_ext_studentsprotocol
+            $existing = DB::table('uc_ext_studentsprotocol')
                 ->where('id_protocol', $protocol->prot_id)
                 ->where('id_students', $idStudents)
                 ->first();
 
             if ($existing) {
-                \Illuminate\Support\Facades\DB::table('uc_ext_studentsprotocol')
+                DB::table('uc_ext_studentsprotocol')
                     ->where('id_studentprotocol', $existing->id_studentprotocol)
                     ->update([
                         'markitog'        => $statusInput,
                         'status'          => $statusInput,
-                        'markpract'       => $practiceMark,
+                        'markpractic'     => $practiceMark,
                         'assignedgrade'   => $assignedRank,
                         'resulttest'      => $testResult,
                         'regnumber'       => $regNumber,
@@ -292,19 +378,19 @@ class ProtocolController extends Controller
                         'counthourfact'   => (float)$hoursFact,
                         'flagpassed'      => $flagPassed,
                         'fiofact'         => $fioFact,
-                        'stafffact'       => $staffFact,
-                        'departfact'      => $departFact,
-                        'namecompanyfact' => $companyFact,
-                        'gradefact'       => $gradeFact,
+                        'stafffact'       => $employee->position ?? '—',
+                        'departfact'      => $employee->department ?? '—',
+                        'namecompanyfact' => $employee->company ?? '—',
+                        'gradefact'       => $employee->rank ?? null,
                     ]);
             } else {
-                \Illuminate\Support\Facades\DB::table('uc_ext_studentsprotocol')->insert([
-                    'id_studentprotocol' => (string) \Illuminate\Support\Str::uuid(),
+                DB::table('uc_ext_studentsprotocol')->insert([
+                    'id_studentprotocol' => (string) Str::uuid(),
                     'id_protocol'       => $protocol->prot_id,
                     'id_students'       => $idStudents,
                     'markitog'          => $statusInput,
                     'status'            => $statusInput,
-                    'markpract'         => $practiceMark,
+                    'markpractic'         => $practiceMark,
                     'assignedgrade'     => $assignedRank,
                     'resulttest'        => $testResult,
                     'regnumber'         => $regNumber,
@@ -314,10 +400,10 @@ class ProtocolController extends Controller
                     'counthourfact'     => (float)$hoursFact,
                     'flagpassed'        => $flagPassed,
                     'fiofact'           => $fioFact,
-                    'stafffact'         => $staffFact,
-                    'departfact'        => $departFact,
-                    'namecompanyfact'   => $companyFact,
-                    'gradefact'         => $gradeFact,
+                    'stafffact'         => $employee->position ?? '—',
+                    'departfact'        => $employee->department ?? '—',
+                    'namecompanyfact'   => $employee->company ?? '—',
+                    'gradefact'         => $employee->rank ?? null,
                 ]);
             }
         }
@@ -359,18 +445,28 @@ class ProtocolController extends Controller
 
         UcExtReport::updateOrCreate(
             ['id_protocol' => $protocol->prot_id],
-            array_merge(['id_report' => (string) \Illuminate\Support\Str::uuid()], $reportData)
+            array_merge(['id_report' => (string) Str::uuid()], $reportData)
         );
+
+        // пока что тестовое сохранение номера и даты приказа из отчета
+        if ($request->filled('order_num')) {
+            \App\Models\AppProtocol::where('prot_id', $protocol->prot_id)->update([
+                'order_num'  => $request->input('order_num'),
+                'order_date' => $request->input('order_date') ?? $protocol->order_date,
+                'date_edit'   => now(),
+                'id_user_edit' => auth()->id() ?? 1
+            ]);
+        }
 
         // \App\Models\ProtocolComission::where('protocol_id', $protocol->prot_id)->delete();
         \App\Models\UcExtCommissionprotocol::where('id_protocol', $protocol->prot_id)->delete();
 
         // Председатель
         $chairmanFio = $request->input('comission.chairman_id');
-        $dbChairman = \Illuminate\Support\Facades\DB::table('comission_members')->where('fio', $chairmanFio)->first();
+        $dbChairman = DB::table('comission_members')->where('fio', $chairmanFio)->first();
         if ($dbChairman) {
             \App\Models\UcExtCommissionprotocol::create([
-                'id_compr'          => (string) \Illuminate\Support\Str::uuid(),
+                'id_compr'          => (string) Str::uuid(),
                 'id_protocol'       => $protocol->prot_id,
                 'id_listcommission' => $dbChairman->id,
                 'fio'               => $dbChairman->fio,
@@ -382,10 +478,10 @@ class ProtocolController extends Controller
 
         // Заместитель
         $deputyFio = $request->input('comission.deputy_id');
-        $dbDeputy = \Illuminate\Support\Facades\DB::table('comission_members')->where('fio', $deputyFio)->first();
+        $dbDeputy = DB::table('comission_members')->where('fio', $deputyFio)->first();
         if ($dbDeputy) {
             \App\Models\UcExtCommissionprotocol::create([
-                'id_compr'          => (string) \Illuminate\Support\Str::uuid(),
+                'id_compr'          => (string) Str::uuid(),
                 'id_protocol'       => $protocol->prot_id,
                 'id_listcommission' => $dbDeputy->id,
                 'fio'               => $dbDeputy->fio,
@@ -398,10 +494,10 @@ class ProtocolController extends Controller
         // Члены комиссии
         $memberIds = $request->input('comission.members', []);
         foreach ($memberIds as $index => $mId) {
-            $dbMember = \Illuminate\Support\Facades\DB::table('comission_members')->find($mId);
+            $dbMember = DB::table('comission_members')->find($mId);
             if ($dbMember) {
                 \App\Models\UcExtCommissionprotocol::create([
-                    'id_compr'          => (string) \Illuminate\Support\Str::uuid(),
+                    'id_compr'          => (string) Str::uuid(),
                     'id_protocol'       => $protocol->prot_id,
                     'id_listcommission' => $dbMember->id,
                     'fio'               => $dbMember->fio,
@@ -441,7 +537,7 @@ class ProtocolController extends Controller
         //
     }
 
-     public function searchOrders(\Illuminate\Http\Request $request)
+     public function searchOrders(Request $request)
     {
         $search = $request->query('q');
         
@@ -449,7 +545,7 @@ class ProtocolController extends Controller
             return response()->json([]);
         }
 
-        $orders = \Illuminate\Support\Facades\DB::table('orders')
+        $orders = DB::table('orders')
             ->where('order_number', 'LIKE', "%{$search}%")
             ->select('id', 'order_number', 'order_date')
             ->limit(5)
@@ -478,7 +574,7 @@ class ProtocolController extends Controller
         return response()->json($protocol);
     }
 
-    public function exportExcel(\Illuminate\Http\Request $request)
+    public function exportExcel(Request $request)
     {
         $request->validate([
             'protocol_id' => 'required|exists:app_protocols,prot_id',

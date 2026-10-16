@@ -74,17 +74,17 @@
 
     <!-- Преподаватель -->
     <td style="padding: 10px 8px; color: #4b5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-        {{ $protocol->demand?->teacher->name ?? '—' }}
+        {{ $protocol->demand?->teacher->fio ?? '—' }}
     </td>
 
     <!-- Аудитория -->
     <td style="padding: 10px 8px; text-align: center; color: #4b5563;">
-        {{ $protocol->demand?->audience->name ?? '—' }}
+        {{ $protocol->demand?->audience->number ?? '—' }}
     </td>
 
     <!-- Куратор -->
     <td style="padding: 10px 8px; color: #4b5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-        {{ $protocol->demand?->curator->name ?? '—' }}
+        {{ $protocol->demand?->curator->fio ?? '—' }}
     </td>
 </tr>
 @empty

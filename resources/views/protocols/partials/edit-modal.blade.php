@@ -102,9 +102,9 @@
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">Дата формирования:</label>
-                        <input type="date" name="prot_date" x-model="editData.prot_date" style="width: 160px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                        <input type="date" name="date_end" x-model="editData.date_end" style="width: 160px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     </div>
-
+                    
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">Номер группы: <span style="color: #dc2626;">*</span></label>
                         <input type="text" name="group_num" x-model="editData.group_num" required style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
