@@ -8,6 +8,9 @@ use App\Models\ReasonNonCertification;
 
 class DirectoryController extends Controller
 {
+
+    
+
     public function reasonsNonCertification()
     {
         $reasons = ReasonNonCertification::orderBy('id')->get();

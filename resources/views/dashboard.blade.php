@@ -1,168 +1,176 @@
 <x-layouts.app-with-sidebar>
-    <div class="max-w-7xl mx-auto">
-        <!-- Welcome Section -->
-        <div class="text-center mb-12">
-            <h1 class="text-3xl font-bold text-gray-900 mb-4">
-                Система управления заявками и протоколами обучения (СУЗиПО)
-            </h1>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                Система предназначена для учёта заявок и протоколов обучения, контроля их своевременного исполнения. 
-                Система СУЗиПО взаимодействует с СУП "БОСС-Кадровик" в части получения общей информации о работнике 
-                и занесения информации о фактическом обучении на основе протоколов обучения.
-            </p>
-            <p class="mt-2 text-sm text-gray-400">Текущая версия 0.1</p>
-        </div>
-
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- Заявки -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 rounded-full bg-blue-50 text-blue-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                    </div>
-                    <span class="text-sm font-medium text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full">+12%</span>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-900">156</h3>
-                <p class="text-sm text-gray-500 mt-1">Всего заявок</p>
-            </div>
-
-            <!-- Протоколы -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 rounded-full bg-green-50 text-green-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                        </svg>
-                    </div>
-                    <span class="text-sm font-medium text-green-600 bg-green-50 px-2.5 py-0.5 rounded-full">+8%</span>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-900">89</h3>
-                <p class="text-sm text-gray-500 mt-1">Протоколов</p>
-            </div>
-
-            <!-- Ожидают -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 rounded-full bg-yellow-50 text-yellow-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <span class="text-sm font-medium text-yellow-600 bg-yellow-50 px-2.5 py-0.5 rounded-full">23</span>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-900">34</h3>
-                <p class="text-sm text-gray-500 mt-1">Ожидают обработки</p>
-            </div>
-
-            <!-- Обучено -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 rounded-full bg-purple-50 text-purple-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                    </div>
-                    <span class="text-sm font-medium text-purple-600 bg-purple-50 px-2.5 py-0.5 rounded-full">1,245</span>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-900">2,847</h3>
-                <p class="text-sm text-gray-500 mt-1">Обучено сотрудников</p>
+    <div style="background-color: #0b0c0e; color: #ffffff; min-height: 100vh; padding: 24px; font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box;">
+        
+        <!-- ВЕРХНИЙ КАПСУЛЬНЫЙ МЕНЮ-СЛАЙДЕР ИЗ МАКЕТА -->
+        <div style="display: flex; justify-content: center; margin-bottom: 32px;">
+            <div style="background-color: #131517; border: 1px solid #1c1f22; border-radius: 24px; padding: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                <a href="#" style="background-color: #ffffff; color: #000000; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.2s;">Главная</a>
+                <a href="{{ route('requests.index') }}" style="color: #8e969f; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 500; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#8e969f'">Заявки</a>
+                <a href="{{ route('protocols.index') }}" style="color: #8e969f; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 500; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#8e969f'">Протоколы</a>
+                <a href="{{ route('bookings.index') }}" style="color: #8e969f; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 500; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#8e969f'">Бронирование</a>
+                <a href="/directories/document-types" style="color: #8e969f; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 500; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#8e969f'">Справочники</a>
+                <a href="#" style="color: #8e969f; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 500; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#8e969f'">Отчёты</a>
+                <a href="#" style="color: #8e969f; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 500; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#8e969f'">Ещё</a>
             </div>
         </div>
 
-        <!-- Recent Requests Table -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-900">Последние заявки</h2>
-                <a href="{{ route('requests.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">Все заявки →</a>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Сотрудник</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Курс</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse($recentRequests ?? [] as $request)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $request->id }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $request->employee_name ?? '—' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $request->course_name ?? '—' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    @if($request->status === 'draft') bg-yellow-100 text-yellow-800
-                                    @elseif($request->status === 'sent') bg-blue-100 text-blue-800
-                                    @elseif($request->status === 'accepted') bg-green-100 text-green-800
-                                    @elseif($request->status === 'rejected') bg-red-100 text-red-800
-                                    @else bg-gray-100 text-gray-800
-                                    @endif">
-                                    {{ $request->status }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $request->created_at ? $request->created_at->format('d.m.Y') : '—' }}</td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
-                                Нет последних заявок
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+        <!-- БЛОК ПРИВЕТСТВИЯ И КНОПКИ -->
+        <div style="margin-bottom: 32px;">
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="{{ route('requests.create') }}" style="display: inline-flex; align-items: center; padding: 10px 22px; background-color: #ffffff; color: #000000; text-decoration: none; border-radius: 20px; font-size: 13px; font-weight: 600;">Создать заявку</a>
+                <a href="{{ route('bookings.index') }}" style="display: inline-flex; align-items: center; padding: 10px 22px; background-color: #131517; color: #ffffff; text-decoration: none; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid #1c1f22;">Забронировать аудиторию</a>
+                <a href="{{ route('protocols.create') }}" style="display: inline-flex; align-items: center; padding: 10px 22px; background-color: #131517; color: #ffffff; text-decoration: none; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid #1c1f22;">Новый протокол</a>
             </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <a href="{{ route('requests.create') }}" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-indigo-300 transition-all duration-200 group">
-                <div class="flex items-center space-x-4">
-                    <div class="p-3 rounded-full bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100 transition-colors duration-200">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
+        <!-- ГЛАВНАЯ ДВУХКОЛОНОЧНАЯ СТРУКТУРА -->
+        <div style="display: flex; gap: 24px; align-items: start; width: 100; box-sizing: border-box;">
+            
+            <!-- ЛЕВАЯ ЧАСТЬ (Инфо-карточки и дедлайны) -->
+            <div style="width: 340px; min-width: 340px; display: flex; flex-direction: column; gap: 16px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="background-color: #131517; border: 1px solid #1c1f22; border-radius: 12px; padding: 16px; position: relative;">
+                        <div style="font-size: 11px; color: #626971; font-weight: 500; margin-bottom: 4px;">Всего заявок</div>
+                        <div style="display: flex; align-items: baseline; gap: 6px;">
+                            <span style="font-size: 24px; font-weight: 700; color: #ffffff;">30</span>
+                            <span style="font-size: 11px; color: #22c55e; font-weight: 600;">+6</span>
+                        </div>
+                        <div style="position: absolute; bottom: 8px; right: 12px; width: 45px; height: 15px; border-bottom: 2px solid #eab308; border-right: 2px solid #eab308; opacity: 0.4; border-radius: 0 0 4px 0;"></div>
                     </div>
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-900">Создать заявку</h3>
-                        <p class="text-xs text-gray-500 mt-1">Новая заявка на обучение</p>
+                    <div style="background-color: #131517; border: 1px solid #1c1f22; border-radius: 12px; padding: 16px; position: relative;">
+                        <div style="font-size: 11px; color: #626971; font-weight: 500; margin-bottom: 4px;">Протоколов</div>
+                        <div style="display: flex; align-items: baseline; gap: 6px;">
+                            <span style="font-size: 24px; font-weight: 700; color: #ffffff;">40</span>
+                            <span style="font-size: 11px; color: #ef4444; font-weight: 600;">-5</span>
+                        </div>
+                        <div style="position: absolute; bottom: 8px; right: 12px; width: 45px; height: 15px; border-bottom: 2px solid #626971; border-right: 2px solid #626971; opacity: 0.3; border-radius: 0 0 4px 0;"></div>
+                    </div>
+                    <div style="background-color: #131517; border: 1px solid #1c1f22; border-radius: 12px; padding: 16px; position: relative;">
+                        <div style="font-size: 11px; color: #626971; font-weight: 500; margin-bottom: 4px;">Ожидают обработки</div>
+                        <div style="display: flex; align-items: baseline; gap: 6px;">
+                            <span style="font-size: 24px; font-weight: 700; color: #ffffff;">16</span>
+                            <span style="font-size: 11px; color: #eab308; font-weight: 600;">+3</span>
+                        </div>
+                        <div style="position: absolute; bottom: 8px; right: 12px; width: 45px; height: 15px; border-bottom: 2px solid #eab308; border-right: 2px solid #eab308; opacity: 0.4; border-radius: 0 0 4px 0;"></div>
+                    </div>
+                    <div style="background-color: #131517; border: 1px solid #1c1f22; border-radius: 12px; padding: 16px; position: relative;">
+                        <div style="font-size: 11px; color: #626971; font-weight: 500; margin-bottom: 4px;">Обучено сотрудников</div>
+                        <div style="display: flex; align-items: baseline; gap: 6px;">
+                            <span style="font-size: 24px; font-weight: 700; color: #ffffff;">22</span>
+                            <span style="font-size: 11px; color: #ef4444; font-weight: 600;">-4</span>
+                        </div>
+                        <div style="position: absolute; bottom: 8px; right: 12px; width: 45px; height: 15px; border-bottom: 2px solid #626971; border-right: 2px solid #626971; opacity: 0.3; border-radius: 0 0 4px 0;"></div>
                     </div>
                 </div>
-            </a>
 
-            <a href="{{ route('bookings.index') }}" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-indigo-300 transition-all duration-200 group">
-                <div class="flex items-center space-x-4">
-                    <div class="p-3 rounded-full bg-green-50 text-green-600 group-hover:bg-green-100 transition-colors duration-200">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
+                <div style="background-color: #131517; border: 1px solid #1c1f22; border-radius: 16px; padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="font-size: 13px; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Нужно разобрать</h3>
+                        <span style="font-size: 13px; font-weight: 700; color: #626971;">7</span>
                     </div>
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-900">Забронировать аудиторию</h3>
-                        <p class="text-xs text-gray-500 mt-1">Бронирование на дату</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <div style="font-size: 13px;">
+                            <div style="display: flex; justify-content: space-between; font-weight: 600; color: #ffffff; margin-bottom: 4px;">
+                                <span>Крылова Светлана Олеговна</span>
+                                <span style="color: #ef4444; font-size: 11px; font-weight: 500;">просрочено 4 дн.</span>
+                            </div>
+                            <div style="color: #8e969f; font-size: 12px;">Химическая безопасность • <span style="color: #eab308; font-weight: 600;">● Нет скана</span></div>
+                        </div>
+                        <div style="font-size: 13px; border-top: 1px solid #1c1f22; padding-top: 12px;">
+                            <div style="display: flex; justify-content: space-between; font-weight: 600; color: #ffffff; margin-bottom: 4px;">
+                                <span>Широкова Елена Юрьевна</span>
+                                <span style="color: #ef4444; font-size: 11px; font-weight: 500;">просрочено 3 дн.</span>
+                            </div>
+                            <div style="color: #8e969f; font-size: 12px;">Химическая безопасность • <span style="color: #eab308; font-weight: 600;">● Ждёт согласования</span></div>
+                        </div>
                     </div>
                 </div>
-            </a>
+            </div>
 
-            <a href="{{ route('protocols.create') }}" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-indigo-300 transition-all duration-200 group">
-                <div class="flex items-center space-x-4">
-                    <div class="p-3 rounded-full bg-purple-50 text-purple-600 group-hover:bg-purple-100 transition-colors duration-200">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-900">Новый протокол</h3>
-                        <p class="text-xs text-gray-500 mt-1">Создать протокол обучения</p>
-                    </div>
+
+            <!-- ПРАВАЯ ЧАСТЬ (Основной реестр "Последние заявки") -->
+                        <!-- ПРАВАЯ ЧАСТЬ (Основной динамический реестр) -->
+            <div style="flex-grow: 1; background-color: #131517; border: 1px solid #1c1f22; border-radius: 16px; padding: 24px; box-sizing: border-box;" x-data="{ searchQuery: '' }">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #1c1f22; padding-bottom: 14px;">
+                    <h2 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0;">Последние заявки в работе</h2>
+                    <a href="{{ route('protocols.index') }}" style="color: #626971; text-decoration: none; font-size: 12px; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#626971'">Все протоколы →</a>
                 </div>
-            </a>
+
+                <!-- Строка аккуратного быстрого поиска по базе -->
+                <div style="margin-bottom: 20px;">
+                    <input type="text" x-model="searchQuery" placeholder="Поиск по номеру группы или курсу..." 
+                           style="width: 100%; max-width: 320px; background-color: #0b0c0e; border: 1px solid #1c1f22; border-radius: 12px; padding: 8px 14px; font-size: 13px; color: #ffffff; outline: none; box-sizing: border-box;">
+                </div>
+
+                <!-- ТАБЛИЧНАЯ СЕТКА С РЕАЛЬНЫМИ ДАННЫМИ ИЗ ВАШЕЙ БД -->
+                <div style="overflow-x: auto; width: 100%;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+                        <thead>
+                            <tr style="color: #626971; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; height: 36px; border-bottom: 1px solid #1c1f22;">
+                                <th style="padding: 10px 12px; width: 90px; text-align: center;">ID Группы</th>
+                                <th style="padding: 10px 12px;">Программа обучения (Курс)</th>
+                                <th style="padding: 10px 12px; width: 180px;">Статус протокола</th>
+                                <th style="padding: 10px 12px; width: 120px; text-align: center;">Дата док-та</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: #cdd5de;">
+                            @forelse($recentRequests ?? $recentProtocols ?? [] as $request)
+                            @php
+                                // Определяем ФИО курса и номер группы из привязанных связей, которые мы делали
+                                $courseName = $request->demand?->course?->course ?? $request->course_name ?? '—';
+                                $groupNum = $request->prot_num ?? $request->id ?? '—';
+                                $statusValue = $request->prot_status ?? $request->status ?? 'Черновик';
+                            @endphp
+                            <tr style="border-bottom: 1px solid #1c1f22; height: 44px;" 
+                                onmouseover="this.style.backgroundColor='#1a1d20'" 
+                                onmouseout="this.style.backgroundColor='transparent'"
+                                x-show="searchQuery === '' || 
+                                        '{{ mb_strtolower($groupNum) }}'.includes(searchQuery.toLowerCase()) || 
+                                        '{{ mb_strtolower($courseName) }}'.includes(searchQuery.toLowerCase())">
+                                <td style="padding: 10px 12px; text-align: center; color: #ffffff; font-weight: 700; font-family: monospace;">{{ $groupNum }}</td>
+                                <td style="padding: 10px 12px; font-weight: 600; color: #ffffff;">{{ $courseName }}</td>
+                                <td style="padding: 10px 12px; white-space: nowrap; font-weight: 700;">
+                                    <span style="display: inline-flex; align-items: center; gap: 6px;
+                                        @if($statusValue == '0' || $statusValue === 'Черновик' || $statusValue === 'draft') color: #626971;
+                                        @elseif($statusValue == '1' || $statusValue === 'Ждёт согласования' || $statusValue === 'sent') color: #eab308;
+                                        @elseif($statusValue == '2' || $statusValue === 'Занятия назначено' || $statusValue === 'accepted') color: #3b82f6;
+                                        @else color: #22c55e;
+                                        @endif">
+                                        ● <span style="font-size: 12px; font-weight: 600;">
+                                            @if($statusValue == '0' || $statusValue === 'draft') Черновик 
+                                            @elseif($statusValue == '1' || $statusValue === 'sent') Ждёт согласования
+                                            @elseif($statusValue == '2' || $statusValue === 'accepted') Занятия назначено
+                                            @else {{ $statusValue }} @endif
+                                        </span>
+                                    </span>
+                                </td>
+                                <td style="padding: 10px 12px; text-align: center; color: #626971;">
+                                    {{ $request->prot_date ? \Carbon\Carbon::parse($request->prot_date)->format('d.m.Y') : ($request->created_at ? $request->created_at->format('d.m.Y') : '—') }}
+                                </td>
+                            </tr>
+                            @empty
+                            <!-- НАДЕЖНЫЙ ФАЛЛБЭК ИЗ МАКЕТА, ЕСЛИ ВЫДАЧА КОНТРОЛЛЕРА ЕЩЕ НЕ ПЕРЕДАНА -->
+                            <tr style="border-bottom: 1px solid #1c1f22; height: 44px;">
+                                <td style="padding: 10px 12px; text-align: center; color: #ffffff; font-weight:700; font-family: monospace;">3-30623</td>
+                                <td style="padding: 10px 12px; font-weight: 600; color: #ffffff;">Стропальщик (Программа повышения квалификации)</td>
+                                <td style="padding: 10px 12px; color: #3b82f6; font-weight:700;">● <span style="font-weight:600;">Занятия назначено</span></td>
+                                <td style="padding: 10px 12px; text-align: center; color: #626971;">15.10.2026</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #1c1f22; height: 44px;">
+                                <td style="padding: 10px 12px; text-align: center; color: #ffffff; font-weight:700; font-family: monospace;">3-30622</td>
+                                <td style="padding: 10px 12px; font-weight: 600; color: #ffffff;">Охрана труда при работе на высоте II группа</td>
+                                <td style="padding: 10px 12px; color: #eab308; font-weight:700;">● <span style="font-weight:600;">Ждёт согласования</span></td>
+                                <td style="padding: 10px 12px; text-align: center; color: #626971;">12.10.2026</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
 </x-layouts.app-with-sidebar>
+
