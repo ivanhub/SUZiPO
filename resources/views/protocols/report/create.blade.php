@@ -32,21 +32,20 @@
             </div>
         </div>
 
-        <!-- Переключатели вкладок (Табы) в стиле сайта -->
         <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 24px; font-size: 14px; border-bottom: 1px solid #e5e7eb; padding-bottom: 0; overflow-x: auto; white-space: nowrap;">
-            <!-- Вкладка 1: Отчет (Универсальная) -->
+            <!-- Вкладка 1: Отчет -->
             <span @click="activeTab = 'report'"
                 :style="activeTab === 'report' ? 'color: #1f2937; font-weight: 600; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-bottom: -1px; cursor: pointer;' : 'color: #6b7280; cursor: pointer; padding-bottom: 12px;'">
                 📋 Отчет
             </span>
 
-            <!-- Вкладка 2: Список (Универсальная) -->
+            <!-- Вкладка 2: Список -->
             <span @click="activeTab = 'list'"
                 :style="activeTab === 'list' ? 'color: #1f2937; font-weight: 600; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-bottom: -1px; cursor: pointer;' : 'color: #6b7280; cursor: pointer; padding-bottom: 12px;'">
                 👥 Список обучаемых
             </span>
 
-            <!-- Вкладка 3: Протокол (Динамическое название!) -->
+            <!-- Вкладка 3: Протокол -->
             <span @click="activeTab = 'protocol'"
                 :style="activeTab === 'protocol' ? 'color: #1f2937; font-weight: 600; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-bottom: -1px; cursor: pointer;' : 'color: #6b7280; cursor: pointer; padding-bottom: 12px;'">
                 📜 Протокол {{ $learningTypeName }}
@@ -59,7 +58,6 @@
             <input type="hidden" name="id_protocol" value="{{ $protocol->prot_id }}">
             <!-- СОДЕРЖИМОЕ ВКЛАДКИ 1: ОТЧЕТ -->
             <div x-show="activeTab === 'report'" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; padding: 12px; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; color: #4b5563;">
                     <div><b>Вид обучения:</b> <span class="text-gray-900 font-semibold">{{ $protocol->demand?->learningType?->name ?? '—' }}</span></div>
                     <div><b>Форма обучения:</b> <span class="text-gray-900 font-semibold">{{ $protocol->demand?->education_form ?? 'дистанционное' }}</span></div>
@@ -68,7 +66,6 @@
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 14px; font-size: 12px;">
-
                     <!-- Ряд 1: Ф.И.О. специалиста ООО -->
                     <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px;">
                         <label style="font-weight: 500; color: #374151;">Ф.И.О. специалиста:</label>
@@ -82,7 +79,6 @@
                             @endforeach
                         </select>
                     </div>
-
                     <!-- Ряд 2: Распоряжение № / Приказ № -->
                     <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px; position: relative;">
                         <label style="font-weight: 500; color: #374151;">Распоряжение №/ Приказ №:</label>
@@ -108,7 +104,6 @@
                              }"
                             @click.away="openList = false">
 
-                            <!-- Текстовое поле ввода номера -->
                             <div style="position: relative; width: 100%; max-width: 180px;">
                                 <input type="text" name="order_num" autocomplete="off"
                                     x-model="searchStr"
@@ -116,7 +111,6 @@
                                     @focus="if(searchStr.length > 0) fetchOrders()"
                                     style="width: 100%; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; height: 34px; box-sizing: border-box;">
 
-                                <!-- Абсолютный выпадающий список совпадений -->
                                 <div x-show="openList"
                                     style="position: absolute; top: 38px; left: 0; width: 280px; background: #ffffff; border: 1px solid #d1d5db; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 99999; max-height: 200px; overflow-y: auto;"
                                     x-cloak>
@@ -134,7 +128,6 @@
 
                             <span style="padding: 5px 10px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; font-weight: 600; font-size: 11px; height: 34px; display: flex; align-items: center;">от</span>
 
-                            <!-- Поле даты с уникальным id для автоподстановки -->
                             <input type="date" name="order_date" id="order_date_input" value="{{ $protocol->order_date }}" style="width: 160px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; height: 34px;">
                         </div>
                     </div>
@@ -149,7 +142,6 @@
                                 <input type="date" name="prot_date" value="{{ $protocol->date_end }}" style="width: 160px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; height: 34px;">
                                 <label style="display: inline-flex; align-items: center; gap: 4px; margin-left: 12px; font-weight: 600;"><input type="checkbox" name="is_ctkk" value="1"> ЦТКК</label>
                             </div>
-                            <!-- Линейка чекбоксов ЕИСОТ -->
                             <div style="display: flex; gap: 16px; font-size: 11px; color: #4b5563; flex-wrap: wrap; margin-top: 2px;">
                                 <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;"><input type="checkbox" name="not_required_eisot" value="1"> не требуется проверка знаний в ЕИСОТ</label>
                                 <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;"><input type="checkbox" name="is_main_eisot" value="1"> Основной протокол (ЕИСОТ)</label>
@@ -157,7 +149,6 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Ряд 4: Группа № и Аудитория № -->
                     <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px;">
                         <label style="font-weight: 500; color: #374151;">Группа № / Аудитория №:</label>
@@ -171,13 +162,11 @@
                             </select>
                         </div>
                     </div>
-
                     <!-- Ряд 5: Фактическая дата начала -->
                     <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px;">
                         <label style="font-weight: 500; color: #374151;">Фактическая Дата начала обучения (для титульного):</label>
                         <input type="date" name="start_date_fact" value="{{ $protocol->date_start }}" style="width: 160px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; height: 34px;">
                     </div>
-
                     <!-- Блок Часов по программе -->
                     <div style="display: grid; grid-template-columns: 240px 1fr; gap: 12px; border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
                         <label style="font-weight: 600; color: #111827; margin-top: 6px;">Распределение учебных часов:</label>
@@ -189,7 +178,6 @@
                             <div style="display: flex; justify-content: space-between; align-items: center;"><span>Кол-во часов самостоятельной подг.:</span> <input type="number" name="self_hours" value="0" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center; height: 30px;"></div>
                         </div>
                     </div>
-
                     <!-- Блок: Категория обучаемых -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
                         <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Категория обучаемых</span>
@@ -256,8 +244,6 @@
                             </div>
                         </div>
                     </div>
-
-
                     <!-- Блок: Группы предприятий -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
                         <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Группы предприятий</span>
@@ -280,7 +266,6 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Ряд: Множественный выбор Преподавателей -->
                     <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px; border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
                         <label style="font-weight: 500; color: #374151;">Преподаватель:</label>
@@ -290,7 +275,6 @@
                             @endforeach
                         </select>
                     </div>
-
                     <!-- Ряд: Выбор куратора УРП -->
                     <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px;">
                         <label style="font-weight: 500; color: #374151;">Куратор УРП:</label>
@@ -301,7 +285,6 @@
                     <!-- РЯД: УПРАВЛЕНИЕ СОСТАВОМ КОМИССИИ ПРОТОКОЛА -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 16px; margin-top: 12px; display: flex; flex-direction: column; gap: 14px;">
                         <span style="display: block; font-weight: 700; color: #1e3a8a; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; background: #eff6ff; padding: 6px; border-radius: 4px; text-align: center;">Управление составом аттестационной комиссии</span>
-
                         <!-- Выбор Председателя -->
                         <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px;">
                             <label style="font-weight: 600; color: #374151;">Председатель комиссии:</label>
@@ -311,7 +294,6 @@
                                 @endforeach
                             </select>
                         </div>
-
                         <!-- Выбор Заместителя председателя -->
                         <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px;">
                             <label style="font-weight: 600; color: #374151;">Заместитель председателя:</label>
@@ -321,12 +303,10 @@
                                 @endforeach
                             </select>
                         </div>
-
                         <!-- Множественный интерактивный выбор Членов комиссии -->
                         <div style="display: grid; grid-template-columns: 240px 1fr; align-items: start; gap: 12px;">
                             <label style="font-weight: 600; color: #374151; margin-top: 4px;">Члены комиссии (выберите):</label>
                             <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 600px;">
-                                <!-- Сетка чекбоксов для быстрого клика -->
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #fff; border: 1px solid #d1d5db; border-radius: 6px; padding: 10px; max-height: 150px; overflow-y: auto;">
                                     @foreach($allComissionMembers as $member)
                                     <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; padding: 2px 4px;" class="hover:bg-gray-50">
@@ -350,8 +330,7 @@
 
             <!-- СОДЕРЖИМОЕ ВКЛАДКИ 2: СПИСОК -->
             <div x-show="activeTab === 'list'" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" x-cloak>
-
-                <!-- ВЕРХНЯЯ ШАПКА БЛАНКА ИЗ EXCEL (Новое по ТЗ) -->
+                <!-- ВЕРХНЯЯ ШАПКА БЛАНКА ИЗ EXCEL -->
                 <div style="font-family: 'Arial', sans-serif; font-size: 11px; color: #374151; line-height: 1.5; margin-bottom: 20px; text-align: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 14px;">
                     <div style="font-weight: bold; font-size: 12px; margin-bottom: 4px;">Приложение №1</div>
                     <div style="margin-bottom: 12px;">к Распоряжению № <span style="font-weight: 700; text-decoration: underline;">{{ $protocol->order_num ?? '_____' }}</span></div>
