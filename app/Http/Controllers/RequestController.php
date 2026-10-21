@@ -71,7 +71,8 @@ class RequestController extends Controller
 
         // $userDept = auth()->user()->department; // 'УРП' или 'УЦ'
         //  $userDept = 'УЦ'; // для теста
-        $isUrp = auth()->user()->hasAnyRole(['urp', 'urp admin']);
+        // $isUrp = auth()->user()->hasAnyRole(['urp', 'urp admin']);
+        $isUrp = true;
         //if ($user->hasAnyRole(['urp', 'urp admin', 'admin']))  $isUrp = (mb_strtoupper($userDept) === 'УРП');
 
         $nextGlobalNumbers = [
@@ -219,7 +220,9 @@ class RequestController extends Controller
         // $userDept = auth()->user()->department;
         //$userDept = 'УЦ';
         //$isUrp = (mb_strtoupper($userDept) === 'УРП');
-        $isUrp = auth()->user()->hasAnyRole(['urp', 'urp admin']);
+        
+        // $isUrp = auth()->user()->hasAnyRole(['urp', 'urp admin']);
+        $isUrp = true;
         $isAdmin = auth()->user()->hasRole('admin');
 
         if ($isUrp) {

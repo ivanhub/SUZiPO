@@ -210,50 +210,49 @@
                     </div>
 
                     <!-- Блок: Результаты обучения и пол -->
-                                        <!-- Блок: Результаты обучения и пол (Синхронизация с БД) -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
                         <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Результаты обучения и пол</span>
-                        
+
                         <!-- Сетка показателей из Excel-шаблона -->
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 12px;">
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Явилось на экзамены</label>
-                                <input type="number" readonly 
-                                       value="{{ $report ? $report->Show : count($protocol->demand?->employees ?? []) }}" 
-                                       style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #111827;">
+                                <input type="number" readonly
+                                    value="{{ $report ? $report->Show : count($protocol->demand?->employees ?? []) }}"
+                                    style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #111827;">
                             </div>
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Не явилось (неявка)</label>
-                                <input type="number" readonly 
-                                       value="{{ $report ? $report->noshow : 0 }}" 
-                                       style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #b91c1c;">
+                                <input type="number" readonly
+                                    value="{{ $report ? $report->noshow : 0 }}"
+                                    style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #b91c1c;">
                             </div>
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Сдали</label>
-                                <input type="number" readonly 
-                                       value="{{ $report ? $report->passed : count($protocol->demand?->employees ?? []) }}" 
-                                       style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #059669;">
+                                <input type="number" readonly
+                                    value="{{ $report ? $report->passed : count($protocol->demand?->employees ?? []) }}"
+                                    style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #059669;">
                             </div>
                         </div>
 
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Не сдали</label>
-                                <input type="number" readonly 
-                                       value="{{ $report ? $report->nopassed : 0 }}" 
-                                       style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #b91c1c;">
+                                <input type="number" readonly
+                                    value="{{ $report ? $report->nopassed : 0 }}"
+                                    style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #b91c1c;">
                             </div>
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Кол-во мужчин</label>
-                                <input type="number" readonly 
-                                       value="{{ $report ? $report->countman : collect($protocol->demand?->employees)->where('gender', 'М')->count() }}" 
-                                       style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
+                                <input type="number" readonly
+                                    value="{{ $report ? $report->countman : collect($protocol->demand?->employees ?? [])->where('gender_key', '1')->count() }}"
+                                    style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #111827;">
                             </div>
                             <div>
                                 <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Кол-во женщин</label>
-                                <input type="number" readonly 
-                                       value="{{ $report ? $report->countwoman : collect($protocol->demand?->employees)->where('gender', 'Ж')->count() }}" 
-                                       style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
+                                <input type="number" readonly
+                                    value="{{ $report ? $report->countwoman : collect($protocol->demand?->employees ?? [])->where('gender_key', '2')->count() }}"
+                                    style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #111827;">
                             </div>
                         </div>
                     </div>
@@ -399,21 +398,87 @@
                         </thead>
                         <tbody>
                             @forelse($protocol->demand?->employees ?? [] as $index => $employee)
-                            <tr style="border-bottom: 1px solid #e5e7eb;">
-                                <td style="padding: 10px 8px; text-align: center; color: #6b7280;">{{ $index + 1 }}</td>
-                                <td style="padding: 10px 8px;">{{ $employee->tab_num ?? '—' }}</td>
-                                <td style="padding: 10px 8px; font-weight: 600; color: #111827;">{{ $employee->last_name ?? '—' }} {{ $employee->first_name ?? '—' }} {{ $employee->middle_name ?? '—' }}</td>
-                                <td style="padding: 10px 8px; color: #4b5563;">{{ $employee->position ?? '—' }}</td>
-                                <td style="padding: 10px 8px; text-align: center; color: #4b5563;">{{ $employee->rank ?? '—' }}</td>
-                                <td style="padding: 10px 8px; color: #4b5563;">{{ $employee->company ?? '—' }}</td>
-                                <td style="padding: 10px 8px; color: #4b5563;">{{ $employee->department ?? '—' }}</td>
+                            @php
+                            $empTabNum = (string)($employee->tab_num ?? $employee->tab_number ?? '');
+                            $sapRow = !empty($empTabNum) ? $sapUsers->get($empTabNum) : null;
+
+                            // 1. ФИО
+                            $origFio = trim($employee->last_name . ' ' . $employee->first_name . ' ' . ($employee->middle_name ?? ''));
+                            if(empty(trim($origFio))) { $origFio = trim($employee->fio ?? $employee->name ?? ''); }
+                            $sapFio = $sapRow ? trim($sapRow->fullname ?? $sapRow->fio ?? $origFio) : $origFio;
+                            $isFioChanged = (!empty($sapFio) && mb_strtolower($origFio) !== mb_strtolower($sapFio));
+
+                            // 2. Должность
+                            $origPosition = trim($employee->position ?? '');
+                            $sapPosition = $sapRow ? trim($sapRow->position ?? $origPosition) : $origPosition;
+                            $isPositionChanged = (!empty($sapPosition) && mb_strtolower($origPosition) !== mb_strtolower($sapPosition));
+
+                            // 3. Предприятие
+                            $origCompany = trim($employee->level_3_name ?? '');
+                            $sapCompany = $sapRow ? trim($sapRow->level_3_name ?? $origCompany) : $origCompany;
+                            $isCompanyChanged = (!empty($sapCompany) && mb_strtolower($origCompany) !== mb_strtolower($sapCompany));
+
+                            // 4. Подразделение/Цех
+                            $origDept = trim($employee->level_4_name ?? '');
+                            $sapDept = $sapRow ? trim($sapRow->level_4_name ?? $origDept) : $origDept;
+                            $isDeptChanged = (!empty($sapDept) && mb_strtolower($origDept) !== mb_strtolower($sapDept));
+
+                            // 5. Разряд
+                            $origRank = trim($employee->rank ?? '');
+                            $sapRank = $sapRow ? trim($sapRow->rank ?? $origRank) : $origRank;
+                            $isRankChanged = (!empty($sapRank) && mb_strtolower($origRank) !== mb_strtolower($sapRank));
+                            @endphp
+                            <tr style="border-bottom: 1px solid #e5e7eb; height: 40px;">
+                                <td style="padding: 8px; text-align: center; color: #6b7280;">{{ $index + 1 }}</td>
+                                <td style="padding: 8px; font-family: monospace; color: #374151;">{{ $empTabNum }}</td>
+
+                                <!-- ФИО -->
+                                <td style="padding: 8px; color: #111827;">
+                                    <span style="{{ $isFioChanged ? 'color: #b91c1c; font-weight: bold;' : '' }}">{{ $origFio }}</span>
+                                    @if($isFioChanged)
+                                    <span style="color: #9ca3af; font-size: 11px; font-weight: normal; margin-left: 4px;">/ {{ $sapFio }}</span>
+                                    @endif
+                                </td>
+
+                                <!-- ДОЛЖНОСТЬ -->
+                                <td style="padding: 8px;">
+                                    <span style="{{ $isPositionChanged ? 'color: #ea580c; font-weight: bold;' : 'color: #374151;' }}">{{ $origPosition }}</span>
+                                    @if($isPositionChanged)
+                                    <span style="color: #9ca3af; font-size: 11px; margin-left: 4px;">/ {{ $sapPosition }}</span>
+                                    @endif
+                                </td>
+
+                                <!-- РАЗРЯД -->
+                                <td style="padding: 8px; text-align: center;">
+                                    <span style="{{ $isRankChanged ? 'color: #ea580c; font-weight: bold;' : 'color: #374151;' }}">{{ $origRank ?: '—' }}</span>
+                                    @if($isRankChanged)
+                                    <span style="color: #9ca3af; font-size: 11px; margin-left: 2px;">/ {{ $sapRank }}</span>
+                                    @endif
+                                </td>
+
+                                <!-- ПРЕДПРИЯТИЕ -->
+                                <td style="padding: 8px;">
+                                    <span style="{{ $isCompanyChanged ? 'color: #ea580c; font-weight: bold;' : 'color: #374151;' }}">{{ $origCompany }}</span>
+                                    @if($isCompanyChanged)
+                                    <span style="color: #9ca3af; font-size: 11px; margin-left: 4px;">/ {{ $sapCompany }}</span>
+                                    @endif
+                                </td>
+
+                                <!-- МЕСТО РАБОТЫ (ЦЕХ) -->
+                                <td style="padding: 8px;">
+                                    <span style="{{ $isDeptChanged ? 'color: #ea580c; font-weight: bold;' : 'color: #374151;' }}">{{ $origDept }}</span>
+                                    @if($isDeptChanged)
+                                    <span style="color: #9ca3af; font-size: 11px; margin-left: 4px;">/ {{ $sapDept }}</span>
+                                    @endif
+                                </td>
+
                                 @if(isset($matrixNum) && $matrixNum == 3)
-                                <td style="padding: 10px 8px; color: #4b5563; font-size: 10px; line-height: 1.2;">{{ $employee->process_management ?? 'Управление супервайзинга' }}</td>
-                                <td style="padding: 10px 8px; color: #6b7280;">{{ $employee->phone ?? '—' }}</td>
-                                <td style="padding: 10px 8px; text-align: center;">{{ $employee->birth_date ? \Carbon\Carbon::parse($employee->birth_date)->format('d.m.Y') : '—' }}</td>
-                                <td style="padding: 10px 8px; text-align: center; font-family: monospace;">{{ $employee->snils ?? '—' }}</td>
+                                <td style="padding: 8px; color: #4b5563; font-size: 10px;">{{ $employee->process_management ?? '—' }}</td>
+                                <td style="padding: 8px; color: #6b7280;">{{ $employee->phone ?? '—' }}</td>
+                                <td style="padding: 8px; text-align: center;">{{ $employee->birth_date ? \Carbon\Carbon::parse($employee->birth_date)->format('d.m.Y') : '—' }}</td>
+                                <td style="padding: 8px; text-align: center; font-family: monospace;">{{ $employee->snils ?? '—' }}</td>
                                 @endif
-                                <td style="padding: 10px 8px; text-align: center;"><span style="padding: 2px 6px; background: #f3f4f6; border-radius: 4px; font-size: 10px; font-weight: 600;">{{ $employee->gender ?? '—' }}</span></td>
+                                <td style="padding: 8px; text-align: center;"><span style="padding: 2px 6px; background: #f3f4f6; border-radius: 4px; font-size: 10px; font-weight: 600;">{{ $employee->gender ?? '—' }}</span></td>
                             </tr>
                             @empty
                             <tr>
@@ -425,317 +490,537 @@
                 </div>
             </div>
 
-
-
             <!-- СОДЕРЖИМОЕ ВКЛАДКИ 3: ПРОТОКОЛ-->
             <div x-show="activeTab === 'protocol'" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" x-cloak>
                 <!-- ОТ -->
                 @if(isset($matrixNum) && $matrixNum == 4)
-                <!-- Шапка официального бланка из Excel -->
-                <div style="text-align: center; font-family: 'Arial', sans-serif; color: #111827; margin-bottom: 24px; line-height: 1.4;">
-                    <div style="font-weight: 800; font-size: 14px; letter-spacing: 0.03em;">ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ</div>
-                    <div style="font-weight: 900; font-size: 16px;">«РН-ЮГАНСКНЕФТЕГАЗ»</div>
-                    <div style="font-size: 12px; font-weight: 600; color: #374151;">(ООО «РН-ЮГАНСКНЕФТЕГАЗ»)</div>
-                    <div style="font-weight: 800; font-size: 14px; margin-top: 4px; text-decoration: underline;">УЧЕБНЫЙ ЦЕНТР</div>
 
-                    <h2 style="font-size: 16px; font-weight: 800; margin: 20px 0 6px 0; text-transform: uppercase;">ПРОТОКОЛ № {{ $protocol->prot_num }}</h2>
-                    <div style="font-size: 12px; font-weight: 600; color: #4b5563;">заседания комиссии по проверке знаний требований охраны труда, назначенной</div>
-                    <div style="font-size: 12px; margin-top: 2px;">распоряжением № <span style="font-weight: 700;">{{ $protocol->order_num ?? '_____' }}</span> от <span style="font-weight: 700;">{{ $protocol->order_date ? \Carbon\Carbon::parse($protocol->order_date)->format('d.m.Y') : '«___» ________ 202_ г.' }}</span></div>
-                </div>
+                <div style="max-width: 1500px; margin: 0 auto; background: #fff; padding: 10px; border: 1px solid #d1d5db; position: relative;">
 
-                <!-- Блок параметров программы обучения -->
-                <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; background: #fafafa; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
-                    <div><b>По проверке знаний обучающихся группы №:</b> <span style="color: #4f46e5; font-weight: 700;">{{ $protocol->prot_num }}</span></div>
-                    <div><b>Программа обучения:</b> <span style="font-weight: 600;">{{ $protocol->demand?->course?->course ?? '—' }}</span></div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 4px; border-top: 1px solid #e5e7eb; padding-top: 6px;">
-                        <div><b>Часов по программе:</b> {{ $protocol->hoursbyprogram ?? 0 }} ч.</div>
-                        <div><b>Теория:</b> {{ $protocol->theoryhours ?? 0 }} ч.</div>
-                        <div><b>Практика:</b> {{ $protocol->practicehours ?? 0 }} ч.</div>
-                    </div>
-                </div>
-
-                <!-- Интерактивная таблица выставления оценок ОТ -->
-                <div style="overflow-x: auto; width: 100%; border: 1px solid #a1a1a1;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; color: #111827;">
-                        <thead>
-                            <tr style="background-color: #f3f4f6; border-bottom: 2px solid #a1a1a1; text-align: center; font-weight: 700; height: 40px;">
-                                <th style="border-right: 1px solid #a1a1a1; padding: 4px; width: 35px;">№ пп</th>
-                                <th style="border-right: 1px solid #a1a1a1; padding: 4px; width: 75px;">№ табельный</th>
-                                <th style="border-right: 1px solid #a1a1a1; padding: 4px; width: 180px;">Фамилия Имя Отчество</th>
-                                <th style="border-right: 1px solid #a1a1a1; padding: 4px; width: 160px;">Должность</th>
-                                <th style="border-right: 1px solid #a1a1a1; padding: 4px; width: 180px;">Наименование подразделения</th>
-                                <th style="border-right: 1px solid #a1a1a1; padding: 4px; width: 140px;">Предприятие</th>
-                                <th style="border-right: 1px solid #a1a1a1; padding: 4px; width: 120px; color: #b91c1c;">Результат проверки<br>(сдал/не сдал)</th>
-                                <th style="border-right: 1px solid #a1a1a1; padding: 4px; width: 110px;">Рег. номер ЕИСОТ</th>
-                                <th style="border-right: 1px solid #a1a1a1; padding: 4px; width: 85px;">Начало (факт)</th>
-                                <th style="border-right: 1px solid #a1a1a1; padding: 4px; width: 85px;">Окончание (факт)</th>
-                                <th style="padding: 4px; width: 70px;">Часы (факт)</th>
-                            </tr>
-                            <tr style="background-color: #e5e7eb; border-bottom: 1px solid #a1a1a1; text-align: center; font-weight: 600; font-size: 10px; height: 18px; color: #4b5563;">
-                                <td style="border-right: 1px solid #a1a1a1;">1</td>
-                                <td style="border-right: 1px solid #a1a1a1;">2</td>
-                                <td style="border-right: 1px solid #a1a1a1;">3</td>
-                                <td style="border-right: 1px solid #a1a1a1;">4</td>
-                                <td style="border-right: 1px solid #a1a1a1;">5</td>
-                                <td style="border-right: 1px solid #a1a1a1;">6</td>
-                                <td style="border-right: 1px solid #a1a1a1;">7</td>
-                                <td style="border-right: 1px solid #a1a1a1;">8</td>
-                                <td style="border-right: 1px solid #a1a1a1;">10</td>
-                                <td style="border-right: 1px solid #a1a1a1;">11</td>
-                                <td>12</td>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($protocol->demand?->employees ?? [] as $index => $employee)
-                            <tr style="border-bottom: 1px solid #a1a1a1; height: 36px;">
-                                <td style="border-right: 1px solid #a1a1a1; padding: 6px; text-align: center; color: #6b7280;">{{ $index + 1 }}</td>
-                                <td style="border-right: 1px solid #a1a1a1; padding: 6px; text-align: center;">{{ $employee->tab_num ?? '—' }}</td>
-                                <td style="border-right: 1px solid #a1a1a1; padding: 6px; font-weight: 700;">{{ $employee->last_name ?? '—'}} {{ $employee->first_name ?? '—' }} {{ $employee->middle_name ?? '—'}}</td>
-                                <td style="border-right: 1px solid #a1a1a1; padding: 6px; font-size: 10px; line-height: 1.2;">{{ $employee->position ?? '—' }}</td>
-                                <td style="border-right: 1px solid #a1a1a1; padding: 6px; font-size: 10px;">{{ $employee->department ?? '—' }}</td>
-                                <td style="border-right: 1px solid #a1a1a1; padding: 6px; font-size: 10px;">{{ $employee->company ?? '—' }}</td>
-
-                                <!-- Поля ввода ИНПУТОВ оценок для сохранения в БД -->
-                                <td style="border-right: 1px solid #a1a1a1; padding: 4px; text-align: center;">
-                                    <select name="results[{{ $employee->id }}][status]" style="width: 100%; padding: 2px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px;">
-                                        <option value="удовлетворительно">удовлетворительно</option>
-                                        <option value="неудовлетворительно">неудовлетворительно</option>
-                                        <option value="неявка">неявка</option>
-                                    </select>
-                                </td>
-                                <td style="border-right: 1px solid #a1a1a1; padding: 4px;">
-                                    <input type="text" name="results[{{ $employee->id }}][eisot_num]" placeholder="211509345" style="width: 100%; padding: 3px 6px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; box-sizing: border-box;">
-                                </td>
-                                <td style="border-right: 1px solid #a1a1a1; padding: 4px; text-align: center;">
-                                    <input type="date" name="results[{{ $employee->id }}][start_fact]" value="{{ $protocol->date_start ? \Carbon\Carbon::parse($protocol->date_start)->format('Y-m-d') : '' }}" style="width: 100%; padding: 2px; font-size: 10px; border: 1px solid #d1d5db; border-radius: 4px;">
-                                </td>
-                                <td style="border-right: 1px solid #a1a1a1; padding: 4px; text-align: center;">
-                                    <input type="date" name="results[{{ $employee->id }}][end_fact]" value="{{ $protocol->date_end ? \Carbon\Carbon::parse($protocol->date_end)->format('Y-m-d') : '' }}" style="width: 100%; padding: 2px; font-size: 10px; border: 1px solid #d1d5db; border-radius: 4px;">
-                                </td>
-                                <td style="padding: 4px; text-align: center;">
-                                    <input type="number" name="results[{{ $employee->id }}][hours_fact]" value="{{ $protocol->hoursbyprogram ?? 0 }}" style="width: 55px; padding: 3px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="11" style="padding: 24px; text-align: center; color: #9ca3af;">Список сотрудников для формирования протокола ОТ отсутствует</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                <!-- Курсы -->
-                @elseif(isset($matrixNum) && $matrixNum == 3)
-                <!-- Официальная шапка из Excel-шаблона -->
-                <div style="text-align: center; font-family: 'Arial', sans-serif; color: #111827; margin-bottom: 16px; line-height: 1.3;">
-                    <div style="font-weight: 800; font-size: 13px; letter-spacing: 0.02em;">ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ</div>
-                    <div style="font-weight: 900; font-size: 15px;">«РН-ЮГАНСКНЕФТЕГАЗ»</div>
-                    <div style="font-size: 11px; font-weight: 600; color: #4b5563;">(ООО «РН-ЮГАНСКНЕФТЕГАЗ»)</div>
-                    <div style="font-weight: 800; font-size: 13px; margin-top: 3px; text-decoration: underline;">УЧЕБНЫЙ ЦЕНТР</div>
-
-                    <!-- Номер и Дата протокола в одну строку -->
-                    <div style="display: flex; justify-content: center; align-items: center; gap: 40px; margin: 15px auto 6px auto; max-width: 600px;">
-                        <h2 style="font-size: 15px; font-weight: 800; margin: 0; text-transform: uppercase;">ПРОТОКОЛ № {{ $protocol->prot_num }}</h2>
-                        <span style="font-size: 12px; font-weight: 700;">от {{ $protocol->date_end ? \Carbon\Carbon::parse($protocol->date_end)->format('d.m.Y') : '«___» ____________ 202_ г.' }}</span>
+                    <!-- Правый верхний угол: Ссылка на ЕИСОТ -->
+                    <div style="position: absolute; top: 15px; right: 20px; text-align: right; font-size: 11px; line-height: 1.3; font-weight: bold; color: #111827;">
+                        Приложение к протоколу № {{ $protocol->prot_num }} от {{ $protocol->date_start ? \Carbon\Carbon::parse($protocol->date_start)->format('d.m.Y') : '____' }}г.<br>
+                        <span style="font-weight: 500; font-style: italic; color: #4b5563;">Факт прохождения проверки знаний в ЕИСОТ.</span>
                     </div>
 
-                    <!-- Распоряжение -->
-                    <div style="font-size: 11px; font-weight: 600; color: #374151;">
-                        заседания комиссии, назначенной распоряжением № <span style="font-weight:700; border-b: 1px solid #000; padding: 0 10px;">{{ $protocol->order_num ?? '_____' }}</span> от <span style="font-weight:700; border-b: 1px solid #000; padding: 0 10px;">{{ $protocol->order_date ? \Carbon\Carbon::parse($protocol->order_date)->format('d.m.Y') : '___.___.202_' }}</span>
+                    <!-- Центральный официальный заголовок Минтруда -->
+                    <div style="text-align: center; font-weight: 800; font-size: 15px; letter-spacing: 0.03em; margin-bottom: 25px; line-height: 1.4; color: #000000; padding-top: 15px;">
+                        ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ<br>
+                        «РН-ЮГАНСКНЕФТЕГАЗ»<br>
+                        (ООО «РН-ЮГАНСКНЕФТЕГАЗ»)<br>
+                        <span style="font-size: 16px; border-bottom: 2px solid #000; display: inline-block; padding-bottom: 2px; margin-top: 4px;">УЧЕБНЫЙ ЦЕНТР</span>
                     </div>
 
-                    <!-- Линейный блок состава комиссии со скрина бланка -->
-                    <div style="font-size: 11px; margin-top: 6px; color: #374151; display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
-                        <div>в составе председателя комиссии: <span style="font-weight: 700; text-decoration: underline;" x-text="chairman"></span></div>
-                        <div>заместителя: <span style="font-weight: 600; text-decoration: underline;" x-text="deputy"></span></div>
-                        <div>членов комиссии: <span style="font-weight: 600; text-decoration: underline;" x-text="selectedMembers.length ? selectedMembers.join(', ') : '—'"></span></div>
+                    <!-- Номерной блок протокола -->
+                    <div style="text-align: center; font-size: 14px; margin-bottom: 15px; font-weight: bold;">
+                        ПРОТОКОЛ &nbsp; № &nbsp; <span style="border-bottom: 1px solid #000; padding: 0 15px;">{{ $protocol->prot_num }}</span> &nbsp; от &nbsp; <span style="border-bottom: 1px solid #000; padding: 0 20px;">{{ $protocol->date_start ? \Carbon\Carbon::parse($protocol->date_start)->format('d.m.Y') : '____' }}</span>
                     </div>
-                </div>
 
-                <!-- Описание программы обучения группы -->
-                <div style="font-size: 12px; line-height: 1.4; color: #374151; margin-bottom: 14px; display: flex; justify-content: center; gap: 24px; align-items: center; background: transparent; padding: 4px 0; flex-wrap: wrap;">
-                    <div>
-                        <b>по проверке знаний обучающихся группы №:</b>
-                        <span style="color: #4f46e5; font-weight: 700; margin-left: 4px;">{{ $protocol->prot_num }}</span>
+                    <div style="font-size: 11px; text-align: center; margin-bottom: 14px; font-style: italic; color: #374151;">
+                        заседания комиссии по проверке знаний требований охраны труда, назначенной распоряжением № <span style="font-weight: 700;">{{ $protocol->order_num ?? '_____' }}</span> от <span style="font-weight: 700;">{{ $protocol->order_date ? \Carbon\Carbon::parse($protocol->order_date)->format('d.m.Y') : '____' }}</span>
                     </div>
-                    <div style="max-width: 700px; text-align: center;">
-                        <b>Программа обучения:</b>
-                        <span style="font-weight: 600; color: #111827; margin-left: 4px;">{{ $protocol->demand?->course?->course ?? '—' }}</span>
-                    </div>
-                </div>
 
+                    <!-- Интерактивный реактивный состав комиссии из Alpine.js -->
+                    <div style="font-size: 11px; margin-bottom: 20px; color: #111827; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; background: #f9fafb; padding: 8px; border-radius: 6px; border: 1px solid #e5e7eb;">
+                        <div><b>Председатель:</b> <span x-text="chairman"></span></div>
+                        <div><b>Заместитель:</b> <span x-text="deputy"></span></div>
+                        <div><b>Комиссия:</b> <span x-text="selectedMembers.length ? selectedMembers.join(', ') : '—'"></span></div>
+                    </div>
 
-                <!-- Двухколоночный мини-блок Дат и Общих Часов как в Excel бланке -->
-                <div style="display: flex; justify-content: center; gap: 48px; font-size: 12px; font-family: system-ui, -apple-system, sans-serif; color: #374151; margin-bottom: 20px; background: transparent; padding: 4px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px;">
-                    <div>
-                        <b>Начало обучения:</b>
-                        <span style="color: #111827; margin-left: 4px;">{{ $protocol->date_start ? \Carbon\Carbon::parse($protocol->date_start)->format('d.m.Y') : '—' }}</span>
+                    <!-- Данные учебной группы и курса -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; font-size: 11px; margin-bottom: 16px; background: #fff; padding: 4px;">
+                        <div><b>По проверке знаний обучающихся группы №:</b> <span style="color: #4f46e5; font-weight: 700;">{{ $protocol->prot_num }}</span></div>
+                        <div><b>Программа обучения:</b> <span style="font-weight: 700; color: #111827;">«{{ $protocol->demand?->course?->course ?? '—' }}»</span></div>
                     </div>
-                    <div>
-                        <b>Окончание обучения:</b>
-                        <span style="color: #111827; margin-left: 4px;">{{ $protocol->date_end ? \Carbon\Carbon::parse($protocol->date_end)->format('d.m.Y') : '—' }}</span>
-                    </div>
-                    <div>
-                        <b>Количество часов по программе:</b>
-                        <span style="color: #4f46e5; font-weight: 700; margin-left: 4px; background: #eef2ff; padding: 2px 10px; border-radius: 4px;">{{ $protocol->program_hours ?? $protocol->hoursbyprogram ?? 0 }} ч.</span>
-                    </div>
-                </div>
 
-                <!-- Таблица ведомости оценок Курсов -->
-                <div style="overflow-x: auto; width: 100%; border: 1px solid #7f8c8d;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; color: #111827; min-width: 1350px;">
-                        <thead>
-                            <tr style="background-color: #f8f9fa; border-bottom: 2px solid #7f8c8d; text-align: center; font-weight: 700; height: 38px;">
-                                <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 40px;">№ пп</th>
-                                <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 85px;">№ табельный</th>
-                                <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 190px;">Фамилия Имя Отчество</th>
-                                <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 160px;">Должность/профессия</th>
-                                <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 60px;">Разряд</th>
-                                <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 110px; color: #4338ca;">Итоговый зачет</th>
-                                <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 110px;">Оценка за практ. обучение</th>
-                                <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 100px;">Присваиваемый разряд</th>
-                                <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 150px;">Предприятие</th>
-                                <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 110px; color: #b91c1c;">Результат тестирования</th>
-                                <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 80px;">Подпись</th>
-                                <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 90px;">Начало обуч. (факт)</th>
-                                <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 90px;">Окончание обуч. (факт)</th>
-                                <th style="padding: 4px; width: 75px;">Пройдено (час.)</th>
-                            </tr>
-                            <tr style="background-color: #e5e7eb; border-bottom: 1px solid #7f8c8d; text-align: center; font-weight: 600; font-size: 10px; height: 18px; color: #555;">
-                                <td style="border-right: 1px solid #7f8c8d;">1</td>
-                                <td style="border-right: 1px solid #7f8c8d;">2</td>
-                                <td style="border-right: 1px solid #7f8c8d;">3</td>
-                                <td style="border-right: 1px solid #7f8c8d;">4</td>
-                                <td style="border-right: 1px solid #7f8c8d;">5</td>
-                                <td style="border-right: 1px solid #7f8c8d;">6</td>
-                                <td style="border-right: 1px solid #7f8c8d;">7</td>
-                                <td style="border-right: 1px solid #7f8c8d;">8</td>
-                                <td style="border-right: 1px solid #7f8c8d;">9</td>
-                                <td style="border-right: 1px solid #7f8c8d;">10</td>
-                                <td style="border-right: 1px solid #7f8c8d;">11</td>
-                                <td style="border-right: 1px solid #7f8c8d;">12</td>
-                                <td style="border-right: 1px solid #7f8c8d;">13</td>
-                                <td>14</td>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($protocol->demand?->employees ?? [] as $index => $employee)
+                    <!-- Параметры фактических часов обучения по Охране Труда -->
+                    <div style="font-size: 11px; border: 1px solid #7f8c8d; border-radius: 6px; overflow: hidden; margin-bottom: 20px; max-width: 450px;">
+                        <div style="display: grid; grid-template-columns: 280px 1fr; border-bottom: 1px solid #e5e7eb; padding: 6px 12px; background: #f9fafb;">
+                            <div>Начало обучения / Окончание обучения:</div>
+                            <div style="font-weight: 700; text-align: center;">{{ $protocol->date_start ? \Carbon\Carbon::parse($protocol->date_start)->format('d.m.Y') : '—' }}</div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 280px 1fr; border-bottom: 1px solid #e5e7eb; padding: 6px 12px;">
+                            <div>Количество часов по программе:</div>
+                            <div style="font-weight: 700; text-align: center;">{{ $protocol->program_hours ?? 8 }}</div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 280px 1fr; border-bottom: 1px solid #e5e7eb; padding: 6px 12px;">
+                            <div>Количество часов теоретического обучения:</div>
+                            <div style="font-weight: 700; text-align: center;">{{ $protocol->theory_hours ?? 4 }}</div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 280px 1fr; padding: 6px 12px;">
+                            <div>Количество часов практического обучения:</div>
+                            <div style="font-weight: 700; text-align: center;">{{ $protocol->practice_hours ?? 4 }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Интерактивная таблица выставления оценок ОТ -->
+                    <div style="overflow-x: auto; width: 100%; margin-bottom: 20px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px; color: #000000; border: 2px solid #000000; table-layout: fixed;">
+                            <thead>
+                                <!-- Строка 1: Главные заголовки шапки -->
+                                <tr style="background-color: #f2f2f2; text-align: center; font-weight: bold; border-bottom: 1px solid #000000;">
+                                    <th style="border-right: 1px solid #000000; padding: 6px; width: 35px;">№ пп</th>
+                                    <th style="border-right: 1px solid #000000; padding: 6px; width: 85px;">№ табельный</th>
+                                    <th style="border-right: 1px solid #000000; padding: 6px; width: 140px;">Фамилия Имя Отчество</th>
+                                    <th style="border-right: 1px solid #000000; padding: 6px; width: 150px;">Должность</th>
+                                    <th style="border-right: 1px solid #000000; padding: 6px; width: 160px;">Наименование подразделения (цех, участок)</th>
+                                    <th style="border-right: 1px solid #000000; padding: 6px; width: 120px;">Предприятие</th>
+                                    <th style="border-right: 1px solid #000000; padding: 6px; width: 125px; color: #1e3a8a;">Результат проверки знаний</th>
+                                    <th style="border-right: 1px solid #000000; padding: 6px; width: 120px; color: #b91c1c;">Регистрационный номер ЕИСОТ</th>
+                                    <th style="border-right: 1px solid #000000; padding: 6px; width: 75px;">Подпись</th>
+                                    <th style="border-right: 1px solid #000000; padding: 6px; width: 85px;">Начало обуч. (факт)</th>
+                                    <th style="border-right: 1px solid #000000; padding: 6px; width: 85px;">Оконч. обуч. (факт)</th>
+                                    <th style="padding: 6px; width: 60px;">Пройдено (час.)</th>
+                                </tr>
+                                <!-- Строка 2: Техническая нумерация колонок строго по макету -->
+                                <tr style="background-color: #e6e6e6; text-align: center; font-weight: bold; font-size: 10px; border-bottom: 2px solid #000000; height: 18px;">
+                                    <td style="border-right: 1px solid #000000;">1</td>
+                                    <td style="border-right: 1px solid #000000;">2</td>
+                                    <td style="border-right: 1px solid #000000;">3</td>
+                                    <td style="border-right: 1px solid #000000;">4</td>
+                                    <td style="border-right: 1px solid #000000;">5</td>
+                                    <td style="border-right: 1px solid #000000;">6</td>
+                                    <td style="border-right: 1px solid #000000;">7</td>
+                                    <td style="border-right: 1px solid #000000;">8</td>
+                                    <td style="border-right: 1px solid #000000;">9</td>
+                                    <td style="border-right: 1px solid #000000;">10</td>
+                                    <td style="border-right: 1px solid #000000;">11</td>
+                                    <td>12</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($protocol->demand?->employees ?? [] as $index => $employee)
                                 @php
-                                    $empSnilsRaw = $employee->pfr_certificate ?? ''; 
+                                // Вытаскиваем сохраненную строку результатов из СУБД для сопоставления по СНИЛС или табельному
+                                $empSnilsRaw = $employee->pfr_certificate ?? '';
+                                $empSnilsClean = !empty($empSnilsRaw) ? preg_replace('/[^0-9]/', '', $empSnilsRaw) : '';
+                                $empTabNum = (string)($employee->tab_number ?? '');
+
+                                $dbRow = null;
+                                if (!empty($empSnilsClean)) { $dbRow = $savedResults->get($empSnilsClean); }
+                                if (!$dbRow && !empty($empTabNum)) { $dbRow = $savedResults->get($empTabNum); }
+                                if (!$dbRow) { $dbRow = $savedResults->get((string)$employee->id); }
+
+                                $studentKey = $employee->id;
+                                $empFullName = trim(($employee->last_name ?? '') . ' ' . ($employee->first_name ?? '') . ' ' . ($employee->middle_name ?? ''));
+                                if(empty($empFullName)) { $empFullName = $employee->fio ?? $employee->name ?? '—'; }
+
+                                // Определяем текущее значение оценки в ЕИСОТ (по дефолту удовлетворительно)
+                                $currentMark = $dbRow?->markitog ?? 'удовлетворительно';
+                                @endphp
+                                <tr style="border-bottom: 1px solid #000000; min-height: 38px;">
+                                    <!-- Колонка 1: Порядковый номер -->
+                                    <td style="border-right: 1px solid #000000; padding: 6px; text-align: center; font-weight: bold; color: #4b5563;">{{ $index + 1 }}</td>
+
+                                    <!-- Колонка 2: Табельный номер -->
+                                    <td style="border-right: 1px solid #000000; padding: 6px; text-align: center; font-family: monospace;">{{ $employee->tab_number ?? '—' }}</td>
+
+                                    <!-- Колонка 3: ФИО сотрудника -->
+                                    <td style="border-right: 1px solid #000000; padding: 6px; font-weight: bold; color: #111827;">{{ $empFullName }}</td>
+
+                                    <!-- Колонка 4: Должность -->
+                                    <td style="border-right: 1px solid #000000; padding: 6px; font-size: 10px; line-height: 1.3;">{{ $employee->position ?? '—' }}</td>
+
+                                    <!-- Колонка 5: Подразделение (Цех/Участок) -->
+                                    <td style="border-right: 1px solid #000000; padding: 6px; font-size: 10px; line-height: 1.3; color: #374151;">{{ $employee->level_4_name ?? $employee->department ?? '—' }}</td>
+
+                                    <!-- Колонка 6: Предприятие -->
+                                    <td style="border-right: 1px solid #000000; padding: 6px; font-size: 10px;">{{ $employee->level_3_name ?? $employee->company ?? '—' }}</td>
+
+                                    <!-- Колонка 7: Результат проверки знаний (Селектор Минтруда) -->
+                                    <td style="border-right: 1px solid #000000; padding: 4px; text-align: center;">
+                                        <select name="results[{{ $studentKey }}][status]" style="width: 100%; padding: 4px; font-size: 11px; font-weight: bold; border: 1px solid #d1d5db; border-radius: 4px; color: #000000; background-color: #ffffff;">
+                                            <option value="удовлетворительно" {{ $currentMark === 'удовлетворительно' ? 'selected' : '' }}>удовлетворительно</option>
+                                            <option value="неудовлетворительно" {{ $currentMark === 'неудовлетворительно' ? 'selected' : '' }}>неудовлетворительно</option>
+                                            <option value="неявка" {{ $currentMark === 'неявка' ? 'selected' : '' }}>неявка</option>
+                                        </select>
+                                    </td>
+
+                                    <!-- Колонка 8: Регистрационный номер записи в ЕИСОТ -->
+                                    <td style="border-right: 1px solid #000000; padding: 4px; text-align: center;">
+                                        <input type="text" name="results[{{ $studentKey }}][eisot_num]"
+                                            value="{{ $dbRow?->regnumber ?? $dbRow?->documentnumber ?? '' }}"
+                                            placeholder="211509345"
+                                            style="width: 100%; padding: 4px; font-size: 11px; font-weight: bold; border: 1px solid #b91c1c; border-radius: 4px; text-align: center; color: #b91c1c; bg: #fff5f5;">
+                                    </td>
+
+                                    <!-- Колонка 9: Место подписи -->
+                                    <td style="border-right: 1px solid #000000; padding: 6px; text-align: center; color: #9ca3af; font-size: 10px; font-style: italic;">подпись</td>
+
+                                    <!-- Колонка 10: Дата начала (факт) -->
+                                    <td style="border-right: 1px solid #000000; padding: 4px; text-align: center; vertical-align: middle;">
+                                        <input type="date" name="results[{{ $studentKey }}][start_fact]"
+                                            value="{{ $dbRow?->begindatefact ?? $protocol->date_start ? \Carbon\Carbon::parse($dbRow?->begindatefact ?? $protocol->date_start)->format('Y-m-d') : '' }}"
+                                            class="no-datepicker"
+                                            data-datepicker="false"
+                                            style=" width: 100%; font-size: 11px; font-family: 'Arial', sans-serif; font-weight: bold; text-align: center; color: #111827; background: transparent; cursor: pointer; box-sizing: border-box;">
+                                    </td>
+
+                                    <!-- Колонка 11: Дата окончания (факт) -->
+                                    <td style="border-right: 1px solid #000000; padding: 4px; text-align: center;">
+                                        <input type="date" name="results[{{ $studentKey }}][end_fact]"
+                                            value="{{ $dbRow?->enddatefact ?? $protocol->date_end ? \Carbon\Carbon::parse($dbRow?->enddatefact ?? $protocol->date_end)->format('Y-m-d') : '' }}"
+                                            style="all: unset; width: 100%; padding: 2px; font-size: 10px; border: 1px solid #d1d5db; border-radius: 4px; background: #fff;">
+                                    </td>
+
+                                    <!-- Колонка 12: Фактические часы пройденного обучения -->
+                                    <td style="padding: 4px; text-align: center;">
+                                        <input type="number" name="results[{{ $studentKey }}][hours_fact]"
+                                            value="{{ (int)($dbRow?->counthourfact ?? $protocol->program_hours ?? 8) }}"
+                                            style="all: unset; width: 100%; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center; background: #fff;">
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="11" style="padding: 24px; text-align: center; color: #9ca3af;">Список сотрудников для формирования протокола ОТ отсутствует</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                        <!-- Исполнитель-->
+                        <div style="margin-top: 30px; font-family: 'Arial', sans-serif; color: #111827; font-size: 12px; display: flex; flex-direction: column; gap: 16px; border: 1px solid #e5e7eb; padding: 20px; border-radius: 6px; background-color: #fafafa; max-width: 350px;">
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; display: grid; grid-template-columns: 100px 150px 1fr; align-items: center; gap: 16px;">
+                                <div style="font-weight: bold;">Исполнитель:</div>
+                                <input type="text" name="commission[executor_fio]" value="-" style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; font-weight: 600; width: 100%; max-width: 250px; height: 28px; background: #fff;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Мультимедийные курсы (matrix_num = 5) -->
+                    @elseif(isset($matrixNum) && $matrixNum == 5)
+                    <div style="max-width: 1200px; margin: 0 auto; background: #fff; padding: 10px; font-family: 'Arial', sans-serif; color: #000000;">
+
+                        <!-- ВЕРХНЯЯ СЕТКА ШАПКИ БЛАНКА (ОТЧЕТ № / НОМЕРА / ДАТЫ ИЗ EXCEL) -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 40px 1fr; gap: 10px; align-items: start; margin-bottom: 25px; text-align: center;">
+                            <!-- Колонки 1-2: ОТЧЕТ № -->
+                            <div style="text-align: right; padding-right: 15px;">
+                                <div style="font-size: 16px; font-weight: 800; text-transform: uppercase;">ОТЧЕТ №</div>
+                                <div style="font-size: 10px; color: #b91c1c; font-weight: bold; margin-top: 1px;">Приказ/Распоряжение</div>
+                            </div>
+
+                            <!-- Колонка 3: Номер группы и приказа -->
+                            <div style="text-align: left; padding-left: 10px;">
+                                <div style="font-size: 16px; font-weight: 800; color: #000000;">{{ $protocol->prot_num }}</div>
+                                <div style="font-size: 11px; font-weight: bold; color: #374151; margin-top: 3px;">{{ $protocol->order_num ?? '-' }}</div>
+                            </div>
+
+                            <!-- Разделитель "от" -->
+                            <div style="font-size: 13px; font-weight: bold; color: #000000; text-transform: lowercase; line-height: 1.3;">от<br><span style="font-size: 10px; color:#4b5563; font-weight:normal;">от</span></div>
+
+                            <!-- Колонки 5-6: Даты формирования и назначения приказа -->
+                            <div style="text-align: left; padding-left: 15px;">
+                                <div style="font-size: 16px; font-weight: 800; color: #000000;">{{ $protocol->prot_date ? \Carbon\Carbon::parse($protocol->prot_date)->format('d.m.Y') : (\Carbon\Carbon::parse($protocol->date_end)->format('d.m.Y')) }}</div>
+                                <div style="font-size: 11px; font-weight: bold; color: #374151; margin-top: 3px;">{{ $protocol->order_date ? \Carbon\Carbon::parse($protocol->order_date)->format('d.m.Y') : '-' }}</div>
+                            </div>
+                        </div>
+
+                        <!-- НАИМЕНОВАНИЕ ПРОГРАММЫ ОБУЧЕНИЯ (ПО ЦЕНТРУ МАКЕТА) -->
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <div style="font-size: 11px; font-weight: bold; text-align: left; margin-bottom: 6px; padding-left: 4px;">Группа № {{ $protocol->prot_num }}</div>
+                            <div style="font-size: 13px; font-weight: bold; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 6px; text-align: center; letter-spacing: 0.01em;">
+                                {{ $protocol->demand?->course?->course ?? '-' }}
+                            </div>
+                        </div>
+                        <!-- ТАБЛИЧНАЯ ВЕДОМОСТЬ СВЕДЕНИЙ О ПРОХОЖДЕНИИ МУЛЬТИМЕДИЙНЫХ КУРСОВ -->
+                        <div style="overflow-x: auto; width: 100%; margin-bottom: 20px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 11px; color: #000000; border: 2px solid #000000;">
+                                <thead>
+                                    <tr style="background-color: #ffffff; text-align: center; font-weight: bold; border-bottom: 1px solid #000000; height: 28px;">
+                                        <th style="border-right: 1px solid #000000; padding: 4px; width: 45px;">№ пп</th>
+                                        <th style="border-right: 1px solid #000000; padding: 4px; width: 95px;">№ табельный</th>
+                                        <th style="border-right: 1px solid #000000; padding: 4px; width: 220px;">Фамилия Имя Отчество</th>
+                                        <th style="border-right: 1px solid #000000; padding: 4px; width: 240px;">Профессия (должность)</th>
+                                        <th style="border-right: 1px solid #000000; padding: 4px; width: 65px;">Разряд</th>
+                                        <th style="border-right: 1px solid #000000; padding: 4px; width: 200px;">Предприятие</th>
+                                        <th style="border-right: 1px solid #000000; padding: 4px; width: 140px; color: #1e3a8a;">Сведения о прохождении обучения</th>
+                                        <th style="padding: 4px; width: 90px;">Подпись</th>
+                                    </tr>
+                                    <tr style="background-color: #e6e6e6; text-align: center; font-weight: bold; font-size: 10px; border-bottom: 2px solid #000000; height: 18px; color: #333333;">
+                                        <td style="border-right: 1px solid #000000;">1</td>
+                                        <td style="border-right: 1px solid #000000;">2</td>
+                                        <td style="border-right: 1px solid #000000;">3</td>
+                                        <td style="border-right: 1px solid #000000;">4</td>
+                                        <td style="border-right: 1px solid #000000;">5</td>
+                                        <td style="border-right: 1px solid #000000;">6</td>
+                                        <td style="border-right: 1px solid #000000;">7</td>
+                                        <td>8</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($protocol->demand?->employees ?? [] as $index => $employee)
+                                    @php
+                                    $empSnilsRaw = $employee->pfr_certificate ?? '';
                                     $empSnilsClean = !empty($empSnilsRaw) ? preg_replace('/[^0-9]/', '', $empSnilsRaw) : '';
-                                    $empTabNum = (string)($employee->tab_number ?? ''); 
+                                    $empTabNum = (string)($employee->tab_number ?? '');
 
                                     $dbRow = null;
                                     if (!empty($empSnilsClean)) { $dbRow = $savedResults->get($empSnilsClean); }
                                     if (!$dbRow && !empty($empTabNum)) { $dbRow = $savedResults->get($empTabNum); }
                                     if (!$dbRow) { $dbRow = $savedResults->get((string)$employee->id); }
 
-                                    $studentKey = $employee->id; 
-                                @endphp
-                            <tr style="border-bottom: 1px solid #7f8c8d; height: 36px;">
-                                <td style="border-right: 1px solid #7f8c8d; padding: 6px; text-align: center; color: #6b7280;">{{ $index + 1 }}</td>
-                                <td style="border-right: 1px solid #7f8c8d; padding: 6px; text-align: center;">{{ $employee->tab_num ?? '—' }}</td>
-                                <td style="border-right: 1px solid #7f8c8d; padding: 6px; font-weight: 700;">{{ $employee->last_name ?? '—' }} {{ $employee->first_name ?? '—' }}</td>
-                                <td style="border-right: 1px solid #7f8c8d; padding: 6px; font-size: 10px;">{{ $employee->position ?? '—' }}</td>
-                                <td style="border-right: 1px solid #7f8c8d; padding: 6px; text-align: center;">{{ $employee->rank ?? '—' }}</td>
+                                    $studentKey = $employee->id;
+                                    $empFullName = trim(($employee->last_name ?? '') . ' ' . ($employee->first_name ?? '') . ' ' . ($employee->middle_name ?? ''));
+                                    if(empty($empFullName)) { $empFullName = $employee->fio ?? $employee->name ?? '—'; }
 
-                                <!-- 6. Динамический селект Итогового зачета -->
-                                <td style="border-right: 1px solid #7f8c8d; padding: 4px; text-align: center;">
-                                    <select name="results[{{ $employee }}][status]" style="width: 100%; padding: 3px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px;">
-                                        <option value="зачет" {{ ($dbRow?->markitog ?? 'зачет') == 'зачет' ? 'selected' : '' }}>зачет</option>
-                                        <option value="незачет" {{ ($dbRow?->markitog ?? '') == 'незачет' ? 'selected' : '' }}>незачет</option>
-                                        <option value="неявка" {{ ($dbRow?->markitog ?? '') == 'неявка' ? 'selected' : '' }}>неявка</option>
-                                    </select>
-                                </td>
+                                    $currentMark = $dbRow?->markitog ?? 'пройдено';
+                                    @endphp
+                                    <tr style="border-bottom: 1px solid #000000; min-height: 40px; text-align: left; vertical-align: middle;">
+                                        <td style="border-right: 1px solid #000000; padding: 6px; text-align: center; font-weight: bold; color: #4b5563;">{{ $index + 1 }}</td>
+                                        <td style="border-right: 1px solid #000000; padding: 6px; text-align: center; font-family: monospace;">{{ $employee->tab_number ?? $employee->tab_number ?? '—' }}</td>
+                                        <td style="border-right: 1px solid #000000; padding: 6px; font-weight: bold; color: #111827;">{{ $empFullName }}</td>
+                                        <td style="border-right: 1px solid #000000; padding: 6px; font-size: 10px; line-height: 1.3;">{{ $employee->position ?? '—' }}</td>
+                                        <td style="border-right: 1px solid #000000; padding: 6px; text-align: center;">{{ $employee->rank ?? '—' }}</td>
+                                        <td style="border-right: 1px solid #000000; padding: 6px; font-size: 10px;">{{ $employee->level_3_name ?? $employee->company ?? 'ООО «РН-Юганскнефтегаз»' }}</td>
 
-                                <!-- 7. Динамический инпут Оценки за практику -->
-                                <td style="border-right: 1px solid #7f8c8d; padding: 4px;">
-                                    <input type="text" name="results[{{ $employee->id }}][practice_mark]"
-                                        value="{{ $dbRow?->markpractic ?? '' }}"
-                                        placeholder="отл / 5" style="width: 100%; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
-                                </td>
+                                        <!-- Сведения о прохождении мультимедийного курса (Селект из макета) -->
+                                        <td style="border-right: 1px solid #000000; padding: 4px; text-align: center;">
+                                            <select name="results[{{ $studentKey }}][status]" style="width: 100%; padding: 4px; font-size: 11px; font-weight: bold; border: 1px solid #d1d5db; border-radius: 4px; background-color: #ffffff; color: #000000; text-align: center;">
+                                                <option value="пройдено" {{ $currentMark === 'пройдено' ? 'selected' : '' }}>пройдено</option>
+                                                <option value="не пройдено" {{ $currentMark === 'не пройдено' ? 'selected' : '' }}>не пройдено</option>
+                                                <option value="неявка" {{ $currentMark === 'неявка' ? 'selected' : '' }}>неявка</option>
+                                            </select>
+                                        </td>
 
-                                <!-- 8. Динамический инпут Присваиваемого разряда -->
-                                <td style="border-right: 1px solid #7f8c8d; padding: 4px;">
-                                    <input type="number" name="results[{{ $employee->id }}][assigned_rank]"
-                                        value="{{ $dbRow?->assignedgrade ?? '' }}"
-                                        style="width: 100%; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
-                                </td>
-
-                                <td style="border-right: 1px solid #7f8c8d; padding: 6px; font-size: 10px;">{{ $employee->company ?? '—' }}</td>
-
-                                <!-- 10. Динамический результат тестирования (%) -->
-                                <td style="border-right: 1px solid #7f8c8d; padding: 4px;">
-                                        <input type="text" name="results[{{ $employee }}][test_result]" 
-                                               value="{{ $dbRow?->resulttest ?? '' }}"
-                                               placeholder="90%" style="width: 100%; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center; font-weight: 600;">
-                                </td>
-
-                                <td style="border-right: 1px solid #7f8c8d; padding: 6px; text-align: center; color: #9ca3af; font-size: 10px; font-style: italic;">место подписи</td>
-
-                                <td style="border-right: 1px solid #7f8c8d; padding: 4px; text-align: center;">
-                                    <input type="date" name="results[{{ $employee }}][start_fact]" value="{{ $dbRow?->begindatefact ?? $protocol->date_start ? \Carbon\Carbon::parse($dbRow?->begindatefact ?? $protocol->date_start)->format('Y-m-d') : '' }}" style="width: 100%; padding: 2px; font-size: 10px; border: 1px solid #d1d5db; border-radius: 4px;">
-                                </td>
-                                <td style="border-right: 1px solid #7f8c8d; padding: 4px; text-align: center;">
-                                    <input type="date" name="results[{{ $employee }}][end_fact]" value="{{ $dbRow?->enddatefact ?? $protocol->date_end ? \Carbon\Carbon::parse($dbRow?->enddatefact ?? $protocol->date_end)->format('Y-m-d') : '' }}" style="width: 100%; padding: 2px; font-size: 10px; border: 1px solid #d1d5db; border-radius: 4px;">
-                                </td>
-                                <td style="padding: 4px; text-align: center;">
-                                    <input type="number" name="results[{{ $employee }}][hours_fact]" value="{{ (int)($dbRow?->counthourfact ?? $protocol->program_hours ?? 0) }}" style="width: 55px; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
-                                </td>
-
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="14" style="padding: 24px; text-align: center; color: #9ca3af;">Список сотрудников для формирования протокола Курсов отсутствует</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                    <!-- БЛОК ПОДПИСЕЙ И ДОЛЖНОСТНЫХ ЛИЦ КОМИССИИ -->
-                    <div style="margin-top: 30px; font-family: 'Arial', sans-serif; color: #111827; font-size: 12px; display: flex; flex-direction: column; gap: 16px; border: 1px solid #e5e7eb; padding: 20px; border-radius: 6px; background-color: #fafafa; max-width: 800px;">
-
-                        <!-- Председатель комиссии -->
-                        <div>
-                            <div style="font-weight: 800; text-transform: uppercase; font-size: 11px; color: #4b5563; margin-bottom: 6px; letter-spacing: 0.05em;">Председатель комиссии:</div>
-                            <div style="display: grid; grid-template-columns: 280px 150px 1fr; align-items: center; gap: 16px;">
-                                <div>Начальник Учебного центра</div>
-                                <input type="text" name="commission_static[chairman_fio]" x-model="chairman" style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; font-weight: 600; width: 100%; max-width: 250px; height: 28px; background: #fff;">
-                            </div>
+                                        <td style="padding: 6px; text-align: center; color: #9ca3af; font-size: 11px;">-</td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="8" style="padding: 20px; text-align: center; color: #6b7280; font-style: italic; background: #f9fafb;">Список сотрудников для формирования отчета по мультимедимйным курсам пуст</td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
+                        <!-- НИЖНИЙ БЛОК ПОДПИСЕЙ И ИСПОЛНИТЕЛЯ ДЛЯ МУЛЬТИМЕДИЙНЫХ КУРСОВ -->
+                        <div style="margin-top: 25px; font-family: 'Arial', sans-serif; color: #111827; font-size: 12px; display: flex; flex-direction: column; gap: 14px; border: 1px solid #e5e7eb; padding: 20px; border-radius: 6px; background-color: #fafafa; max-width: 600px;">
 
-                        <!-- Члены комиссии -->
-                        <div style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
-                            <div style="font-weight: 800; text-transform: uppercase; font-size: 11px; color: #4b5563; margin-bottom: 8px; letter-spacing: 0.05em;">Члены комиссии:</div>
-                            <div style="display: flex; flex-direction: column; gap: 10px;">
-                                <div style="font-size: 11px; color: #4b5563; font-style: italic;" x-show="!selectedMembers.length">Члены комиссии не выбраны</div>
-                                <template x-for="(member, index) in selectedMembers" :key="index">
-                                    <div style="display: grid; grid-template-columns: 280px 150px 1fr; align-items: center; gap: 16px; margin-bottom: 6px;">
-                                        <div style="font-weight: 500;" x-text="'Член комиссии ' + (index + 1)"></div>
-                                        <div style="font-size: 12px; font-weight: 600; color: #111827;" x-text="member"></div>
-                                    </div>
-                                </template>
+                            <!-- Подпись Председателя -->
+                            <div style="display: grid; grid-template-columns: 180px 140px 1fr; align-items: center; gap: 16px;">
+                                <div style="font-weight: bold;">Председатель комиссии:</div>
                             </div>
-                        </div>
 
-                        <!-- Исполнитель -->
-                        <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; display: grid; grid-template-columns: 280px 150px 1fr; align-items: center; gap: 16px;">
-                            <div style="font-weight: bold;">Исполнитель:</div>
-                            <input type="text" name="commission[executor_fio]" value="-" style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; font-weight: 600; width: 100%; max-width: 250px; height: 28px; background: #fff;">
+                            <!-- Ввод Исполнителя -->
+                            <div style="margin-top: 5px; display: grid; grid-template-columns: 180px 1fr; align-items: center; gap: 16px; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 12px;">
+                                <div style="font-weight: bold;">Исполнитель:</div>
+                                <div style="font-weight: 600; color: #374151;">
+                                    <input type="text" name="commission[executor_fio]" value="{{ $report->specialist ?? '' }}" style="border: none; border-bottom: 1px solid #d1d5db; padding: 2px 4px; font-size: 12px; font-weight: bold; color: #111827; outline: none; width: 220px; background: transparent;">
+                                </div>
+                            </div>
                         </div>
 
                     </div>
 
+                    <!-- Курсы -->
+                    @elseif(isset($matrixNum) && $matrixNum == 3)
+                    <!-- Официальная шапка из Excel-шаблона -->
+                    <div style="text-align: center; font-family: 'Arial', sans-serif; color: #111827; margin-bottom: 16px; line-height: 1.3;">
+                        <div style="font-weight: 800; font-size: 13px; letter-spacing: 0.02em;">ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ</div>
+                        <div style="font-weight: 900; font-size: 15px;">«РН-ЮГАНСКНЕФТЕГАЗ»</div>
+                        <div style="font-size: 11px; font-weight: 600; color: #4b5563;">(ООО «РН-ЮГАНСКНЕФТЕГАЗ»)</div>
+                        <div style="font-weight: 800; font-size: 13px; margin-top: 3px; text-decoration: underline;">УЧЕБНЫЙ ЦЕНТР</div>
+
+                        <!-- Номер и Дата протокола в одну строку -->
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 40px; margin: 15px auto 6px auto; max-width: 600px;">
+                            <h2 style="font-size: 15px; font-weight: 800; margin: 0; text-transform: uppercase;">ПРОТОКОЛ № {{ $protocol->prot_num }}</h2>
+                            <span style="font-size: 12px; font-weight: 700;">от {{ $protocol->date_end ? \Carbon\Carbon::parse($protocol->date_end)->format('d.m.Y') : '«___» ____________ 202_ г.' }}</span>
+                        </div>
+
+                        <!-- Распоряжение -->
+                        <div style="font-size: 11px; font-weight: 600; color: #374151;">
+                            заседания комиссии, назначенной распоряжением № <span style="font-weight:700; border-b: 1px solid #000; padding: 0 10px;">{{ $protocol->order_num ?? '_____' }}</span> от <span style="font-weight:700; border-b: 1px solid #000; padding: 0 10px;">{{ $protocol->order_date ? \Carbon\Carbon::parse($protocol->order_date)->format('d.m.Y') : '___.___.202_' }}</span>
+                        </div>
+
+                        <!-- Линейный блок состава комиссии со скрина бланка -->
+                        <div style="font-size: 11px; margin-top: 6px; color: #374151; display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+                            <div>в составе председателя комиссии: <span style="font-weight: 700; text-decoration: underline;" x-text="chairman"></span></div>
+                            <div>заместителя: <span style="font-weight: 600; text-decoration: underline;" x-text="deputy"></span></div>
+                            <div>членов комиссии: <span style="font-weight: 600; text-decoration: underline;" x-text="selectedMembers.length ? selectedMembers.join(', ') : '—'"></span></div>
+                        </div>
+                    </div>
+
+                    <!-- Описание программы обучения группы -->
+                    <div style="font-size: 12px; line-height: 1.4; color: #374151; margin-bottom: 14px; display: flex; justify-content: center; gap: 24px; align-items: center; background: transparent; padding: 4px 0; flex-wrap: wrap;">
+                        <div>
+                            <b>по проверке знаний обучающихся группы №:</b>
+                            <span style="color: #4f46e5; font-weight: 700; margin-left: 4px;">{{ $protocol->prot_num }}</span>
+                        </div>
+                        <div style="max-width: 700px; text-align: center;">
+                            <b>Программа обучения:</b>
+                            <span style="font-weight: 600; color: #111827; margin-left: 4px;">{{ $protocol->demand?->course?->course ?? '—' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Двухколоночный мини-блок Дат и Общих Часов как в Excel бланке -->
+                    <div style="display: flex; justify-content: center; gap: 48px; font-size: 12px; font-family: system-ui, -apple-system, sans-serif; color: #374151; margin-bottom: 20px; background: transparent; padding: 4px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px;">
+                        <div>
+                            <b>Начало обучения:</b>
+                            <span style="color: #111827; margin-left: 4px;">{{ $protocol->date_start ? \Carbon\Carbon::parse($protocol->date_start)->format('d.m.Y') : '—' }}</span>
+                        </div>
+                        <div>
+                            <b>Окончание обучения:</b>
+                            <span style="color: #111827; margin-left: 4px;">{{ $protocol->date_end ? \Carbon\Carbon::parse($protocol->date_end)->format('d.m.Y') : '—' }}</span>
+                        </div>
+                        <div>
+                            <b>Количество часов по программе:</b>
+                            <span style="color: #4f46e5; font-weight: 700; margin-left: 4px; background: #eef2ff; padding: 2px 10px; border-radius: 4px;">{{ $protocol->program_hours ?? $protocol->hoursbyprogram ?? 0 }} ч.</span>
+                        </div>
+                    </div>
+
+                    <!-- Таблица ведомости оценок Курсов -->
+                    <div style="overflow-x: auto; width: 100%; border: 1px solid #7f8c8d;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; color: #111827; min-width: 1350px;">
+                            <thead>
+                                <tr style="background-color: #f8f9fa; border-bottom: 2px solid #7f8c8d; text-align: center; font-weight: 700; height: 38px;">
+                                    <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 40px;">№ пп</th>
+                                    <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 85px;">№ табельный</th>
+                                    <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 190px;">Фамилия Имя Отчество</th>
+                                    <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 160px;">Должность/профессия</th>
+                                    <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 60px;">Разряд</th>
+                                    <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 110px; color: #4338ca;">Итоговый зачет</th>
+                                    <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 110px;">Оценка за практ. обучение</th>
+                                    <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 100px;">Присваиваемый разряд</th>
+                                    <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 150px;">Предприятие</th>
+                                    <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 110px; color: #b91c1c;">Результат тестирования</th>
+                                    <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 80px;">Подпись</th>
+                                    <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 90px;">Начало обуч. (факт)</th>
+                                    <th style="border-right: 1px solid #7f8c8d; padding: 4px; width: 90px;">Окончание обуч. (факт)</th>
+                                    <th style="padding: 4px; width: 75px;">Пройдено (час.)</th>
+                                </tr>
+                                <tr style="background-color: #e5e7eb; border-bottom: 1px solid #7f8c8d; text-align: center; font-weight: 600; font-size: 10px; height: 18px; color: #555;">
+                                    <td style="border-right: 1px solid #7f8c8d;">1</td>
+                                    <td style="border-right: 1px solid #7f8c8d;">2</td>
+                                    <td style="border-right: 1px solid #7f8c8d;">3</td>
+                                    <td style="border-right: 1px solid #7f8c8d;">4</td>
+                                    <td style="border-right: 1px solid #7f8c8d;">5</td>
+                                    <td style="border-right: 1px solid #7f8c8d;">6</td>
+                                    <td style="border-right: 1px solid #7f8c8d;">7</td>
+                                    <td style="border-right: 1px solid #7f8c8d;">8</td>
+                                    <td style="border-right: 1px solid #7f8c8d;">9</td>
+                                    <td style="border-right: 1px solid #7f8c8d;">10</td>
+                                    <td style="border-right: 1px solid #7f8c8d;">11</td>
+                                    <td style="border-right: 1px solid #7f8c8d;">12</td>
+                                    <td style="border-right: 1px solid #7f8c8d;">13</td>
+                                    <td>14</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($protocol->demand?->employees ?? [] as $index => $employee)
+                                @php
+                                $empSnilsRaw = $employee->pfr_certificate ?? '';
+                                $empSnilsClean = !empty($empSnilsRaw) ? preg_replace('/[^0-9]/', '', $empSnilsRaw) : '';
+                                $empTabNum = (string)($employee->tab_number ?? '');
+
+                                $dbRow = null;
+                                if (!empty($empSnilsClean)) { $dbRow = $savedResults->get($empSnilsClean); }
+                                if (!$dbRow && !empty($empTabNum)) { $dbRow = $savedResults->get($empTabNum); }
+                                if (!$dbRow) { $dbRow = $savedResults->get((string)$employee->id); }
+
+                                $studentKey = $employee->id;
+                                @endphp
+                                <tr style="border-bottom: 1px solid #7f8c8d; height: 36px;">
+                                    <td style="border-right: 1px solid #7f8c8d; padding: 6px; text-align: center; color: #6b7280;">{{ $index + 1 }}</td>
+                                    <td style="border-right: 1px solid #7f8c8d; padding: 6px; text-align: center;">{{ $employee->tab_number ?? '—' }}</td>
+                                    <td style="border-right: 1px solid #7f8c8d; padding: 6px; font-weight: 700;">{{ $employee->last_name ?? '—' }} {{ $employee->first_name ?? '—' }}</td>
+                                    <td style="border-right: 1px solid #7f8c8d; padding: 6px; font-size: 10px;">{{ $employee->position ?? '—' }}</td>
+                                    <td style="border-right: 1px solid #7f8c8d; padding: 6px; text-align: center;">{{ $employee->rank ?? '—' }}</td>
+
+                                    <!-- 6. Динамический селект Итогового зачета -->
+                                    <td style="border-right: 1px solid #7f8c8d; padding: 4px; text-align: center;">
+                                        <select name="results[{{ $employee }}][status]" style="width: 100%; padding: 3px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px;">
+                                            <option value="зачет" {{ ($dbRow?->markitog ?? 'зачет') == 'зачет' ? 'selected' : '' }}>зачет</option>
+                                            <option value="незачет" {{ ($dbRow?->markitog ?? '') == 'незачет' ? 'selected' : '' }}>незачет</option>
+                                            <option value="неявка" {{ ($dbRow?->markitog ?? '') == 'неявка' ? 'selected' : '' }}>неявка</option>
+                                        </select>
+                                    </td>
+
+                                    <!-- 7. Динамический инпут Оценки за практику -->
+                                    <td style="border-right: 1px solid #7f8c8d; padding: 4px;">
+                                        <input type="text" name="results[{{ $employee->id }}][practice_mark]"
+                                            value="{{ $dbRow?->markpractic ?? '' }}"
+                                            placeholder="отл / 5" style="width: 100%; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
+                                    </td>
+
+                                    <!-- 8. Динамический инпут Присваиваемого разряда -->
+                                    <td style="border-right: 1px solid #7f8c8d; padding: 4px;">
+                                        <input type="number" name="results[{{ $employee->id }}][assigned_rank]"
+                                            value="{{ $dbRow?->assignedgrade ?? '' }}"
+                                            style="width: 100%; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
+                                    </td>
+
+                                    <td style="border-right: 1px solid #7f8c8d; padding: 6px; font-size: 10px;">{{ $employee->level_3_name ?? '—' }}</td>
+
+                                    <!-- 10. Динамический результат тестирования (%) -->
+                                    <td style="border-right: 1px solid #7f8c8d; padding: 4px;">
+                                        <input type="text" name="results[{{ $employee }}][test_result]"
+                                            value="{{ $dbRow?->resulttest ?? '' }}"
+                                            placeholder="90%" style="width: 100%; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center; font-weight: 600;">
+                                    </td>
+
+                                    <td style="border-right: 1px solid #7f8c8d; padding: 6px; text-align: center; color: #9ca3af; font-size: 10px; font-style: italic;">место подписи</td>
+
+                                    <td style="border-right: 1px solid #7f8c8d; padding: 4px; text-align: center;">
+                                        <input type="date" name="results[{{ $employee }}][start_fact]" value="{{ $dbRow?->begindatefact ?? $protocol->date_start ? \Carbon\Carbon::parse($dbRow?->begindatefact ?? $protocol->date_start)->format('Y-m-d') : '' }}" style="width: 100%; padding: 2px; font-size: 10px; border: 1px solid #d1d5db; border-radius: 4px;">
+                                    </td>
+                                    <td style="border-right: 1px solid #7f8c8d; padding: 4px; text-align: center;">
+                                        <input type="date" name="results[{{ $employee }}][end_fact]" value="{{ $dbRow?->enddatefact ?? $protocol->date_end ? \Carbon\Carbon::parse($dbRow?->enddatefact ?? $protocol->date_end)->format('Y-m-d') : '' }}" style="width: 100%; padding: 2px; font-size: 10px; border: 1px solid #d1d5db; border-radius: 4px;">
+                                    </td>
+                                    <td style="padding: 4px; text-align: center;">
+                                        <input type="number" name="results[{{ $employee }}][hours_fact]" value="{{ (int)($dbRow?->counthourfact ?? $protocol->program_hours ?? 0) }}" style="width: 55px; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
+                                    </td>
+
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="14" style="padding: 24px; text-align: center; color: #9ca3af;">Список сотрудников для формирования протокола Курсов отсутствует</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                        <!-- БЛОК ПОДПИСЕЙ И ДОЛЖНОСТНЫХ ЛИЦ КОМИССИИ -->
+                        <div style="margin-top: 30px; font-family: 'Arial', sans-serif; color: #111827; font-size: 12px; display: flex; flex-direction: column; gap: 16px; border: 1px solid #e5e7eb; padding: 20px; border-radius: 6px; background-color: #fafafa; max-width: 800px;">
+
+                            <!-- Председатель комиссии -->
+                            <div>
+                                <div style="font-weight: 800; text-transform: uppercase; font-size: 11px; color: #4b5563; margin-bottom: 6px; letter-spacing: 0.05em;">Председатель комиссии:</div>
+                                <div style="display: grid; grid-template-columns: 280px 150px 1fr; align-items: center; gap: 16px;">
+                                    <div>Начальник Учебного центра</div>
+                                    <input type="text" name="commission_static[chairman_fio]" x-model="chairman" style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; font-weight: 600; width: 100%; max-width: 250px; height: 28px; background: #fff;">
+                                </div>
+                            </div>
+
+                            <!-- Члены комиссии -->
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
+                                <div style="font-weight: 800; text-transform: uppercase; font-size: 11px; color: #4b5563; margin-bottom: 8px; letter-spacing: 0.05em;">Члены комиссии:</div>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div style="font-size: 11px; color: #4b5563; font-style: italic;" x-show="!selectedMembers.length">Члены комиссии не выбраны</div>
+                                    <template x-for="(member, index) in selectedMembers" :key="index">
+                                        <div style="display: grid; grid-template-columns: 280px 150px 1fr; align-items: center; gap: 16px; margin-bottom: 6px;">
+                                            <div style="font-weight: 500;" x-text="'Член комиссии ' + (index + 1)"></div>
+                                            <div style="font-size: 12px; font-weight: 600; color: #111827;" x-text="member"></div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Исполнитель -->
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; display: grid; grid-template-columns: 280px 150px 1fr; align-items: center; gap: 16px;">
+                                <div style="font-weight: bold;">Исполнитель:</div>
+                                <input type="text" name="commission[executor_fio]" value="-" style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; font-weight: 600; width: 100%; max-width: 250px; height: 28px; background: #fff;">
+                            </div>
+
+                        </div>
+
+                    </div>
+                    @else
+                    <h3 style="font-size: 15px; font-weight: 700; color: #111827;">Протокол заседания комиссии: {{ $learningTypeName }}</h3>
+                    <p class="text-gray-500 text-sm mt-2">Спецификация и поля оценок для данного направления будут добавлены на следующих этапах.</p>
+                    @endif
                 </div>
-                @else
-                <h3 style="font-size: 15px; font-weight: 700; color: #111827;">Протокол заседания комиссии: {{ $learningTypeName }}</h3>
-                <p class="text-gray-500 text-sm mt-2">Спецификация и поля оценок для данного направления будут добавлены на следующих этапах.</p>
-                @endif
-            </div>
-            <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
-                <input type="hidden" name="id_protocol" value="{{ $protocol->prot_id }}">
-                <a href="{{ route('protocols.index') }}" style="padding: 8px 20px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; font-weight: 500; text-decoration: none; color: #374151; font-size: 13px; display: inline-flex; align-items: center; h-[36px]" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='#ffffff'">Отмена</a>
-                <button type="submit" style="padding: 8px 24px; border: none; border-radius: 6px; background: #10b981; color: #ffffff; font-weight: 600; font-size: 13px; cursor: pointer; h-[36px]; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" onmouseover="this.style.backgroundColor='#059669'" onmouseout="this.style.backgroundColor='#10b981'">💾 Сохранить отчет</button>
-            </div>
+                <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
+                    <input type="hidden" name="id_protocol" value="{{ $protocol->prot_id }}">
+                    <a href="{{ route('protocols.index') }}" style="padding: 8px 20px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; font-weight: 500; text-decoration: none; color: #374151; font-size: 13px; display: inline-flex; align-items: center; h-[36px]" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='#ffffff'">Отмена</a>
+                    <button type="submit" style="padding: 8px 24px; border: none; border-radius: 6px; background: #10b981; color: #ffffff; font-weight: 600; font-size: 13px; cursor: pointer; h-[36px]; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" onmouseover="this.style.backgroundColor='#059669'" onmouseout="this.style.backgroundColor='#10b981'">💾 Сохранить отчет</button>
+                </div>
 
         </form>
 

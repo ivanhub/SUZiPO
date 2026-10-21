@@ -195,11 +195,11 @@ class ProtocolController extends Controller
         // Подгружаем справочник аудиторий для ручного выбора на вкладке "Отчет"
         $audiences = \App\Models\RequestsAudience::orderBy('number')->get();
         // Подгружаем справочник преподавателей для множественного выбора
-        $refCurators = \Illuminate\Support\Facades\DB::table('ref_curators')->orderBy('fio')->get();
+        $refCurators = DB::table('ref_curators')->orderBy('fio')->get();
         $teachers = \App\Models\RequestsTeachers::orderBy('fio')->get();
         $report = \App\Models\UcExtReport::where('id_protocol', $id)->first();
 
-        $rawSavedResults = \Illuminate\Support\Facades\DB::table('uc_ext_studentsprotocol')
+        $rawSavedResults = DB::table('uc_ext_studentsprotocol')
             ->where('id_protocol', $id)
             ->get();
 
@@ -230,10 +230,17 @@ class ProtocolController extends Controller
         $allComissionMembers = \App\Models\ComissionMember::orderBy('fio')->get();
         $currentComission = \App\Models\ProtocolComission::where('protocol_id', $id)->get();
 
+        $tabNumbers = $protocol->demand?->employees->pluck('tab_number')->filter()->toArray() ?? [];
+
+        $sapUsers = DB::table('all_users_sap')
+            ->whereIn('tab_number', $tabNumbers)
+            ->get()
+            ->keyBy('tab_number');
+
         return view('protocols.report.create', compact(
             'protocol', 'learningTypeName', 'audiences',
             'teachers', 'refCurators', 'report', 'matrixNum',
-            'allComissionMembers', 'currentComission', 'savedResults'));
+            'allComissionMembers', 'currentComission', 'savedResults', 'sapUsers'));
     }
 
     public function storeReport(Request $request)
@@ -356,6 +363,7 @@ class ProtocolController extends Controller
             $regNumber = is_numeric($eisotNum) ? (int)$eisotNum : null;
             $docNumber = !is_numeric($eisotNum) ? $eisotNum : null;
 
+            $finalStaff = $currentData['assigned_staff'] ?? ($employee->position ?? '—');
             // Запись индивидуальных результатов в uc_ext_studentsprotocol
             $existing = DB::table('uc_ext_studentsprotocol')
                 ->where('id_protocol', $protocol->prot_id)
@@ -378,7 +386,7 @@ class ProtocolController extends Controller
                         'counthourfact'   => (float)$hoursFact,
                         'flagpassed'      => $flagPassed,
                         'fiofact'         => $fioFact,
-                        'stafffact'       => $employee->position ?? '—',
+                        'stafffact'       => $finalStaff,
                         'departfact'      => $employee->department ?? '—',
                         'namecompanyfact' => $employee->company ?? '—',
                         'gradefact'       => $employee->rank ?? null,
@@ -390,7 +398,7 @@ class ProtocolController extends Controller
                     'id_students'       => $idStudents,
                     'markitog'          => $statusInput,
                     'status'            => $statusInput,
-                    'markpractic'         => $practiceMark,
+                    'markpractic'       => $practiceMark,
                     'assignedgrade'     => $assignedRank,
                     'resulttest'        => $testResult,
                     'regnumber'         => $regNumber,
@@ -400,7 +408,7 @@ class ProtocolController extends Controller
                     'counthourfact'     => (float)$hoursFact,
                     'flagpassed'        => $flagPassed,
                     'fiofact'           => $fioFact,
-                    'stafffact'         => $employee->position ?? '—',
+                    'stafffact'         => $finalStaff,
                     'departfact'        => $employee->department ?? '—',
                     'namecompanyfact'   => $employee->company ?? '—',
                     'gradefact'         => $employee->rank ?? null,

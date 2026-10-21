@@ -26,6 +26,20 @@ Alpine.start();
 
 // Инициализация после загрузки DOM
 document.addEventListener("DOMContentLoaded", () => {
+
+  // const excludedRoutes = [
+  //   '/protocols',
+  // ];
+  // const currentPath = window.location.pathname;
+  // console.log(`Current path: ${currentPath}`)
+  // const isExcluded = excludedRoutes.some(route => {
+  //   return currentPath === route || currentPath.startsWith(route + '/');
+  // });
+  // if (isExcluded) {
+  //   console.log(`Flatpickr отключен для страницы: ${currentPath}`);
+  //   return;
+  // }
+
   flatpickr("input[type='date']", {
     locale: "ru",       // Подключаем русский язык
   altInput: true,          // Включает отображение "дубликата" для пользователя

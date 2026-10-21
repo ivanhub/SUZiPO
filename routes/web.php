@@ -174,7 +174,7 @@ Route::get('/api/available-teachers', function (Illuminate\Http\Request $request
 });
 
 
-       //Импорт сотрудников из SAP (xls)
+//Импорт сотрудников из SAP (xls)
 Route::post('all-users-sap/import', [AllUserSapController::class, 'import'])->name('all-users-sap.import');
 Route::delete('all-users-sap/{allUserSap}/delete', [AllUserSapController::class, 'destroy'])->name('all-users-sap.delete');
 

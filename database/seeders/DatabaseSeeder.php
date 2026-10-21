@@ -23,7 +23,6 @@ class DatabaseSeeder extends Seeder
 
         // Вызываем RoleSeeder отдельно (он создаст роли и пользователей)
         $this->call(RoleSeeder::class);
-        
         // Ниже ничего не нужно, т.к. RoleSeeder уже создаст всех пользователей
     }
 }
