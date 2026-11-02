@@ -9,77 +9,66 @@ use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Support\Str;
+use \Maatwebsite\Excel\Facades\Excel;
 
 class ProtocolController extends Controller
 {
     public function index(Request $request)
     {
-        // Инициализируем запрос с жадной загрузкой программ обучения
         $query = AppProtocol::with(['demand.course', 'demand.provider', 'editor']);
 
         if ($request->filled('activeTab') && $request->activeTab !== 'all') {
-            // Если выбраны Черновики, Активные, Просроченные, Отмененные или Завершенные
             $query->where('prot_status', $request->activeTab);
         }
 
-        // 1. Фильтр по ID протокола (первичный ключ)
         if ($request->filled('searchId')) {
             $query->where('prot_id', $request->searchId);
         }
 
-        // 2. Фильтр по состоянию (статусу) протокола
         if ($request->filled('searchStatus')) {
             $query->where('prot_status', 'LIKE', '%' . $request->searchStatus . '%');
         }
 
-        // 3. Фильтр по номеру протокола
         if ($request->filled('searchProtNum')) {
             $query->where('prot_num', 'LIKE', '%' . $request->searchProtNum . '%');
         }
 
-        // 4. Фильтр по Редактору (связанная таблица пользователей/редакторов)
         if ($request->filled('searchEditor')) {
             $query->whereHas('editor', function ($q) use ($request) {
                 $q->where('name', 'LIKE', '%' . $request->searchEditor . '%');
             });
         }
 
-        // 5. Фильтр по Наименованию курса (сквозной через app_demands -> bk_course)
         if ($request->filled('searchCourse')) {
             $query->whereHas('demand.course', function ($q) use ($request) {
                 $q->where('name', 'LIKE', '%' . $request->searchCourse . '%');
             });
         }
 
-        // 6. Фильтр по Номеру заявки (таблица app_demands)
         if ($request->filled('searchDemNum')) {
             $query->whereHas('demand', function ($q) use ($request) {
                 $q->where('dem_num', 'LIKE', '%' . $request->searchDemNum . '%');
             });
         }
 
-        // 7. Фильтр по Квалификации (поле из таблицы app_demands)
         if ($request->filled('searchQual')) {
             $query->whereHas('demand', function ($q) use ($request) {
                 $q->where('qualification', 'LIKE', '%' . $request->searchQual . '%');
             });
         }
 
-        // 8. Фильтр по ФИО Преподавателя (поле из таблицы app_demands)
         if ($request->filled('searchTeacher')) {
             $query->whereHas('demand', function ($q) use ($request) {
                 $q->where('teacher_name', 'LIKE', '%' . $request->searchTeacher . '%');
             });
         }
 
-        // 9. Фильтр по Номеру аудитории (поле из таблицы app_demands)
         if ($request->filled('searchClassroom')) {
             $query->whereHas('demand', function ($q) use ($request) {
                 $q->where('classroom_number', 'LIKE', '%' . $request->searchClassroom . '%');
             });
         }
 
-        // 10. Фильтр по Куратору группы (поле из таблицы app_demands)
         if ($request->filled('searchCurator')) {
             $query->whereHas('demand', function ($q) use ($request) {
                 $q->where('curator_name', 'LIKE', '%' . $request->searchCurator . '%');
@@ -99,7 +88,6 @@ class ProtocolController extends Controller
 
         $protocols->appends($request->all());
 
-        // Расчет счетчиков для верхних табов-вкладок по полю flagapproved
         $totalCount = AppProtocol::count();
 
         $counts = AppProtocol::select('prot_status', DB::raw('count(*) as total'))
@@ -108,7 +96,6 @@ class ProtocolController extends Controller
             ->pluck('total', 'prot_status')
             ->toArray();
 
-        // AJAX-ответ для Alpine.js (возвращает только строки tbody)
         if ($request->ajax()) {
             return view('protocols.partials.table-rows', compact('protocols'))->render();
         }
@@ -181,12 +168,12 @@ class ProtocolController extends Controller
             'demand.profession',
             'demand.audience',
             'demand.educationType',
-            'demand.learningType', 
-            'demand.employees'     
+            'demand.learningType',
+            'demand.employees'
         ])->findOrFail($id);
 
         $matrixNum = $protocol->demand?->matrix_num;
-        $learningTypeName =$protocol->demand?->educationType?->name ?? 'курсы';
+        $learningTypeName = $protocol->demand?->educationType?->name ?? 'курсы';
 
         $refCurators = DB::table('ref_curators')
             ->orderBy('fio')
@@ -208,27 +195,31 @@ class ProtocolController extends Controller
             $studentInfo = \Illuminate\Support\Facades\DB::table('uc_ext_students')
                 ->where('id_student', $row->id_students)
                 ->first();
-            
+
             $key = null;
 
-            if ($studentInfo && !empty($studentInfo->snils)) { $key = preg_replace('/[^0-9]/', '', $studentInfo->snils); }
-            if (empty($key) && $studentInfo && !empty($studentInfo->personnelnumber)) { $key = (string)$studentInfo->personnelnumber; }
-            if (empty($key)) { 
-                $matchedEmp = $protocol->demand?->employees->first(function($emp) use ($row) {
+            if ($studentInfo && !empty($studentInfo->snils)) {
+                $key = preg_replace('/[^0-9]/', '', $studentInfo->snils);
+            }
+            if (empty($key) && $studentInfo && !empty($studentInfo->personnelnumber)) {
+                $key = (string)$studentInfo->personnelnumber;
+            }
+            if (empty($key)) {
+                $matchedEmp = $protocol->demand?->employees->first(function ($emp) use ($row) {
                     $fio = trim(($emp->last_name ?? '') . ' ' . ($emp->first_name ?? '') . ' ' . ($emp->middle_name ?? ''));
                     return trim($fio) === trim($row->fiofact);
                 });
-                
-                $key = $matchedEmp ? (string)$matchedEmp->id : (string)$row->id_students; 
+
+                $key = $matchedEmp ? (string)$matchedEmp->id : (string)$row->id_students;
             }
-            if (!empty($key)) { $savedResults->put($key, $row); }
+            if (!empty($key)) {
+                $savedResults->put($key, $row);
+            }
         }
 
         $allComissionMembers = \App\Models\ComissionMember::orderBy('fio')->get();
-        $currentComission = \App\Models\ProtocolComission::where('protocol_id', $id)->get();
-
-        $allComissionMembers = \App\Models\ComissionMember::orderBy('fio')->get();
-        $currentComission = \App\Models\ProtocolComission::where('protocol_id', $id)->get();
+        // $currentComission = \App\Models\ProtocolComission::where('protocol_id', $id)->get();
+        $currentComission = DB::table('uc_ext_commissionprotocol')->where('id_protocol', $id)->get();
 
         $tabNumbers = $protocol->demand?->employees->pluck('tab_number')->filter()->toArray() ?? [];
 
@@ -238,9 +229,18 @@ class ProtocolController extends Controller
             ->keyBy('tab_number');
 
         return view('protocols.report.create', compact(
-            'protocol', 'learningTypeName', 'audiences',
-            'teachers', 'refCurators', 'report', 'matrixNum',
-            'allComissionMembers', 'currentComission', 'savedResults', 'sapUsers'));
+            'protocol',
+            'learningTypeName',
+            'audiences',
+            'teachers',
+            'refCurators',
+            'report',
+            'matrixNum',
+            'allComissionMembers',
+            'currentComission',
+            'savedResults',
+            'sapUsers'
+        ));
     }
 
     public function storeReport(Request $request)
@@ -263,11 +263,11 @@ class ProtocolController extends Controller
                 $targetId = (int)$key;
             } elseif (is_string($key) && str_contains($key, '"id":')) {
                 $decoded = json_decode($key, true);
-                if (isset($decoded['id'])) { 
-                    $targetId = (int)$decoded['id']; 
+                if (isset($decoded['id'])) {
+                    $targetId = (int)$decoded['id'];
                 }
             }
-            
+
             if ($targetId && is_array($values)) {
                 $inputResults[$targetId] = array_merge($inputResults[$targetId] ?? [], $values);
             }
@@ -277,19 +277,19 @@ class ProtocolController extends Controller
         $noPassedCount = 0;
         $programHours = (int)($request->input('program_hours') ?? $protocol->program_hours ?? 0);
 
-        $cleanSnils = function($value) {
+        $cleanSnils = function ($value) {
             return !empty($value) ? preg_replace('/[^0-9]/', '', $value) : null;
         };
 
         foreach ($employees as $employee) {
-            $empId = $employee->id; 
-            
+            $empId = $employee->id;
+
             // $personnelNumber = $employee->tab_num ?? $employee->personnel_number ?? null;
             // $empSnilsRaw     = $employee->snils ?? null;
             // $empSnilsClean   = $cleanSnils($empSnilsRaw);
 
-            $personnelNumber = $employee->tab_number ?? null; 
-            $empSnilsRaw     = $employee->pfr_certificate ?? null; 
+            $personnelNumber = $employee->tab_number ?? null;
+            $empSnilsRaw     = $employee->pfr_certificate ?? null;
             $empSnilsClean   = $cleanSnils($empSnilsRaw);
 
             $fioFact = trim($employee->last_name ?? $employee->fio ?? $employee->name ?? '');
@@ -299,15 +299,17 @@ class ProtocolController extends Controller
 
             $birthDate = $employee->birth_date ?? null;
             $idStudents = null;
-            
+
             // поиск по СНИЛС
             if (!empty($empSnilsClean)) {
                 $oldStudent = DB::table('uc_ext_students')
                     ->whereNotNull('snils')
                     ->whereRaw("regexp_replace(snils, '[^0-9]', '', 'g') = ?", [$empSnilsClean])
                     ->first();
-                
-                if ($oldStudent) { $idStudents = $oldStudent->id_student; }
+
+                if ($oldStudent) {
+                    $idStudents = $oldStudent->id_student;
+                }
             }
 
             // поиск по табельному
@@ -315,18 +317,22 @@ class ProtocolController extends Controller
                 $oldStudent = DB::table('uc_ext_students')
                     ->where('personnelnumber', (string)$personnelNumber)
                     ->first();
-                
-                if ($oldStudent) { $idStudents = $oldStudent->id_student; }
+
+                if ($oldStudent) {
+                    $idStudents = $oldStudent->id_student;
+                }
             }
 
             if (!$idStudents && !empty($fioFact)) {
                 $oldStudent = DB::table('uc_ext_students')->where('fullname', 'LIKE', "%{$fioFact}%")->first();
-                if ($oldStudent) { $idStudents = $oldStudent->id_student; }
+                if ($oldStudent) {
+                    $idStudents = $oldStudent->id_student;
+                }
             }
 
             if (!$idStudents) {
                 $idStudents = (string) \Illuminate\Support\Str::uuid();
-                
+
                 DB::table('uc_ext_students')->insert([
                     'id_student'      => $idStudents,
                     'personnelnumber' => $personnelNumber,
@@ -364,7 +370,6 @@ class ProtocolController extends Controller
             $docNumber = !is_numeric($eisotNum) ? $eisotNum : null;
 
             $finalStaff = $currentData['assigned_staff'] ?? ($employee->position ?? '—');
-            // Запись индивидуальных результатов в uc_ext_studentsprotocol
             $existing = DB::table('uc_ext_studentsprotocol')
                 ->where('id_protocol', $protocol->prot_id)
                 ->where('id_students', $idStudents)
@@ -424,27 +429,27 @@ class ProtocolController extends Controller
             'id_protocol'     => $protocol->prot_id,
             'specialist'      => $request->input('user_oo_fio') ?? auth()->user()->name ?? 'Специалист ООО',
             'numbergroup'     => $protocol->prot_num,
-            
-            'countworker'     => $employees->where('position', 'Рабочий')     ->count(),
+
+            'countworker'     => $employees->where('position', 'Рабочий')->count(),
             'countleader'     => $employees->where('position', 'Руководитель')->count(),
-            'countspecialist' => $employees->where('position', 'Специалист')  ->count(),
-            
-            'Show'            => $showCount, 
+            'countspecialist' => $employees->where('position', 'Специалист')->count(),
+
+            'Show'            => $showCount,
             'noshow'          => $noShowCount,
             'passed'          => $passedCount,
             'nopassed'        => $noPassedCount,
-            
+
             'fulltime'        => str_contains(mb_strtolower($protocol->demand?->education_form), 'очн') ? $employees->count() : 0,
             'distance'        => str_contains(mb_strtolower($protocol->demand?->education_form), 'дист') ? $employees->count() : 0,
-            
+
             'countwoman'      => $employees->where('gender', 'Ж')->count(),
             'countman'        => $employees->where('gender', 'М')->count(),
-            
+
             'countung'        => $employees->where('company_type', 'РН-ЮНГ')->count(),
             'countservise'    => $employees->where('company_type', 'Сервис')->count(),
             'countothercomp'  => $employees->where('company_type', 'Прочие')->count(),
             'countcash'       => $employees->where('company_type', 'Наличные')->count(),
-            
+
             'teacher1'        => $protocol->demand?->teacher?->fio ?? '—',
             'specialistuc'    => $protocol->demand?->curator?->fio ?? '—',
             'curatorurp'      => $protocol->demand?->curator?->fio ?? '—',
@@ -459,10 +464,12 @@ class ProtocolController extends Controller
         // пока что тестовое сохранение номера и даты приказа из отчета
         if ($request->filled('order_num')) {
             \App\Models\AppProtocol::where('prot_id', $protocol->prot_id)->update([
-                'order_num'  => $request->input('order_num'),
-                'order_date' => $request->input('order_date') ?? $protocol->order_date,
-                'date_edit'   => now(),
-                'id_user_edit' => auth()->id() ?? 1
+                'order_num'    => $request->input('order_num'),
+                'order_date'   => $request->input('order_date') ?? $protocol->order_date,
+                'date_edit'    => now(),
+                'id_user_edit' => auth()->id() ?? 1,
+                'group_num'    => $protocol->prot_num,
+                'dem_id'       => $protocol->demand?->dem_id ?? $protocol->dem_id,
             ]);
         }
 
@@ -470,37 +477,37 @@ class ProtocolController extends Controller
         \App\Models\UcExtCommissionprotocol::where('id_protocol', $protocol->prot_id)->delete();
 
         // Председатель
-        $chairmanFio = $request->input('comission.chairman_id');
+        $chairmanFio = $request->input('chairman_fio');
         $dbChairman = DB::table('comission_members')->where('fio', $chairmanFio)->first();
-        if ($dbChairman) {
+        if (!empty($chairmanFio)) {
             \App\Models\UcExtCommissionprotocol::create([
                 'id_compr'          => (string) Str::uuid(),
                 'id_protocol'       => $protocol->prot_id,
-                'id_listcommission' => $dbChairman->id,
-                'fio'               => $dbChairman->fio,
-                'staff'             => $dbChairman->position,
+                'id_listcommission' => $dbChairman ? $dbChairman->id : 1,
+                'fio'               => $chairmanFio,
+                'staff'             => $dbChairman ? $dbChairman->position : 'Председатель комиссии',
                 'note'              => 'Председатель',
                 'sortorder'         => 1,
             ]);
         }
 
         // Заместитель
-        $deputyFio = $request->input('comission.deputy_id');
-        $dbDeputy = DB::table('comission_members')->where('fio', $deputyFio)->first();
-        if ($dbDeputy) {
+        $deputyFio = $request->input('deputy_fio');
+        if (!empty($deputyFio)) {
+            $dbDeputy = DB::table('comission_members')->where('fio', $deputyFio)->first();
             \App\Models\UcExtCommissionprotocol::create([
                 'id_compr'          => (string) Str::uuid(),
                 'id_protocol'       => $protocol->prot_id,
-                'id_listcommission' => $dbDeputy->id,
-                'fio'               => $dbDeputy->fio,
-                'staff'             => $dbDeputy->position,
+                'id_listcommission' => $dbDeputy ? $dbDeputy->id : 2,
+                'fio'               => $deputyFio,
+                'staff'             => $dbDeputy ? $dbDeputy->position : 'Заместитель председателя',
                 'note'              => 'Заместитель председателя',
                 'sortorder'         => 2,
             ]);
         }
 
         // Члены комиссии
-        $memberIds = $request->input('comission.members', []);
+        $memberIds = $request->input('comission_members', []);
         foreach ($memberIds as $index => $mId) {
             $dbMember = DB::table('comission_members')->find($mId);
             if ($dbMember) {
@@ -545,10 +552,10 @@ class ProtocolController extends Controller
         //
     }
 
-     public function searchOrders(Request $request)
+    public function searchOrders(Request $request)
     {
         $search = $request->query('q');
-        
+
         if (empty($search)) {
             return response()->json([]);
         }
@@ -582,47 +589,270 @@ class ProtocolController extends Controller
         return response()->json($protocol);
     }
 
-    public function exportExcel(Request $request)
+    public function exportExcel(Request $request, \App\Services\ExcelReportService $excelService, $id = null)
     {
-        $request->validate([
-            'protocol_id' => 'required|exists:app_protocols,prot_id',
-            'report_type' => 'required|string',
+        $protocolId = $id ?? $request->input('protocol_id') ?? $request->query('protocol_id');
+
+        if (!$protocolId) {
+            return redirect()->back()->with('error', 'Не удалось определить идентификатор протокола для выгрузки Excel.');
+        }
+
+        $spreadsheet = $excelService->generateProtocolReport($protocolId);
+
+        $protocol = \App\Models\AppProtocol::findOrFail($protocolId);
+        $fileName = "protocol_report_{$protocol->prot_num}.xlsx";
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            if (ob_get_contents()) {
+                ob_end_clean();
+            }
+
+            $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+            'Pragma' => 'public',
         ]);
-
-        // Находим протокол со всеми базовыми связями
-        $protocol = AppProtocol::with(['demand.course', 'demand.provider', 'editor'])->findOrFail($request->protocol_id);
-
-        // 1. Инициализируем объект Excel-книги
-        $spreadsheet = new Spreadsheet();
-
-        // Лист 1: Отчет (Текущий активный лист по умолчанию)
-        $sheetReport = $spreadsheet->getActiveSheet();
-        $sheetReport->setTitle('Отчет');
-        $sheetReport->setCellValue('A1', 'Отчет специалиста отдела организации обучения');
-        $sheetReport->setCellValue('A3', 'Протокол №: ' . $protocol->prot_num);
-
-        // Лист 2: Список
-        $sheetList = $spreadsheet->createSheet();
-        $sheetList->setTitle('Список');
-        $sheetList->setCellValue('A1', 'Список обучаемых сотрудников');
-
-        // Лист 3: Протокол
-        $sheetProtocol = $spreadsheet->createSheet();
-        $sheetProtocol->setTitle('Протокол');
-        $sheetProtocol->setCellValue('A1', 'Официальный протокол заседания комиссии');
-
-        // Сбрасываем указатель на первую вкладку, чтобы файл открывался красиво
-        $spreadsheet->setActiveSheetIndex(0);
-
-        // 2. Формируем заголовки для скачивания файла браузером
-        $fileName = "Отчет_" . $protocol->prot_num . ".xlsx";
-
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . urlencode($fileName) . '"');
-        header('Cache-Control: max-age=0');
-
-        $writer = new Xlsx($spreadsheet);
-        $writer->save('php://output');
-        exit;
     }
+
+
+    // public function exportExcel(Request $request, $id = null)
+    // {
+    //     $protocolId = $id ?? $request->input('protocol_id') ?? $request->query('protocol_id');
+
+    //     if (!$protocolId) {
+    //         return redirect()->back()->with('error', 'Не удалось определить идентификатор протокола для выгрузки Excel.');
+    //     }
+    //     $protocol = \App\Models\AppProtocol::with(['demand.course', 'demand.learningType', 'demand.employees', 'demand.curator'])->findOrFail($id);
+    //     $report = \App\Models\UcExtReport::where('id_protocol', $id)->first();
+    //     $employees = collect($protocol->demand?->employees ?? []);
+    //     $matrixNum = $protocol->demand?->matrix_num;
+
+    //     $templatePath = storage_path('app/templates/protocol_blank.xlsx');
+    //     if (!file_exists($templatePath)) {
+    //         return redirect()->back()->with('error', 'Файл шаблона не найден по пути: storage/app/templates/protocol_blank.xlsx');
+    //     }
+
+    //     $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
+    //     $spreadsheet = $reader->load($templatePath);
+
+    //     $rawSavedResults = DB::table('uc_ext_studentsprotocol')->where('id_protocol', $protocolId)->get();
+    //     $savedResults = collect();
+    //     foreach ($rawSavedResults as $row) {
+    //         $studentInfo = DB::table('uc_ext_students')->where('id_student', $row->id_students)->first();
+    //         $key = $studentInfo?->snils ? preg_replace('/[^0-9]/', '', $studentInfo->snils) : ($studentInfo?->personnelnumber ?? null);
+    //         if (empty($key)) {
+    //             $key = (string)$row->id_students;
+    //         }
+    //         if (!empty($key)) {
+    //             $savedResults->put($key, $row);
+    //         }
+    //     }
+
+    //     // Подгружаем состав комиссии
+    //     $commissionRows = DB::table('uc_ext_commissionprotocol')->where('id_protocol', $protocolId)->orderBy('sortorder')->get();
+    //     $chairmanFio = $commissionRows->where('note', 'Председатель')->first()?->fio ?? '—';
+    //     $deputyFio   = $commissionRows->where('note', 'Заместитель председателя')->first()?->fio ?? '—';
+    //     $membersList = $commissionRows->where('note', 'Член комиссии')->pluck('fio')->join(', ');
+
+    //     $sheetReport = $spreadsheet->getSheetByName('Отчет');
+    //     if ($sheetReport) {
+    //         $sheetReport->setCellValue('C11', $report->specialist ?? '—');
+
+    //         $sheetReport->setCellValue('C12', $protocol->order_num ?? '—');
+    //         $sheetReport->setCellValue('E12', $protocol->order_date ? \Carbon\Carbon::parse($protocol->order_date)->format('d.m.Y') : '—');
+
+    //         $sheetReport->setCellValue('C13', $protocol->prot_num ?? '—');
+    //         $sheetReport->setCellValue('E13', $protocol->prot_date ? \Carbon\Carbon::parse($protocol->prot_date)->format('d.m.Y') : '—');
+
+    //         $sheetReport->setCellValue('C14', $protocol->prot_num ?? '—');
+
+    //         $sheetReport->setCellValue('C15', $protocol->demand?->audience_id ?? '—');
+
+    //         $sheetReport->setCellValue('C17', $employees->where('position_type', 'Рабочий')->count());
+    //         $sheetReport->setCellValue('C18', $employees->where('position_type', 'Руководитель')->count());
+    //         $sheetReport->setCellValue('C19', $employees->where('position_type', 'Специалист')->count());
+
+    //         $sheetReport->setCellValue('C20', $protocol->demand?->learningType?->name ?? 'Курсы');
+    //         $sheetReport->setCellValue('C21', $protocol->demand?->education_form ?? 'Очное');
+
+    //         $sheetReport->setCellValue('C22', 'Программа обучения: ' . ($protocol->demand?->course?->course ?? '—'));
+
+    //         $sheetReport->setCellValue('C23', $protocol->date_start ? \Carbon\Carbon::parse($protocol->date_start)->format('d.m.Y') : '—');
+    //         $sheetReport->setCellValue('C24', $protocol->date_end ? \Carbon\Carbon::parse($protocol->date_end)->format('d.m.Y') : '—');
+    //         $sheetReport->setCellValue('C26', $protocol->program_hours ?? 0);
+    //         $sheetReport->setCellValue('C27', $protocol->theory_hours ?? 0);
+    //         $sheetReport->setCellValue('C28', 0);
+    //         $sheetReport->setCellValue('C29', $protocol->practice_hours ?? 0);
+
+    //         $sheetReport->setCellValue('C31', 0);
+    //         $sheetReport->setCellValue('C32', 0);
+
+    //         $sheetReport->setCellValue('C33', $report ? $report->Show : $employees->count());
+    //         $sheetReport->setCellValue('C34', $report ? $report->noshow : 0);
+    //         $sheetReport->setCellValue('C35', $report ? $report->passed : $employees->count());
+    //         $sheetReport->setCellValue('C36', $report ? $report->nopassed : 0);
+
+    //         $sheetReport->setCellValue('C37', $report ? $report->countman : $employees->where('gender_key', '1')->count());
+    //         $sheetReport->setCellValue('C38', $report ? $report->countwoman : $employees->where('gender_key', '2')->count());
+
+    //         $sheetReport->setCellValue('C40', $employees->where('company_type', 'РН-ЮНГ')->count());
+    //         $sheetReport->setCellValue('C41', $employees->where('company_type', 'Сервис')->count());
+    //         $sheetReport->setCellValue('C42', $employees->where('company_type', 'Прочие')->count());
+    //         $sheetReport->setCellValue('C43', $employees->where('company_type', 'Наличные')->count());
+
+    //         $teacherFios = $protocol->demand?->teachers ? $protocol->demand->teachers->pluck('fio')->join(', ') : ($protocol->demand?->teacher?->fio ?? '—');
+    //         $sheetReport->setCellValue('C44', $teacherFios);
+    //         $sheetReport->setCellValue('C45', $report->specialist ?? '—');
+    //         $sheetReport->setCellValue('C46', $protocol->demand?->curator?->fio ?? '—');
+    //     }
+
+    //     // Лист 2 (Список)
+    //     $sheetList = $spreadsheet->getSheetByName('Список');
+    //     if ($sheetList) {
+    //         $sheetList->setCellValue('E6', ($protocol->order_num ?? '—'));
+    //         $sheetList->setCellValue('C7', $protocol->demand?->course?->course ?? '—');
+    //         $sheetList->setCellValue('C11', $protocol->prot_num ?? '—'); 
+    //         $sheetList->setCellValue('D11', $report->specialist ?? '---'); 
+    //         $sheetList->setCellValue('D12', $protocol->date_start ? \Carbon\Carbon::parse($protocol->date_start)->format('d.m.Y') : '—');
+    //         $sheetList->setCellValue('D13', $protocol->date_end ? \Carbon\Carbon::parse($protocol->date_end)->format('d.m.Y') : '—');
+
+    //         $startRow = 17;
+    //         foreach ($employees as $index => $employee) {
+    //             $currentRow = $startRow + $index;
+
+    //             if ($index >= 2) {
+    //                 $sheetList->insertNewRowBefore($currentRow, 1);
+    //             }
+
+    //             $empFullName = trim(($employee->last_name ?? '') . ' ' . ($employee->first_name ?? '') . ' ' . ($employee->middle_name ?? ''));
+    //             if (empty($empFullName)) {
+    //                 $empFullName = $employee->fio ?? $employee->name ?? '—';
+    //             }
+
+    //             $sheetList->setCellValue('B' . $currentRow, $index + 1); // № пп
+    //             $sheetList->setCellValue('C' . $currentRow, $employee->tab_number ?? $employee->tab_num ?? '—'); // № табельный
+    //             $sheetList->setCellValue('D' . $currentRow, $empFullName); // ФИО
+    //             $sheetList->setCellValue('E' . $currentRow, $employee->position ?? '—'); // Должность
+    //             $sheetList->setCellValue('F' . $currentRow, $employee->rank ?? '—'); // Разряд
+    //             $sheetList->setCellValue('G' . $currentRow, $employee->company ?? $employee->level_3_name ?? '---'); // Предприятие
+    //             $sheetList->setCellValue('H' . $currentRow, $employee->department ?? $employee->level_4_name ?? '—'); // Место работы
+    //             $sheetList->setCellValue('I' . $currentRow, $employee->process_management ?? '—'); // Процессное управление
+    //             $sheetList->setCellValue('J' . $currentRow, $employee->phone ?? '—'); // Контакты
+
+    //             $birthDate = $employee->birth_date ? \Carbon\Carbon::parse($employee->birth_date)->format('d.m.Y') : '—';
+    //             $sheetList->setCellValue('K' . $currentRow, $birthDate); // Дата рождения
+
+    //             $sheetList->setCellValue('L' . $currentRow, $employee->snils ?? $employee->pfr_certificate ?? '—'); // СНИЛС
+    //             $sheetList->setCellValue('M' . $currentRow, $employee->gender ?? '—'); // Пол
+    //         }
+    //     }
+
+    //     // ЛИСТ 3: ПРОТОКОЛ
+    //     $sheetTitle = 'Протокол Курсы';
+    //     if ($matrixNum == 4) {
+    //         $sheetTitle = 'Протокол ОТ';
+    //     } elseif ($matrixNum == 5) {
+    //         $sheetTitle = 'Протокол Мультимедиа';
+    //     }
+
+    //     $sheetProt = $spreadsheet->getSheetByName($sheetTitle) ?? $spreadsheet->getSheet(2);
+    //     if ($sheetProt) {
+    //         $sheetProt->setCellValue('E2', $protocol->prot_num ?? '—');
+    //         $sheetProt->setCellValue('H2', $protocol->prot_date ? \Carbon\Carbon::parse($protocol->prot_date)->translatedFormat('d F Y') : '—');
+    //         $sheetProt->setCellValue('F4', $protocol->order_num ?? '—');
+    //         $sheetProt->setCellValue('I4', $protocol->order_date ? \Carbon\Carbon::parse($protocol->order_date)->translatedFormat('d F Y') : '—');
+    //         $sheetProt->setCellValue('E5', $chairmanFio);
+    //         $sheetProt->setCellValue('E6', $membersList ?: '-');
+    //         $sheetProt->setCellValue('E8', $protocol->prot_num ?? '—');
+    //         $sheetProt->setCellValue('G8', $protocol->demand?->course?->course ?? '—');
+    //         $sheetProt->setCellValue('F9', $protocol->date_start ? \Carbon\Carbon::parse($protocol->date_start)->format('d.m.Y') : '—');
+    //         $sheetProt->setCellValue('M9', $protocol->date_end ? \Carbon\Carbon::parse($protocol->date_end)->format('d.m.Y') : '—');
+    //         $sheetProt->setCellValue('F10', $protocol->program_hours ?? 8);
+
+    //         $baseRowProt = 20; 
+    //         $totalEmployees = $employees->count();
+
+    //         foreach ($employees as $index => $employee) {
+    //             $currentRow = $baseRowProt + $index;
+
+    //             if ($index > 0) {
+    //                 $sheetProt->insertNewRowBefore($currentRow, 1);
+    //             }
+
+    //             foreach (range('A', 'N') as $column) {
+    //                 $sourceStyle = $sheetProt->getStyle($column . 18);
+    //                 $sheetProt->duplicateStyle($sourceStyle, $column . $currentRow);
+
+    //                 $sheetProt->getStyle($column . $currentRow)->getFont()->setBold(false);
+
+    //                 if (!in_array($column, ['C', 'D'])) {
+    //                     $sheetProt->getStyle($column . $currentRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+    //                 } else {
+    //                     $sheetProt->getStyle($column . $currentRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+    //                 }
+    //                 $sheetProt->getStyle($column . $currentRow)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+    //             }
+
+    //             $sheetProt->getRowDimension($currentRow)->setRowHeight(-1);
+
+    //             $empFullName = trim(($employee->last_name ?? '') . ' ' . ($employee->first_name ?? '') . ' ' . ($employee->middle_name ?? ''));
+    //             if (empty($empFullName)) {
+    //                 $empFullName = $employee->fio ?? $employee->name ?? '—';
+    //             }
+
+    //             $dbRow = $savedResults->get((string)$employee->id) ?? $savedResults->get(preg_replace('/[^0-9]/', '', $employee->snils ?? ''));
+    //             $finalMark = $dbRow?->markitog ?? 'зачет';
+    //             $eisotNum = $dbRow?->regnumber ?? $dbRow?->documentnumber ?? '—';
+
+    //             $sheetProt->setCellValue('A' . $currentRow, $index + 1); // № пп
+    //             $sheetProt->getCell('B' . $currentRow)->setValueExplicit($employee->tab_number ?? $employee->tab_num ?? '—', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING); // № табельный
+    //             $sheetProt->setCellValue('C' . $currentRow, $empFullName); // ФИО
+    //             $sheetProt->setCellValue('D' . $currentRow, $employee->position ?? '—'); // Должность/профессия
+    //             $sheetProt->setCellValue('E' . $currentRow, $employee->rank ?? '—'); // Разряд
+    //             $sheetProt->setCellValue('F' . $currentRow, $finalMark); // Итоговый зачет
+    //             $sheetProt->setCellValue('G' . $currentRow, ''); // Оценка за практику
+
+    //             // Рег. номер ЕИСОТ для Охраны Труда
+    //             if ($matrixNum == 4) {
+    //                 $sheetProt->getCell('H' . $currentRow)->setValueExplicit($eisotNum, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+    //             } else {
+    //                 $sheetProt->setCellValue('H' . $currentRow, '');
+    //             }
+
+    //             $sheetProt->setCellValue('I' . $currentRow, $employee->company ?? $employee->level_3_name ?? '-'); // Предприятие
+    //             $sheetProt->setCellValue('J' . $currentRow, $finalMark); // Результат тестирования
+    //             $sheetProt->setCellValue('K' . $currentRow, ''); // Подпись
+
+    //             $dateStartFact = $dbRow?->begindatefact ? \Carbon\Carbon::parse($dbRow->begindatefact)->format('d.m.Y') : ($protocol->date_start ? \Carbon\Carbon::parse($protocol->date_start)->format('d.m.Y') : '—');
+    //             $dateEndFact = $dbRow?->enddatefact ? \Carbon\Carbon::parse($dbRow->enddatefact)->format('d.m.Y') : ($protocol->date_end ? \Carbon\Carbon::parse($protocol->date_end)->format('d.m.Y') : '—');
+
+    //             $sheetProt->setCellValue('L' . $currentRow, $dateStartFact); // Начало обучения (факт)
+    //             $sheetProt->setCellValue('M' . $currentRow, $dateEndFact); // Окончание обучения (факт)
+    //             $sheetProt->setCellValue('N' . $currentRow, (int)($dbRow?->counthourfact ?? $protocol->program_hours ?? 8)); // Фактически пройдено
+
+    //             $sheetProt->getStyle('C' . $currentRow)->getAlignment()->setWrapText(true);
+    //             $sheetProt->getStyle('I' . $currentRow)->getAlignment()->setWrapText(true);
+    //         }
+
+    //         $insertedRows = $totalEmployees > 2 ? $totalEmployees - 2 : 0;
+
+    //         // TODO: Доделать состав комиссии
+    //         $sheetProt->setCellValue('F' . (25 + $insertedRows), $chairmanFio);
+    //         $sheetProt->setCellValue('F' . (29 + $insertedRows), 'Сидоров С.В.');
+    //         $sheetProt->setCellValue('F' . (31 + $insertedRows), 'Логинова И.М.');
+    //         $sheetProt->setCellValue('B' . (35 + $insertedRows), 'Исполнитель: ' . ($report->specialist ?? '—'));
+    //     }
+
+    //     $fileName = "protocol_report_{$protocol->prot_num}.xlsx";
+
+    //     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    //     header('Content-Disposition: attachment;filename="' . urlencode($fileName) . '"');
+    //     header('Cache-Control: max-age=0');
+
+    //     $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+    //     $writer->save('php://output');
+    //     exit;
+    // }
 }

@@ -90,7 +90,6 @@
                     </div>
                 </div>
 
-
                 <!-- ПРАВАЯ КОЛОНКА: Реквизиты протокола -->
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <div style="text-align: right; font-weight: 600; color: #4b5563; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 4px;">Реквизиты протокола</div>
@@ -107,7 +106,7 @@
                     
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">Номер группы: <span style="color: #dc2626;">*</span></label>
-                        <input type="text" name="group_num" x-model="editData.group_num" required style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                        <input type="text" name="group_num" x-model="editData.prot_num" required style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     </div>
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">

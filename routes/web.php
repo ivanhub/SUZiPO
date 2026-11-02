@@ -185,8 +185,6 @@ Route::resource('all-users-sap', AllUserSapController::class)->parameters([
 // Route::post('requests/send-to-ooo', [RequestController::class, 'sendToOoo'])->name('requests.send-to-ooo');
 
 Route::resource('requests', RequestController::class)->middleware('auth');
-// ������� ��� �������� ��� ��������� �������� ������ � ���
-
 
 Route::post('requests/{id}/request-unlock', [RequestController::class, 'requestUnlock'])
     ->name('requests.request-unlock')
@@ -196,11 +194,14 @@ Route::get('requests/{id}/unlock', [RequestController::class, 'unlock'])->name('
 
 Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
 
+// Роут для экспорта отчета в Excel
+Route::get('/protocols/{id?}/export-excel', [ProtocolController::class, 'exportExcel'])
+    ->name('protocols.export-excel');
+
 
 // История изменений заявки
 Route::get('requests/{request}/history', [RequestController::class, 'history'])->name('requests.history');
 Route::post('requests/{request}/history/{activity}/rollback', [RequestController::class, 'rollback'])->name('requests.rollback');
-
 
 // Маршруты для сотрудников заявки
 Route::prefix('request-employees')->name('request-employees.')->group(function () {

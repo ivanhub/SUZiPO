@@ -3,15 +3,17 @@
         x-data="{ 
             activeTab: 'report',
             
-            chairman: '{{ $currentComission->where('role', 'chairman')->first()?->member?->fio ?? '-' }}',
-            deputy: '{{ $currentComission->where('role', 'deputy')->first()?->member?->fio ?? '-' }}',
-            
+            chairman: '{{ trim($currentComission->where('note', 'Председатель')->first()?->fio ?? '-') }}',
+            deputy: '{{ trim($currentComission->where('note', 'Заместитель председателя')->first()?->fio ?? '-') }}',
+
             selectedMembers: [
-                @foreach($currentComission->where('role', 'member') as $cm)
-                    '{{ $cm->member?->fio }}',
+                @foreach($currentComission->where('note', 'Член комиссии') as $cm)
+                    @if(!empty(trim($cm->fio)) && trim($cm->fio) !== '-')
+                        '{{ trim($cm->fio) }}',
+                    @endif
                 @endforeach
-                @if($currentComission->where('role', 'member')->isEmpty()) 'Сидоров С.В.', 'Кузнецова М.М.' @endif
             ],
+            
 
             toggleMember(fio) {
                 if (this.selectedMembers.includes(fio)) {
@@ -31,6 +33,7 @@
                 <p style="font-size: 13px; color: #6b7280; margin: 2px 0 0 0;">Вид обучения: <span class="font-semibold text-gray-800">{{ $learningTypeName }}</span></p>
             </div>
         </div>
+        <input type="hidden" name="protocol_id" value="{{ $protocol->prot_id ?? $protocol->id ?? '' }}">
 
         <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 24px; font-size: 14px; border-bottom: 1px solid #e5e7eb; padding-bottom: 0; overflow-x: auto; white-space: nowrap;">
             <!-- Вкладка 1: Отчет -->
@@ -50,13 +53,18 @@
                 :style="activeTab === 'protocol' ? 'color: #1f2937; font-weight: 600; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-bottom: -1px; cursor: pointer;' : 'color: #6b7280; cursor: pointer; padding-bottom: 12px;'">
                 📜 Протокол {{ $learningTypeName }}
             </span>
+            <a href="{{ route('protocols.export-excel', $protocol->prot_id ?? $protocol->id) }}"
+                style="display: inline-flex; align-items: center; gap: 6px; padding: 0 16px 12px 16px; margin-bottom: -1px; font-size: 13px; font-weight: 600; color: #16a34a; text-decoration: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; font-family: system-ui, -apple-system, sans-serif;"
+                onmouseover="this.style.borderBottom='2px solid #16a34a'; this.style.color='#15803d';"
+                onmouseout="this.style.borderBottom='2px solid transparent'; this.style.color='#16a34a';">
+                📊 <span style="border-left: 1px solid #e5e7eb; padding-left: 8px; margin-left: 2px;">Сформировать Excel</span>
+            </a>
         </div>
 
         <!-- ОТЧЕТ -->
         <form action="{{ route('protocols.report.store') }}" method="POST">
             @csrf
             <input type="hidden" name="id_protocol" value="{{ $protocol->prot_id }}">
-            <!-- СОДЕРЖИМОЕ ВКЛАДКИ 1: ОТЧЕТ -->
             <div x-show="activeTab === 'report'" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; padding: 12px; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; color: #4b5563;">
                     <div><b>Вид обучения:</b> <span class="text-gray-900 font-semibold">{{ $protocol->demand?->learningType?->name ?? '—' }}</span></div>
@@ -179,71 +187,65 @@
                         </div>
                     </div>
                     <!-- Блок: Категория обучаемых -->
-                    <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
-                        <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Категория обучаемых</span>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
-                            <div>
-                                <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Рабочие</label>
-                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position_type', 'Рабочий')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
+                    <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 12px;">
+                        <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 12px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Категория обучаемых</span>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; text-align: center;">
+                            <div style="background: #fafafa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px;">
+                                <div style="color: #6b7280; font-size: 11px; margin-bottom: 2px;">Рабочие</div>
+                                <div style="font-size: 16px; font-weight: 700; color: #111827;">{{ collect($protocol->demand?->employees)->where('position_type', 'Рабочий')->count() }}</div>
                             </div>
-                            <div>
-                                <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Руководители</label>
-                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position_type', 'Руководитель')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
+                            <div style="background: #fafafa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px;">
+                                <div style="color: #6b7280; font-size: 11px; margin-bottom: 2px;">Руководители</div>
+                                <div style="font-size: 16px; font-weight: 700; color: #111827;">{{ collect($protocol->demand?->employees)->where('position_type', 'Руководитель')->count() }}</div>
                             </div>
-                            <div>
-                                <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Специалисты</label>
-                                <input type="number" readonly value="{{ collect($protocol->demand?->employees)->where('position_type', 'Специалист')->count() }}" style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center;">
+                            <div style="background: #fafafa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px;">
+                                <div style="color: #6b7280; font-size: 11px; margin-bottom: 2px;">Специалисты</div>
+                                <div style="font-size: 16px; font-weight: 700; color: #111827;">{{ collect($protocol->demand?->employees)->where('position_type', 'Специалист')->count() }}</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Блок: Результаты обучения и пол -->
-                    <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
+                    <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 14px; font-family: system-ui, -apple-system, sans-serif;">
                         <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Результаты обучения и пол</span>
 
-                        <!-- Сетка показателей из Excel-шаблона -->
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 12px;">
-                            <div>
-                                <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Явилось на экзамены</label>
-                                <input type="number" readonly
-                                    value="{{ $report ? $report->Show : count($protocol->demand?->employees ?? []) }}"
-                                    style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #111827;">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 10px; text-align: center;">
+                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                <span style="color: #6b7280; font-size: 11px; font-weight: 500;">Явилось на экзамены:</span>
+                                <strong style="font-size: 13px; color: #111827;">{{ $report ? $report->Show : count($protocol->demand?->employees ?? []) }}</strong>
                             </div>
-                            <div>
-                                <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Не явилось (неявка)</label>
-                                <input type="number" readonly
-                                    value="{{ $report ? $report->noshow : 0 }}"
-                                    style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #b91c1c;">
+                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                <span style="color: #059669; font-size: 11px; font-weight: 600;">Сдали:</span>
+                                <strong style="font-size: 13px; color: #059669;">{{ $report ? $report->passed : count($protocol->demand?->employees ?? []) }}</strong>
                             </div>
-                            <div>
-                                <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Сдали</label>
-                                <input type="number" readonly
-                                    value="{{ $report ? $report->passed : count($protocol->demand?->employees ?? []) }}"
-                                    style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #059669;">
+                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                <span style="color: #6b7280; font-size: 11px; font-weight: 500;">Кол-во мужчин:</span>
+                                <strong style="font-size: 13px; color: #111827;">
+                                    {{ collect($protocol->demand?->employees ?? [])->where('gender_key', '1')->count() }}
+                                </strong>
                             </div>
+
                         </div>
 
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
-                            <div>
-                                <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Не сдали</label>
-                                <input type="number" readonly
-                                    value="{{ $report ? $report->nopassed : 0 }}"
-                                    style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #b91c1c;">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
+                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                <span style="color: #dc2626; font-size: 11px; font-weight: 600;">Не явилось (неявка):</span>
+                                <strong style="font-size: 13px; color: #dc2626;">{{ $report ? $report->noshow : 0 }}</strong>
                             </div>
-                            <div>
-                                <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Кол-во мужчин</label>
-                                <input type="number" readonly
-                                    value="{{ $report ? $report->countman : collect($protocol->demand?->employees ?? [])->where('gender_key', '1')->count() }}"
-                                    style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #111827;">
+                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                <span style="color: #dc2626; font-size: 11px; font-weight: 600;">Не сдали:</span>
+                                <strong style="font-size: 13px; color: #dc2626;">{{ $report ? $report->nopassed : 0 }}</strong>
                             </div>
-                            <div>
-                                <label style="display:block; color:#6b7280; font-size:11px; margin-bottom:2px;">Кол-во женщин</label>
-                                <input type="number" readonly
-                                    value="{{ $report ? $report->countwoman : collect($protocol->demand?->employees ?? [])->where('gender_key', '2')->count() }}"
-                                    style="width:100%; padding:5px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; font-weight:600; text-align:center; color: #111827;">
+
+                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                <span style="color: #6b7280; font-size: 11px; font-weight: 500;">Кол-во женщин:</span>
+                                <strong style="font-size: 13px; color: #111827;">
+                                    {{ collect($protocol->demand?->employees ?? [])->where('gender_key', '2')->count() }}
+                                </strong>
                             </div>
                         </div>
                     </div>
+
                     <!-- Блок: Группы предприятий -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
                         <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Группы предприятий</span>
@@ -288,18 +290,33 @@
                         <!-- Выбор Председателя -->
                         <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px;">
                             <label style="font-weight: 600; color: #374151;">Председатель комиссии:</label>
-                            <select name="comission[chairman_id]" x-model="chairman" style="width: 100%; max-width: 400px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; background-color: #ffffff; height: 34px;">
+                            <select name="chairman_fio" x-model="chairman" style="width:100%; padding:6px; border:1px solid #d1d5db; border-radius:6px; max-width:420px;">
+                                <option value="-">-- Выберите председателя --</option>
                                 @foreach($allComissionMembers as $member)
-                                <option value="{{ $member->fio }}" data-id="{{ $member->id }}">{{ $member->fio }} ({{ $member->position }})</option>
+                                    @php
+                                        $isChairman = $currentComission->where('note', 'Председатель')
+                                            ->filter(function($row) use ($member) {
+                                                return trim(mb_strtolower($row->fio)) === trim(mb_strtolower($member->fio));
+                                            })->first();
+                                    @endphp
+                                    <option value="{{ $member->fio }}" {{ $isChairman ? 'selected' : '' }}>
+                                        {{ $member->fio }} ({{ $member->position }})
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
                         <!-- Выбор Заместителя председателя -->
                         <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px;">
                             <label style="font-weight: 600; color: #374151;">Заместитель председателя:</label>
-                            <select name="comission[deputy_id]" x-model="deputy" style="width: 100%; max-width: 400px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; background-color: #ffffff; height: 34px;">
+                            <select name="deputy_fio" x-model="deputy" style="width:100%; padding:6px; border:1px solid #d1d5db; border-radius:6px; max-width:420px;">
+                                <option value="-">-- Выберите заместителя --</option>
                                 @foreach($allComissionMembers as $member)
-                                <option value="{{ $member->fio }}" data-id="{{ $member->id }}">{{ $member->fio }} ({{ $member->position }})</option>
+                                    @php
+                                        $isDeputy = $currentComission->where('note', 'Заместитель председателя')->where('fio', $member->fio)->first();
+                                    @endphp
+                                    <option value="{{ $member->fio }}" {{ $isDeputy ? 'selected' : '' }}>
+                                        {{ $member->fio }} ({{ $member->position }})
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -307,22 +324,25 @@
                         <div style="display: grid; grid-template-columns: 240px 1fr; align-items: start; gap: 12px;">
                             <label style="font-weight: 600; color: #374151; margin-top: 4px;">Члены комиссии (выберите):</label>
                             <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 600px;">
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #fff; border: 1px solid #d1d5db; border-radius: 6px; padding: 10px; max-height: 150px; overflow-y: auto;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                     @foreach($allComissionMembers as $member)
-                                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; padding: 2px 4px;" class="hover:bg-gray-50">
-                                        <input type="checkbox" name="comission[members][]" value="{{ $member->id }}"
-                                            :checked="selectedMembers.includes('{{ $member->fio }}')"
-                                            @change="toggleMember('{{ $member->fio }}')"
-                                            style="border-radius: 4px; border: 1px solid #d1d5db; color: #3b82f6;">
-                                        <span style="font-weight: 500; color: #111827;">{{ $member->fio }}</span>
-                                    </label>
+                                        @php
+                                            $isMemberChecked = $currentComission->where('note', 'Член комиссии')->where('fio', $member->fio)->first();
+                                        @endphp
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #374151; cursor: pointer;">
+                                            <input type="checkbox" name="comission_members[]" value="{{ $member->id }}" {{ $isMemberChecked ? 'checked' : '' }}
+                                                @change="toggleMember('{{ $member->fio }}')"
+                                                style="border-radius: 4px; border-color: #d1d5db; color: #3b82f6;">
+                                            <span>{{ $member->fio }}</span>
+                                        </label>
                                     @endforeach
                                 </div>
                                 <div style="font-size: 11px; color: #6b7280; display: flex; align-items: center; gap: 4px;">
-                                    📋 Выбрано в протокол: <strong style="color: #4f46e5" x-text="selectedMembers.join(', ')"></strong>
+                                    📋 Выбрано в протокол: <strong style="color: #4f46e5" x-text="selectedMembers.length ? selectedMembers.join(', ') : '—'"></strong>
                                 </div>
                             </div>
                         </div>
+
                     </div>
 
                 </div>
@@ -902,7 +922,6 @@
                                     <td style="border-right: 1px solid #7f8c8d; padding: 6px; font-weight: 700;">{{ $employee->last_name ?? '—' }} {{ $employee->first_name ?? '—' }}</td>
                                     <td style="border-right: 1px solid #7f8c8d; padding: 6px; font-size: 10px;">{{ $employee->position ?? '—' }}</td>
                                     <td style="border-right: 1px solid #7f8c8d; padding: 6px; text-align: center;">{{ $employee->rank ?? '—' }}</td>
-
                                     <!-- 6. Динамический селект Итогового зачета -->
                                     <td style="border-right: 1px solid #7f8c8d; padding: 4px; text-align: center;">
                                         <select name="results[{{ $employee }}][status]" style="width: 100%; padding: 3px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px;">
@@ -911,30 +930,25 @@
                                             <option value="неявка" {{ ($dbRow?->markitog ?? '') == 'неявка' ? 'selected' : '' }}>неявка</option>
                                         </select>
                                     </td>
-
                                     <!-- 7. Динамический инпут Оценки за практику -->
                                     <td style="border-right: 1px solid #7f8c8d; padding: 4px;">
                                         <input type="text" name="results[{{ $employee->id }}][practice_mark]"
                                             value="{{ $dbRow?->markpractic ?? '' }}"
                                             placeholder="отл / 5" style="width: 100%; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
                                     </td>
-
                                     <!-- 8. Динамический инпут Присваиваемого разряда -->
                                     <td style="border-right: 1px solid #7f8c8d; padding: 4px;">
                                         <input type="number" name="results[{{ $employee->id }}][assigned_rank]"
                                             value="{{ $dbRow?->assignedgrade ?? '' }}"
                                             style="width: 100%; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
                                     </td>
-
                                     <td style="border-right: 1px solid #7f8c8d; padding: 6px; font-size: 10px;">{{ $employee->level_3_name ?? '—' }}</td>
-
                                     <!-- 10. Динамический результат тестирования (%) -->
                                     <td style="border-right: 1px solid #7f8c8d; padding: 4px;">
                                         <input type="text" name="results[{{ $employee }}][test_result]"
                                             value="{{ $dbRow?->resulttest ?? '' }}"
                                             placeholder="90%" style="width: 100%; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center; font-weight: 600;">
                                     </td>
-
                                     <td style="border-right: 1px solid #7f8c8d; padding: 6px; text-align: center; color: #9ca3af; font-size: 10px; font-style: italic;">место подписи</td>
 
                                     <td style="border-right: 1px solid #7f8c8d; padding: 4px; text-align: center;">
@@ -946,7 +960,6 @@
                                     <td style="padding: 4px; text-align: center;">
                                         <input type="number" name="results[{{ $employee }}][hours_fact]" value="{{ (int)($dbRow?->counthourfact ?? $protocol->program_hours ?? 0) }}" style="width: 55px; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
                                     </td>
-
                                 </tr>
                                 @empty
                                 <tr>
@@ -957,7 +970,6 @@
                         </table>
                         <!-- БЛОК ПОДПИСЕЙ И ДОЛЖНОСТНЫХ ЛИЦ КОМИССИИ -->
                         <div style="margin-top: 30px; font-family: 'Arial', sans-serif; color: #111827; font-size: 12px; display: flex; flex-direction: column; gap: 16px; border: 1px solid #e5e7eb; padding: 20px; border-radius: 6px; background-color: #fafafa; max-width: 800px;">
-
                             <!-- Председатель комиссии -->
                             <div>
                                 <div style="font-weight: 800; text-transform: uppercase; font-size: 11px; color: #4b5563; margin-bottom: 6px; letter-spacing: 0.05em;">Председатель комиссии:</div>
@@ -966,33 +978,38 @@
                                     <input type="text" name="commission_static[chairman_fio]" x-model="chairman" style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; font-weight: 600; width: 100%; max-width: 250px; height: 28px; background: #fff;">
                                 </div>
                             </div>
-
                             <!-- Члены комиссии -->
-                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
-                                <div style="font-weight: 800; text-transform: uppercase; font-size: 11px; color: #4b5563; margin-bottom: 8px; letter-spacing: 0.05em;">Члены комиссии:</div>
-                                <div style="display: flex; flex-direction: column; gap: 10px;">
-                                    <div style="font-size: 11px; color: #4b5563; font-style: italic;" x-show="!selectedMembers.length">Члены комиссии не выбраны</div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; display: grid; grid-template-columns: 280px 1fr; align-items: center; gap: 16px; min-height: 38px;">
+                                <div style="font-weight: 800; text-transform: uppercase; font-size: 11px; color: #4b5563; letter-spacing: 0.05em;">Члены комиссии:</div>
+                                <div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center;">
+                                    <div style="font-size: 11px; color: #4b5563; font-style: italic;" 
+                                         x-show="selectedMembers.length === 0 || selectedMembers.includes('-')">
+                                        Члены комиссии не выбраны
+                                    </div>
                                     <template x-for="(member, index) in selectedMembers" :key="index">
-                                        <div style="display: grid; grid-template-columns: 280px 150px 1fr; align-items: center; gap: 16px; margin-bottom: 6px;">
-                                            <div style="font-weight: 500;" x-text="'Член комиссии ' + (index + 1)"></div>
-                                            <div style="font-size: 12px; font-weight: 600; color: #111827;" x-text="member"></div>
-                                        </div>
+                                        <span x-show="member !== '-'" 
+                                              style="font-size: 12px; font-weight: 600; color: #111827; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);" 
+                                              x-text="member">
+                                        </span>
                                     </template>
                                 </div>
                             </div>
-
                             <!-- Исполнитель -->
-                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; display: grid; grid-template-columns: 280px 150px 1fr; align-items: center; gap: 16px;">
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; display: grid; grid-template-columns: 280px 1fr; align-items: center; gap: 16px;">
                                 <div style="font-weight: bold;">Исполнитель:</div>
-                                <input type="text" name="commission[executor_fio]" value="-" style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; font-weight: 600; width: 100%; max-width: 250px; height: 28px; background: #fff;">
+                                <div style="display: flex; align-items: center;">
+                                    <input type="hidden" name="commission[executor_fio]" value="{{ $report->specialist ?? auth()->user()->name ?? '-' }}">
+                                    <span style="font-size: 12px; font-weight: 600; color: #111827; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); display: inline-block;">
+                                        {{ $report->specialist ?? auth()->user()->name ?? '-' }}
+                                    </span>
+                                </div>
                             </div>
 
                         </div>
-
                     </div>
                     @else
-                    <h3 style="font-size: 15px; font-weight: 700; color: #111827;">Протокол заседания комиссии: {{ $learningTypeName }}</h3>
-                    <p class="text-gray-500 text-sm mt-2">Спецификация и поля оценок для данного направления будут добавлены на следующих этапах.</p>
+                        <h3 style="font-size: 15px; font-weight: 700; color: #111827;">Протокол заседания комиссии: {{ $learningTypeName }}</h3>
+                        <p class="text-gray-500 text-sm mt-2">Спецификация и поля оценок для данного направления будут добавлены на следующих этапах.</p>
                     @endif
                 </div>
                 <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
@@ -1000,8 +1017,6 @@
                     <a href="{{ route('protocols.index') }}" style="padding: 8px 20px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; font-weight: 500; text-decoration: none; color: #374151; font-size: 13px; display: inline-flex; align-items: center; h-[36px]" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='#ffffff'">Отмена</a>
                     <button type="submit" style="padding: 8px 24px; border: none; border-radius: 6px; background: #10b981; color: #ffffff; font-weight: 600; font-size: 13px; cursor: pointer; h-[36px]; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" onmouseover="this.style.backgroundColor='#059669'" onmouseout="this.style.backgroundColor='#10b981'">💾 Сохранить отчет</button>
                 </div>
-
         </form>
-
     </div>
 </x-layouts.app-with-sidebar>
