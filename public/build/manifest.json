@@ -1,6 +1,6 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-CnDtvJjz.css",
+    "file": "assets/app-BQSDUykH.css",
     "name": "app",
     "names": [
       "app.css"
@@ -31,7 +31,7 @@
     "src": "resources/fonts/inter-v20-cyrillic_latin-regular.woff2"
   },
   "resources/js/app.js": {
-    "file": "assets/app-B42MyxT2.js",
+    "file": "assets/app-DNyY1JWm.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -43,7 +43,7 @@
     ]
   },
   "resources/js/gridjs.umd.js": {
-    "file": "assets/gridjs.umd--aTbUQ_I.js",
+    "file": "assets/gridjs.umd-Dv936ATm.js",
     "name": "gridjs.umd",
     "src": "resources/js/gridjs.umd.js",
     "isDynamicEntry": true,

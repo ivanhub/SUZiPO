@@ -26,7 +26,8 @@ Alpine.start();
 
 // Инициализация после загрузки DOM
 document.addEventListener("DOMContentLoaded", () => {
-  flatpickr("input[type='date']", {
+//  flatpickr("input[type='date']", {
+    flatpickr("input[type='date']:not(#issue_date)", {
     locale: "ru",       // Подключаем русский язык
   altInput: true,          // Включает отображение "дубликата" для пользователя
     altFormat: "d.m.Y",      // Формат, который видит пользователь: "23.09.2026"

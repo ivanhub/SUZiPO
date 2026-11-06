@@ -94,13 +94,13 @@
     @error('end_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
 </div>
 
-<!-- Дата оформления -->
+<!-- Дата создания -->
 <div class="relative">
-    <label for="issue_date" class="block text-sm font-medium text-gray-700 mb-1">Дата оформления</label>
-    <input type="date" name="issue_date" id="issue_date" value="{{ old('issue_date') }}"
-           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent date-input">
-    <span class="absolute left-3 top-[36px] text-gray-400 pointer-events-none date-placeholder">ДД.ММ.ГГГГ</span>
-    @error('issue_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+    <label for="issue_date" class="block text-sm font-medium text-gray-700 mb-1">Дата создания</label>
+    <input type="date" name="issue_date" id="issue_date" 
+           value="{{ now()->format('Y-m-d') }}"
+           class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+           readonly>
 </div>
 
                         <!-- Форма образования -->
@@ -269,9 +269,9 @@
 </script>
 
 
-<!-- Наименование курса -->
+<!-- Наименование ПО -->
 <div x-data="courseSelector()" class="relative z-30">
-    <label class="block text-sm font-medium text-gray-700 mb-1">Наименование курса</label>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Наименование ПО</label>
     
     <input type="hidden" name="course_id" x-model="selectedId">
     <input type="hidden" name="new_course_name" x-model="newCourseName">

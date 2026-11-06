@@ -69,11 +69,11 @@
                         <p class="mt-1 text-sm text-gray-900">{{ $request->end_date ? $request->end_date->format('d.m.Y') : '—' }}</p>
                     </div>
 
-                    <!-- Дата оформления -->
-                    <div>
-                        <h3 class="text-sm font-medium text-gray-500">Дата оформления</h3>
-                        <p class="mt-1 text-sm text-gray-900">{{ $request->issue_date ? $request->issue_date->format('d.m.Y') : '—' }}</p>
-                    </div>
+<!-- Дата создания -->
+<div>
+    <h3 class="text-sm font-medium text-gray-500">Дата создания</h3>
+    <p class="mt-1 text-sm text-gray-900">{{ $request->issue_date ? $request->issue_date->format('d.m.Y') : '—' }}</p>
+</div>
 
                     <!-- Форма образования -->
                     <div>
@@ -99,9 +99,9 @@
                         <p class="mt-1 text-sm text-gray-900">{{ $request->provider->name ?? '—' }}</p>
                     </div>
 
-                    <!-- Наименование курса -->
+                    <!-- Наименование ПО -->
                     <div>
-                        <h3 class="text-sm font-medium text-gray-500">Наименование курса (тематика)</h3>
+                        <h3 class="text-sm font-medium text-gray-500">Наименование ПО</h3>
                         <p class="mt-1 text-sm text-gray-900">{{ $request->course->course ?? '—' }}</p>
                     </div>
 
