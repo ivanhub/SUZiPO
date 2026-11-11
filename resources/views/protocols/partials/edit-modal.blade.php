@@ -3,7 +3,7 @@
     x-cloak>
 
     <!-- Белая карточка поп-апа с фиксированной шириной и внутренним скроллом -->
-    <div style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); width: 100%; max-width: 950px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; font-family: system-ui, -apple-system, sans-serif; font-size: 13px; color: #1f2937; box-sizing: border-box;">
+    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #ffffff; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); width: 100%; max-width: 950px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; font-family: system-ui, -apple-system, sans-serif; font-size: 13px; color: #1f2937; box-sizing: border-box;">
 
         <!-- Заголовок окна -->
         <div style="padding: 14px 20px; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; box-sizing: border-box;">
@@ -90,7 +90,6 @@
                     </div>
                 </div>
 
-
                 <!-- ПРАВАЯ КОЛОНКА: Реквизиты протокола -->
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <div style="text-align: right; font-weight: 600; color: #4b5563; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 4px;">Реквизиты протокола</div>
@@ -102,12 +101,12 @@
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">Дата формирования:</label>
-                        <input type="date" name="prot_date" x-model="editData.prot_date" style="width: 160px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                        <input type="date" name="date_end" x-model="editData.date_end" style="width: 160px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     </div>
-
+                    
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">
                         <label style="color: #4b5563; font-weight: 500;">Номер группы: <span style="color: #dc2626;">*</span></label>
-                        <input type="text" name="group_num" x-model="editData.group_num" required style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                        <input type="text" name="group_num" x-model="editData.prot_num" required style="width: 120px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     </div>
 
                     <div style="display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 8px;">

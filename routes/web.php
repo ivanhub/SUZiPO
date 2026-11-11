@@ -174,7 +174,7 @@ Route::get('/api/available-teachers', function (Illuminate\Http\Request $request
 });
 
 
-       //Импорт сотрудников из SAP (xls)
+//Импорт сотрудников из SAP (xls)
 Route::post('all-users-sap/import', [AllUserSapController::class, 'import'])->name('all-users-sap.import');
 Route::delete('all-users-sap/{allUserSap}/delete', [AllUserSapController::class, 'destroy'])->name('all-users-sap.delete');
 
@@ -185,8 +185,6 @@ Route::resource('all-users-sap', AllUserSapController::class)->parameters([
 // Route::post('requests/send-to-ooo', [RequestController::class, 'sendToOoo'])->name('requests.send-to-ooo');
 
 Route::resource('requests', RequestController::class)->middleware('auth');
-// ������� ��� �������� ��� ��������� �������� ������ � ���
-
 
 Route::post('requests/{id}/request-unlock', [RequestController::class, 'requestUnlock'])
     ->name('requests.request-unlock')
@@ -196,11 +194,14 @@ Route::get('requests/{id}/unlock', [RequestController::class, 'unlock'])->name('
 
 Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
 
+// Роут для экспорта отчета в Excel
+Route::get('/protocols/{id?}/export-excel', [ProtocolController::class, 'exportExcel'])
+    ->name('protocols.export-excel');
+
 
 // История изменений заявки
 Route::get('requests/{request}/history', [RequestController::class, 'history'])->name('requests.history');
 Route::post('requests/{request}/history/{activity}/rollback', [RequestController::class, 'rollback'])->name('requests.rollback');
-
 
 // Маршруты для сотрудников заявки
 Route::prefix('request-employees')->name('request-employees.')->group(function () {
@@ -219,10 +220,8 @@ Route::get('/protocols/{id}/report/create', [ProtocolController::class, 'createR
 Route::post('/protocols/export-excel', [ProtocolController::class, 'exportExcel'])->name('protocols.export-excel');
 Route::post('/protocols/report/store', [ProtocolController::class, 'storeReport'])->name('protocols.report.store');
 
-
-
-
-
+// Поиск по номеру договора (Orders)
+Route::get('/api/orders/search', [ProtocolController::class, 'searchOrders'])->name('api.orders.search');
 
 Route::get('/bookings', function () {
     return view('bookings.index');
@@ -251,8 +250,12 @@ Route::prefix('matrices')->name('matrices.')->group(function () {
 
 // Справочники
 Route::prefix('directories')->name('directories.')->group(function () {
-    Route::get('countries', [DirectoryController::class, 'countries'])->name('countries');
     Route::get('reasons-non-certification', [DirectoryController::class, 'reasonsNonCertification'])->name('reasons-non-certification');
+    Route::get('reasons-non-certification', [DirectoryController::class, 'reasonsNonCertification'])->name('reasons-non-certification');
+    Route::post('reasons-non-certification', [DirectoryController::class, 'storeReason'])->name('reasons-non-certification.store');
+    Route::put('reasons-non-certification/{id}/update', [DirectoryController::class, 'updateReason'])->name('reasons-non-certification.update');
+    Route::delete('reasons-non-certification/{id}', [DirectoryController::class, 'destroyReason'])->name('reasons-non-certification.destroy');
+
     Route::resource('providers', RequestsProviderController::class);
     Route::get('courses', [DirectoryController::class, 'courses'])->name('courses');
     Route::get('cities', [DirectoryController::class, 'cities'])->name('cities');
@@ -263,7 +266,12 @@ Route::prefix('directories')->name('directories.')->group(function () {
     Route::resource('learning-types', RequestsLearningTypeController::class);
     Route::get('reasons-rejection', [DirectoryController::class, 'reasonsRejection'])->name('reasons-rejection');
     Route::get('categories', [DirectoryController::class, 'categories'])->name('categories');
+    
     Route::get('document-types', [DirectoryController::class, 'documentTypes'])->name('document-types');
+    Route::post('document-types', [DirectoryController::class, 'storeDocumentType'])->name('document-types.store');
+    Route::put('document-types/{id}/update', [DirectoryController::class, 'updateDocumentType'])->name('document-types.update');
+    Route::delete('document-types/{id}', [DirectoryController::class, 'destroyDocumentType'])->name('document-types.destroy');
+
     Route::get('training-type', [DirectoryController::class, 'trainingType'])->name('training-type');
     Route::get('course-authors', [DirectoryController::class, 'courseAuthors'])->name('course-authors');
     Route::get('training-directions', [DirectoryController::class, 'trainingDirections'])->name('training-directions');
@@ -329,9 +337,9 @@ Route::get('/dashboard', function () {
 
 // Route::resource('requests', RequestController::class);
 Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
-Route::get('/bookings', function () {
-    return view('bookings.index');
-})->name('bookings.index');
+// Route::get('/bookings', function () {
+//     return view('bookings.index');
+// })->name('bookings.index');
 Route::get('/demands', [AppDemandController::class, 'index'])->name('demands.index');
 Route::get('/demands/{id}', [AppDemandController::class, 'show'])->name('demands.show');
 
