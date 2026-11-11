@@ -1,7 +1,7 @@
 <x-layouts.app-with-sidebar>
     <div style="background-color: #0b0c0e; color: #ffffff; min-height: 100vh; padding: 24px; font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box;">
         
-        <!-- ВЕРХНИЙ КАПСУЛЬНЫЙ МЕНЮ-СЛАЙДЕР ИЗ МАКЕТА -->
+        <!-- ВЕРХНИЙ КАПСУЛЬНЫЙ МЕНЮ-СЛАЙДЕР -->
         <div style="display: flex; justify-content: center; margin-bottom: 32px;">
             <div style="background-color: #131517; border: 1px solid #1c1f22; border-radius: 24px; padding: 4px; display: inline-flex; align-items: center; gap: 4px;">
                 <a href="#" style="background-color: #ffffff; color: #000000; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.2s;">Главная</a>
@@ -26,7 +26,7 @@
         <!-- ГЛАВНАЯ ДВУХКОЛОНОЧНАЯ СТРУКТУРА -->
         <div style="display: flex; gap: 24px; align-items: start; width: 100; box-sizing: border-box;">
             
-            <!-- ЛЕВАЯ ЧАСТЬ (Инфо-карточки и дедлайны) -->
+            <!-- ЛЕВАЯ ЧАСТЬ -->
             <div style="width: 340px; min-width: 340px; display: flex; flex-direction: column; gap: 16px;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div style="background-color: #131517; border: 1px solid #1c1f22; border-radius: 12px; padding: 16px; position: relative;">
@@ -89,8 +89,7 @@
             </div>
 
 
-            <!-- ПРАВАЯ ЧАСТЬ (Основной реестр "Последние заявки") -->
-                        <!-- ПРАВАЯ ЧАСТЬ (Основной динамический реестр) -->
+            <!-- ПРАВАЯ ЧАСТЬ -->
             <div style="flex-grow: 1; background-color: #131517; border: 1px solid #1c1f22; border-radius: 16px; padding: 24px; box-sizing: border-box;" x-data="{ searchQuery: '' }">
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #1c1f22; padding-bottom: 14px;">
@@ -98,13 +97,11 @@
                     <a href="{{ route('protocols.index') }}" style="color: #626971; text-decoration: none; font-size: 12px; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#626971'">Все протоколы →</a>
                 </div>
 
-                <!-- Строка аккуратного быстрого поиска по базе -->
                 <div style="margin-bottom: 20px;">
                     <input type="text" x-model="searchQuery" placeholder="Поиск по номеру группы или курсу..." 
                            style="width: 100%; max-width: 320px; background-color: #0b0c0e; border: 1px solid #1c1f22; border-radius: 12px; padding: 8px 14px; font-size: 13px; color: #ffffff; outline: none; box-sizing: border-box;">
                 </div>
 
-                <!-- ТАБЛИЧНАЯ СЕТКА С РЕАЛЬНЫМИ ДАННЫМИ ИЗ ВАШЕЙ БД -->
                 <div style="overflow-x: auto; width: 100%;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
                         <thead>
@@ -118,7 +115,7 @@
                         <tbody style="color: #cdd5de;">
                             @forelse($recentRequests ?? $recentProtocols ?? [] as $request)
                             @php
-                                // Определяем ФИО курса и номер группы из привязанных связей, которые мы делали
+                                // Определяем ФИО курса и номер группы из привязанных связей
                                 $courseName = $request->demand?->course?->course ?? $request->course_name ?? '—';
                                 $groupNum = $request->prot_num ?? $request->id ?? '—';
                                 $statusValue = $request->prot_status ?? $request->status ?? 'Черновик';

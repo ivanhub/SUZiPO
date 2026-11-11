@@ -186,7 +186,7 @@
                             <div style="display: flex; justify-content: space-between; align-items: center;"><span>Кол-во часов самостоятельной подг.:</span> <input type="number" name="self_hours" value="0" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center; height: 30px;"></div>
                         </div>
                     </div>
-                    <!-- Блок: Категория обучаемых -->
+                    <!-- Блок Категория обучаемых -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 12px;">
                         <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 12px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Категория обучаемых</span>
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; text-align: center;">
@@ -205,7 +205,7 @@
                         </div>
                     </div>
 
-                    <!-- Блок: Результаты обучения и пол -->
+                    <!-- Блок Результаты обучения и пол -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 14px; font-family: system-ui, -apple-system, sans-serif;">
                         <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Результаты обучения и пол</span>
 
@@ -246,7 +246,7 @@
                         </div>
                     </div>
 
-                    <!-- Блок: Группы предприятий -->
+                    <!-- Блок Группы предприятий -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
                         <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Группы предприятий</span>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
@@ -268,7 +268,7 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Ряд: Множественный выбор Преподавателей -->
+                    <!-- Ряд Множественный выбор Преподавателей -->
                     <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px; border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
                         <label style="font-weight: 500; color: #374151;">Преподаватель:</label>
                         <select name="teachers[]" symmetric-multiple="true" multiple style="width: 100%; max-width: 320px; padding: 6px; border: 1px solid #d1d5db; border-radius: 6px; background-color: #ffffff; height: 68px;">
@@ -277,14 +277,14 @@
                             @endforeach
                         </select>
                     </div>
-                    <!-- Ряд: Выбор куратора УРП -->
+                    <!-- Ряд Выбор куратора УРП -->
                     <div style="display: grid; grid-template-columns: 240px 1fr; align-items: center; gap: 12px;">
                         <label style="font-weight: 500; color: #374151;">Куратор УРП:</label>
                         <select name="curator_id" style="width: 100%; max-width: 320px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; background-color: #ffffff; height: 34px;">
                             <option value="{{ $protocol->demand?->curator_id }}">{{ $protocol->demand?->curator?->fio ?? '—' }}</option>
                         </select>
                     </div>
-                    <!-- РЯД: УПРАВЛЕНИЕ СОСТАВОМ КОМИССИИ ПРОТОКОЛА -->
+                    <!-- РЯД УПРАВЛЕНИЕ СОСТАВОМ КОМИССИИ ПРОТОКОЛА -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 16px; margin-top: 12px; display: flex; flex-direction: column; gap: 14px;">
                         <span style="display: block; font-weight: 700; color: #1e3a8a; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; background: #eff6ff; padding: 6px; border-radius: 4px; text-align: center;">Управление составом аттестационной комиссии</span>
                         <!-- Выбор Председателя -->
@@ -320,7 +320,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <!-- Множественный интерактивный выбор Членов комиссии -->
+                        <!-- Множественный выбор Членов комиссии -->
                         <div style="display: grid; grid-template-columns: 240px 1fr; align-items: start; gap: 12px;">
                             <label style="font-weight: 600; color: #374151; margin-top: 4px;">Члены комиссии (выберите):</label>
                             <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 600px;">
@@ -350,7 +350,7 @@
 
             <!-- СОДЕРЖИМОЕ ВКЛАДКИ 2: СПИСОК -->
             <div x-show="activeTab === 'list'" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" x-cloak>
-                <!-- ВЕРХНЯЯ ШАПКА БЛАНКА ИЗ EXCEL -->
+                <!-- ВЕРХНЯЯ ШАПКА БЛАНКА -->
                 <div style="font-family: 'Arial', sans-serif; font-size: 11px; color: #374151; line-height: 1.5; margin-bottom: 20px; text-align: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 14px;">
                     <div style="font-weight: bold; font-size: 12px; margin-bottom: 4px;">Приложение №1</div>
                     <div style="margin-bottom: 12px;">к Распоряжению № <span style="font-weight: 700; text-decoration: underline;">{{ $protocol->order_num ?? '_____' }}</span></div>
@@ -359,7 +359,7 @@
                         Программа обучения: {{ $protocol->demand?->course?->course ?? '—' }}
                     </div>
 
-                    <!-- Параметры группы в три колонки -->
+                    <!-- Параметры группы -->
                     <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 8px; font-size: 12px;">
                         <div><b>Группа №:</b> <span style="color: #4f46e5; font-weight: 700;">{{ $protocol->prot_num }}</span></div>
                         <div><b>Ответственный за обучение:</b> <span style="font-weight: 600;">{{ $protocol->demand?->teacher?->fio ?? '-' }}</span></div>
@@ -519,7 +519,6 @@
                         заседания комиссии по проверке знаний требований охраны труда, назначенной распоряжением № <span style="font-weight: 700;">{{ $protocol->order_num ?? '_____' }}</span> от <span style="font-weight: 700;">{{ $protocol->order_date ? \Carbon\Carbon::parse($protocol->order_date)->format('d.m.Y') : '____' }}</span>
                     </div>
 
-                    <!-- Интерактивный реактивный состав комиссии из Alpine.js -->
                     <div style="font-size: 11px; margin-bottom: 20px; color: #111827; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; background: #f9fafb; padding: 8px; border-radius: 6px; border: 1px solid #e5e7eb;">
                         <div><b>Председатель:</b> <span x-text="chairman"></span></div>
                         <div><b>Заместитель:</b> <span x-text="deputy"></span></div>
@@ -552,7 +551,7 @@
                         </div>
                     </div>
 
-                    <!-- Интерактивная таблица выставления оценок ОТ -->
+                    <!-- таблица выставления оценок ОТ -->
                     <div style="overflow-x: auto; width: 100%; margin-bottom: 20px;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 11px; color: #000000; border: 2px solid #000000; table-layout: fixed;">
                             <thead>
@@ -571,7 +570,6 @@
                                     <th style="border-right: 1px solid #000000; padding: 6px; width: 85px;">Оконч. обуч. (факт)</th>
                                     <th style="padding: 6px; width: 60px;">Пройдено (час.)</th>
                                 </tr>
-                                <!-- Строка 2: Техническая нумерация колонок строго по макету -->
                                 <tr style="background-color: #e6e6e6; text-align: center; font-weight: bold; font-size: 10px; border-bottom: 2px solid #000000; height: 18px;">
                                     <td style="border-right: 1px solid #000000;">1</td>
                                     <td style="border-right: 1px solid #000000;">2</td>
@@ -626,7 +624,7 @@
                                     <!-- Колонка 6: Предприятие -->
                                     <td style="border-right: 1px solid #000000; padding: 6px; font-size: 10px;">{{ $employee->level_3_name ?? $employee->company ?? '—' }}</td>
 
-                                    <!-- Колонка 7: Результат проверки знаний (Селектор Минтруда) -->
+                                    <!-- Колонка 7: Результат проверки знаний -->
                                     <td style="border-right: 1px solid #000000; padding: 4px; text-align: center;">
                                         <select name="results[{{ $studentKey }}][status]" style="width: 100%; padding: 4px; font-size: 11px; font-weight: bold; border: 1px solid #d1d5db; border-radius: 4px; color: #000000; background-color: #ffffff;">
                                             <option value="удовлетворительно" {{ $currentMark === 'удовлетворительно' ? 'selected' : '' }}>удовлетворительно</option>
@@ -713,7 +711,7 @@
                             </div>
                         </div>
 
-                        <!-- НАИМЕНОВАНИЕ ПРОГРАММЫ ОБУЧЕНИЯ (ПО ЦЕНТРУ МАКЕТА) -->
+                        <!-- НАИМЕНОВАНИЕ ПРОГРАММЫ ОБУЧЕНИЯ -->
                         <div style="text-align: center; margin-bottom: 20px;">
                             <div style="font-size: 11px; font-weight: bold; text-align: left; margin-bottom: 6px; padding-left: 4px;">Группа № {{ $protocol->prot_num }}</div>
                             <div style="font-size: 13px; font-weight: bold; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 6px; text-align: center; letter-spacing: 0.01em;">
@@ -771,7 +769,7 @@
                                         <td style="border-right: 1px solid #000000; padding: 6px; text-align: center;">{{ $employee->rank ?? '—' }}</td>
                                         <td style="border-right: 1px solid #000000; padding: 6px; font-size: 10px;">{{ $employee->level_3_name ?? $employee->company ?? 'ООО «РН-Юганскнефтегаз»' }}</td>
 
-                                        <!-- Сведения о прохождении мультимедийного курса (Селект из макета) -->
+                                        <!-- Сведения о прохождении мультимедийного курса -->
                                         <td style="border-right: 1px solid #000000; padding: 4px; text-align: center;">
                                             <select name="results[{{ $studentKey }}][status]" style="width: 100%; padding: 4px; font-size: 11px; font-weight: bold; border: 1px solid #d1d5db; border-radius: 4px; background-color: #ffffff; color: #000000; text-align: center;">
                                                 <option value="пройдено" {{ $currentMark === 'пройдено' ? 'selected' : '' }}>пройдено</option>
@@ -849,7 +847,7 @@
                         </div>
                     </div>
 
-                    <!-- Двухколоночный мини-блок Дат и Общих Часов как в Excel бланке -->
+                    <!-- Двухколоночный мини-блок Дат и Общих Часов-->
                     <div style="display: flex; justify-content: center; gap: 48px; font-size: 12px; font-family: system-ui, -apple-system, sans-serif; color: #374151; margin-bottom: 20px; background: transparent; padding: 4px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px;">
                         <div>
                             <b>Начало обучения:</b>
@@ -922,7 +920,7 @@
                                     <td style="border-right: 1px solid #7f8c8d; padding: 6px; font-weight: 700;">{{ $employee->last_name ?? '—' }} {{ $employee->first_name ?? '—' }}</td>
                                     <td style="border-right: 1px solid #7f8c8d; padding: 6px; font-size: 10px;">{{ $employee->position ?? '—' }}</td>
                                     <td style="border-right: 1px solid #7f8c8d; padding: 6px; text-align: center;">{{ $employee->rank ?? '—' }}</td>
-                                    <!-- 6. Динамический селект Итогового зачета -->
+                                    <!-- 6. селект Итогового зачета -->
                                     <td style="border-right: 1px solid #7f8c8d; padding: 4px; text-align: center;">
                                         <select name="results[{{ $employee }}][status]" style="width: 100%; padding: 3px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px;">
                                             <option value="зачет" {{ ($dbRow?->markitog ?? 'зачет') == 'зачет' ? 'selected' : '' }}>зачет</option>
@@ -930,20 +928,20 @@
                                             <option value="неявка" {{ ($dbRow?->markitog ?? '') == 'неявка' ? 'selected' : '' }}>неявка</option>
                                         </select>
                                     </td>
-                                    <!-- 7. Динамический инпут Оценки за практику -->
+                                    <!-- 7. инпут Оценки за практику -->
                                     <td style="border-right: 1px solid #7f8c8d; padding: 4px;">
                                         <input type="text" name="results[{{ $employee->id }}][practice_mark]"
                                             value="{{ $dbRow?->markpractic ?? '' }}"
                                             placeholder="отл / 5" style="width: 100%; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
                                     </td>
-                                    <!-- 8. Динамический инпут Присваиваемого разряда -->
+                                    <!-- 8. инпут Присваиваемого разряда -->
                                     <td style="border-right: 1px solid #7f8c8d; padding: 4px;">
                                         <input type="number" name="results[{{ $employee->id }}][assigned_rank]"
                                             value="{{ $dbRow?->assignedgrade ?? '' }}"
                                             style="width: 100%; padding: 4px; font-size: 11px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
                                     </td>
                                     <td style="border-right: 1px solid #7f8c8d; padding: 6px; font-size: 10px;">{{ $employee->level_3_name ?? '—' }}</td>
-                                    <!-- 10. Динамический результат тестирования (%) -->
+                                    <!-- 10. результат тестирования (%) -->
                                     <td style="border-right: 1px solid #7f8c8d; padding: 4px;">
                                         <input type="text" name="results[{{ $employee }}][test_result]"
                                             value="{{ $dbRow?->resulttest ?? '' }}"

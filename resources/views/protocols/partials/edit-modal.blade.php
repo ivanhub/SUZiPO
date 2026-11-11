@@ -3,7 +3,7 @@
     x-cloak>
 
     <!-- Белая карточка поп-апа с фиксированной шириной и внутренним скроллом -->
-    <div style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); width: 100%; max-width: 950px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; font-family: system-ui, -apple-system, sans-serif; font-size: 13px; color: #1f2937; box-sizing: border-box;">
+    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #ffffff; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); width: 100%; max-width: 950px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; font-family: system-ui, -apple-system, sans-serif; font-size: 13px; color: #1f2937; box-sizing: border-box;">
 
         <!-- Заголовок окна -->
         <div style="padding: 14px 20px; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; box-sizing: border-box;">
