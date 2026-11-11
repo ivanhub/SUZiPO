@@ -159,8 +159,8 @@
             <table style="table-layout: fixed; width: 100%; min-width: 1450px; border-collapse: collapse; font-size: 12px; color: #374151;">
                 <thead>
                     <tr style="background-color: #ffffff; border-bottom: 1px solid #e5e7eb; color: #7c8594; font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">
-                        <th width="75" style="padding: 12px 8px; text-align: center;"></th>
-                        <th width="65" style="padding: 12px 8px; text-align: left;">ID</th>
+                        <th width="101" style="padding: 12px 8px; text-align: center;"></th>
+                        <!-- <th width="65" style="padding: 12px 8px; text-align: left;">ID</th> -->
                         <th width="100" style="padding: 12px 8px; text-align: left;">Состояние</th>
                         <th width="85" style="padding: 12px 8px; text-align: left;">№ Рег.</th>
                         <th width="105" style="padding: 12px 8px; text-align: left;">Создан</th>

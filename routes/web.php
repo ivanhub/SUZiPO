@@ -197,6 +197,9 @@ Route::get('requests/export-form', [RequestController::class, 'exportForm'])->na
 // Роут для экспорта отчета в Excel
 Route::get('/protocols/{id?}/export-excel', [ProtocolController::class, 'exportExcel'])
     ->name('protocols.export-excel');
+Route::get('/protocols/{id}/export-yukos', [ProtocolController::class, 'exportYukos'])
+    ->name('protocols.export-yukos');
+
 
 
 // История изменений заявки

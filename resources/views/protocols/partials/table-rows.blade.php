@@ -2,17 +2,31 @@
 <tr class="hover:bg-gray-50" style="border-bottom: 1px solid #e5e7eb;">
     <!-- Действия (Иконки редактирования) -->
     <td style="padding: 10px 8px; text-align: center;">
-        <span @click="openEdit({{ $protocol->prot_id }})" style="cursor: pointer; color: #4f46e5; font-size: 14px; margin-right: 8px;" title="Редактировать">✏️</span>
+        <span @click="openEdit({{ $protocol->prot_id }})" 
+            style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 4px; color: #16a34a; background-color: #f0fdf4; border: 1px solid #bbf7d0; text-decoration: none; transition: all 0.15s;"
+            title="Редактировать"
+            onmouseover="this.style.backgroundColor='#dcfce7'; this.style.color='#085725';"
+            onmouseout="this.style.backgroundColor='#f0fdf4'; this.style.color='#16a34a';"><a>✏️</a></span>
         <!--<a href="#" style="text-decoration: none; color: #10b981; font-size: 14px;" title="Скачать">📥</a> -->
+        <a href="{{ route('protocols.export-yukos', $protocol->prot_id) }}" 
+            title="Выгрузить протокол в Excel"
+            style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 4px; color: #16a34a; background-color: #f0fdf4; border: 1px solid #bbf7d0; text-decoration: none; transition: all 0.15s;"
+            onmouseover="this.style.backgroundColor='#dcfce7'; this.style.color='#085725';"
+            onmouseout="this.style.backgroundColor='#f0fdf4'; this.style.color='#16a34a';">
+                📥
+        </a>
+
         <a href="{{ route('protocols.report.create', $protocol->prot_id) }}"
             target="_blank"
-            style="text-decoration: none; color: #10b981; font-size: 13px; font-weight: 600;"
-            title="Создать отчет по этой записи">📄</a>
+            style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 4px; color: #16a34a; background-color: #f0fdf4; border: 1px solid #bbf7d0; text-decoration: none; transition: all 0.15s;"
+            title="Создать отчет по этой записи"
+            onmouseover="this.style.backgroundColor='#dcfce7'; this.style.color='#085725';"
+            onmouseout="this.style.backgroundColor='#f0fdf4'; this.style.color='#16a34a';">📄</a>
     </td>
 
 
     <!-- ID Протокола -->
-    <td style="padding: 10px 8px; font-weight: 500; color: #111827;">{{ $protocol->prot_id }}</td>
+    <!-- <td style="padding: 10px 8px; font-weight: 500; color: #111827;">{{ $protocol->prot_id }}</td> -->
 
     <!-- Состояние (Текстовый статус на основе числового prot_status) -->
     <td style="padding: 10px 8px;">

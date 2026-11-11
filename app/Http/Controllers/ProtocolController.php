@@ -616,6 +616,36 @@ class ProtocolController extends Controller
         ]);
     }
 
+    public function exportYukos(\App\Services\ExcelReportService $excelService, $id)
+    {
+        try {
+            $spreadsheet = $excelService->generateYukosProtocol($id);
+            $protocol = AppProtocol::findOrFail($id);
+            $fileName = "protocol_{$protocol->prot_num}.xlsx";
+
+            return response()->streamDownload(function () use ($spreadsheet) {
+                if (ob_get_contents()) {
+                    ob_end_clean();
+                }
+                $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+                $writer->save('php://output');
+            }, $fileName, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Cache-Control' => 'max-age=0',
+                'Pragma' => 'public',
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Ошибка экспорта ЮКОС: ' . $e->getMessage(), [
+                'protocol_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->back()->with('error', 'Ошибка формирования протокола: ' . $e->getMessage());
+        }
+    }
+
+
+
 
     // public function exportExcel(Request $request, $id = null)
     // {
