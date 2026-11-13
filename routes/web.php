@@ -23,6 +23,7 @@ use App\Http\Controllers\RequestsAudienceController;
 use App\Http\Controllers\RequestsDisciplineController;
 use App\Http\Controllers\AllUserSapController;
 use App\Http\Controllers\RequestEmployeeController;
+use App\Http\Controllers\MatrixController;
 use App\Http\Controllers\MatrixCourseController;
 use App\Http\Controllers\MatrixDpoController;
 use App\Http\Controllers\MatrixOtController;
@@ -243,13 +244,15 @@ Route::post('/api/courses', [CourseController::class, 'store'])
 
 Route::prefix('matrices')->name('matrices.')->group(function () {
     Route::resource('courses', MatrixCourseController::class);
-    //Route::resource('courses', MatrixCourseController::class)->parameters(['course' => 'matrixCourse']);
-    //    Route::resource('dpo', MatrixDpoController::class);
     Route::resource('dpo', MatrixDpoController::class)->parameters(['dpo' => 'matrixDpo']);
-    //    Route::resource('ot', MatrixOtController::class);
     Route::resource('ot', MatrixOtController::class)->parameters(['ot' => 'matrixOt']);
     Route::resource('po', MatrixPoController::class);
 });
+
+
+Route::get('/matrices', [MatrixController::class, 'index'])->name('matrices.index');
+Route::post('/matrices/import', [MatrixController::class, 'import'])->name('matrices.import');
+
 
 // Справочники
 Route::prefix('directories')->name('directories.')->group(function () {
