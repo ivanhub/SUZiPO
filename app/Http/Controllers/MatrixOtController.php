@@ -31,37 +31,20 @@ class MatrixOtController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'row_number' => 'nullable|integer',
-            'code' => 'nullable|string|max:50',
-            'training_type' => 'nullable|string|max:100',
-            'program_name' => 'nullable|string',
-            'full_name' => 'nullable|string',
-            'study_form' => 'nullable|string',
-            'total_hours' => 'nullable|integer',
-            'fulltime_theoretical_hours' => 'nullable|numeric',
-            'distance_theoretical_hours' => 'nullable|numeric',
-            'industrial_practice_hours' => 'nullable|integer',
-            'practical_hours' => 'nullable|numeric',
-            'student_category' => 'nullable|string',
-            'group_capacity' => 'nullable|string|max:50',
-            'control_form' => 'nullable|string|max:200',
-            'commission_type' => 'nullable|string',
-            'issued_document' => 'nullable|string|max:200',
-            'note' => 'nullable|string',
-            'uchi_pro' => 'nullable|string|max:100',
-            'information_system_entry' => 'nullable|string',
-            'equipment' => 'nullable|string',
-            'equipment_location' => 'nullable|string',
-            'teacher_name' => 'nullable|string',
-            'code_ucjung' => 'nullable|string|max:100',
-            'code_ul' => 'nullable|string|max:100',
-        ]);
+        $validated = $request->validate($this->validationRules());
 
-        MatrixOt::create($validated);
+        try {
+            MatrixOt::create($validated);
 
-        return redirect()->route('matrices.ot.index')
-            ->with('success', 'Запись ОТ добавлена успешно.');
+            return redirect()->route('matrices.ot.index')
+                ->with('success', 'Запись ОТ добавлена успешно.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Ошибка создания записи ОТ: ' . $e->getMessage());
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Ошибка при создании записи ОТ: ' . $e->getMessage());
+        }
     }
 
     public function edit(MatrixOt $matrixOt): View
@@ -71,37 +54,20 @@ class MatrixOtController extends Controller
 
     public function update(Request $request, MatrixOt $matrixOt): RedirectResponse
     {
-        $validated = $request->validate([
-            'row_number' => 'nullable|integer',
-            'code' => 'nullable|string|max:50',
-            'training_type' => 'nullable|string|max:100',
-            'program_name' => 'nullable|string',
-            'full_name' => 'nullable|string',
-            'study_form' => 'nullable|string',
-            'total_hours' => 'nullable|integer',
-            'fulltime_theoretical_hours' => 'nullable|numeric',
-            'distance_theoretical_hours' => 'nullable|numeric',
-            'industrial_practice_hours' => 'nullable|integer',
-            'practical_hours' => 'nullable|numeric',
-            'student_category' => 'nullable|string',
-            'group_capacity' => 'nullable|string|max:50',
-            'control_form' => 'nullable|string|max:200',
-            'commission_type' => 'nullable|string',
-            'issued_document' => 'nullable|string|max:200',
-            'note' => 'nullable|string',
-            'uchi_pro' => 'nullable|string|max:100',
-            'information_system_entry' => 'nullable|string',
-            'equipment' => 'nullable|string',
-            'equipment_location' => 'nullable|string',
-            'teacher_name' => 'nullable|string',
-            'code_ucjung' => 'nullable|string|max:100',
-            'code_ul' => 'nullable|string|max:100',
-        ]);
+        $validated = $request->validate($this->validationRules());
 
-        $matrixOt->update($validated);
+        try {
+            $matrixOt->update($validated);
 
-        return redirect()->route('matrices.ot.index')
-            ->with('success', 'Запись ОТ обновлена успешно.');
+            return redirect()->route('matrices.ot.index')
+                ->with('success', 'Запись ОТ обновлена успешно.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Ошибка обновления записи ОТ #' . $matrixOt->id . ': ' . $e->getMessage());
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Ошибка при сохранении записи ОТ: ' . $e->getMessage());
+        }
     }
 
     public function destroy(MatrixOt $matrixOt): RedirectResponse
@@ -110,5 +76,54 @@ class MatrixOtController extends Controller
 
         return redirect()->route('matrices.ot.index')
             ->with('success', 'Запись ОТ удалена успешно.');
+    }
+
+    protected function validationRules(): array
+    {
+        return [
+            'row_number'                 => 'nullable|integer',
+            'sro_education_type'         => 'nullable|string|max:255',
+            'registry_number'            => 'nullable|string|max:100',
+            'code'                       => 'nullable|string|max:50',
+            'additional_code'            => 'nullable|string',
+            'date_start'                 => 'nullable|date',
+            'date_end'                   => 'nullable|date',
+            'training_type'              => 'nullable|string|max:100',
+            'program_name'               => 'nullable|string',
+            'full_name'                  => 'nullable|string',
+            'study_form'                 => 'nullable|string',
+            'total_hours'                => 'nullable|numeric',
+            'fulltime_theoretical_hours' => 'nullable|numeric',
+            'distance_theoretical_hours' => 'nullable|numeric',
+            'industrial_practice_hours'  => 'nullable|numeric',
+            'practical_hours'            => 'nullable|numeric',
+            'distance_practical_hours'   => 'nullable|numeric',
+            'cost_total'                 => 'nullable|numeric',
+            'cost_fulltime_theory'       => 'nullable|numeric',
+            'cost_distance_theory'       => 'nullable|numeric',
+            'cost_industrial_practice'   => 'nullable|numeric',
+            'cost_fulltime_practice'     => 'nullable|numeric',
+            'cost_distance_practice'     => 'nullable|numeric',
+            'student_category'           => 'nullable|string',
+            'group_capacity'             => 'nullable|string|max:50',
+            'control_form'               => 'nullable|string|max:200',
+            'commission_type'            => 'nullable|string',
+            'issued_document'            => 'nullable|string|max:200',
+            'periodicity'                => 'nullable|string|max:255',
+            'note'                       => 'nullable|string',
+            'uchi_pro'                   => 'nullable|string|max:100',
+            'information_system_entry'   => 'nullable|string',
+            'teacher_requirements'       => 'nullable|string',
+            'equipment'                  => 'nullable|string',
+            'equipment_location'         => 'nullable|string',
+            'teacher_name'               => 'nullable|string',
+            'only_yung'                  => 'nullable|string|max:100',
+            'og'                         => 'nullable|string|max:100',
+            'third_party'                => 'nullable|string|max:100',
+            'site_publication'           => 'nullable|string|max:100',
+            'inf_mo'                     => 'nullable|string|max:100',
+            'code_ucjung'                => 'nullable|string|max:100',
+            'code_ul'                    => 'nullable|string|max:100',
+        ];
     }
 }

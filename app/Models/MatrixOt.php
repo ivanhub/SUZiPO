@@ -13,15 +13,7 @@ final class MatrixOt extends Model
 
     protected $table = 'matrix_ot';
 
-    protected $fillable = [
-        'row_number', 'code', 'training_type', 'program_name', 'full_name',
-        'study_form', 'total_hours', 'fulltime_theoretical_hours',
-        'distance_theoretical_hours', 'industrial_practice_hours',
-        'practical_hours', 'student_category', 'group_capacity', 'control_form',
-        'commission_type', 'issued_document', 'note', 'uchi_pro',
-        'information_system_entry', 'equipment', 'equipment_location',
-        'teacher_name', 'code_ucjung', 'code_ul'
-    ];
+    protected $guarded = [];
 
     protected $casts = [
         'total_hours' => 'integer',
