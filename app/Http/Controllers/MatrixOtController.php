@@ -31,7 +31,7 @@ class MatrixOtController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate($this->validationRules());
+        $validated = $request->validate($this->validationRules(), $this->validationMessages());
 
         try {
             MatrixOt::create($validated);
@@ -54,7 +54,7 @@ class MatrixOtController extends Controller
 
     public function update(Request $request, MatrixOt $matrixOt): RedirectResponse
     {
-        $validated = $request->validate($this->validationRules());
+        $validated = $request->validate($this->validationRules(), $this->validationMessages());
 
         try {
             $matrixOt->update($validated);
@@ -126,4 +126,16 @@ class MatrixOtController extends Controller
             'code_ul'                    => 'nullable|string|max:100',
         ];
     }
+
+    protected function validationMessages(): array
+    {
+        return [
+            '*.integer' => 'Поле должно содержать только целое число (без букв и дробной части).',
+            '*.numeric' => 'Поле должно содержать числовое значение (например: 1500.50).',
+            '*.date'    => 'Укажите корректную дату в формате ДД.ММ.ГГГГ.',
+            '*.max'     => 'Превышена максимальная длина текста (не более :max символов).',
+            '*.string'  => 'Поле должно содержать текстовое значение.',
+        ];
+    }
+
 }

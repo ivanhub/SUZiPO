@@ -7,7 +7,7 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
     <div>
         <label for="row_number" class="block text-sm font-medium text-gray-700 mb-1">№ п/п</label>
-        <input type="number" name="row_number" id="row_number" value="{{ old('row_number', $item->row_number) }}"
+        <input type="number" min="0" step="1" placeholder="Например: 40" name="row_number" id="row_number" value="{{ old('row_number', $item->row_number) }}"
                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
         @error('row_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
@@ -88,42 +88,42 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
     <div>
         <label for="total_hours" class="block text-sm font-medium text-gray-700 mb-1">Всего часов</label>
-        <input type="number" step="0.01" name="total_hours" id="total_hours" value="{{ old('total_hours', $item->total_hours) }}"
+        <input type="number" min="0" step="0.1" placeholder="0.0" name="total_hours" id="total_hours" value="{{ old('total_hours', $item->total_hours) }}"
                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
         @error('total_hours') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
 
     <div>
         <label for="theoretical_hours" class="block text-sm font-medium text-gray-700 mb-1">Теоретическое обучение</label>
-        <input type="number" step="0.01" name="theoretical_hours" id="theoretical_hours" value="{{ old('theoretical_hours', $item->theoretical_hours) }}"
+        <input type="number" min="0" step="0.1" placeholder="0.0" name="theoretical_hours" id="theoretical_hours" value="{{ old('theoretical_hours', $item->theoretical_hours) }}"
                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
         @error('theoretical_hours') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
 
     <div>
         <label for="self_study_hours" class="block text-sm font-medium text-gray-700 mb-1">Теория с ДОТ / Самостоятельно</label>
-        <input type="number" step="0.01" name="self_study_hours" id="self_study_hours" value="{{ old('self_study_hours', $item->self_study_hours) }}"
+        <input type="number" min="0" step="0.1" placeholder="0.0" name="self_study_hours" id="self_study_hours" value="{{ old('self_study_hours', $item->self_study_hours) }}"
                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
         @error('self_study_hours') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
 
     <div>
         <label for="industrial_practice_hours" class="block text-sm font-medium text-gray-700 mb-1">Производственно-практическое обучение</label>
-        <input type="number" step="0.01" name="industrial_practice_hours" id="industrial_practice_hours" value="{{ old('industrial_practice_hours', $item->industrial_practice_hours) }}"
+        <input type="number" min="0" step="0.1" placeholder="0.0" name="industrial_practice_hours" id="industrial_practice_hours" value="{{ old('industrial_practice_hours', $item->industrial_practice_hours) }}"
                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
         @error('industrial_practice_hours') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
 
     <div>
         <label for="practical_hours" class="block text-sm font-medium text-gray-700 mb-1">Практическое обучение</label>
-        <input type="number" step="0.01" name="practical_hours" id="practical_hours" value="{{ old('practical_hours', $item->practical_hours) }}"
+        <input type="number" min="0" step="0.1" placeholder="0.0" name="practical_hours" id="practical_hours" value="{{ old('practical_hours', $item->practical_hours) }}"
                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
         @error('practical_hours') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
 
     <div>
         <label for="distance_practical_hours" class="block text-sm font-medium text-gray-700 mb-1">Практика с ЭО и ДОТ</label>
-        <input type="number" step="0.01" name="distance_practical_hours" id="distance_practical_hours" value="{{ old('distance_practical_hours', $item->distance_practical_hours) }}"
+        <input type="number" min="0" step="0.1" placeholder="0.0" name="distance_practical_hours" id="distance_practical_hours" value="{{ old('distance_practical_hours', $item->distance_practical_hours) }}"
                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
         @error('distance_practical_hours') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
@@ -133,42 +133,42 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
     <div>
         <label for="cost_total" class="block text-sm font-medium text-gray-700 mb-1">Итоговая стоимость без НДС</label>
-        <input type="number" step="0.01" name="cost_total" id="cost_total" value="{{ old('cost_total', $item->cost_total) }}"
+        <input type="number" min="0" step="0.1" placeholder="0.0" name="cost_total" id="cost_total" value="{{ old('cost_total', $item->cost_total) }}"
                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
         @error('cost_total') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
 
     <div>
         <label for="cost_fulltime_theory" class="block text-sm font-medium text-gray-700 mb-1">Очное теоретическое обучение</label>
-        <input type="number" step="0.01" name="cost_fulltime_theory" id="cost_fulltime_theory" value="{{ old('cost_fulltime_theory', $item->cost_fulltime_theory) }}"
+        <input type="number" min="0" step="0.1" placeholder="0.0" name="cost_fulltime_theory" id="cost_fulltime_theory" value="{{ old('cost_fulltime_theory', $item->cost_fulltime_theory) }}"
                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
         @error('cost_fulltime_theory') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
 
     <div>
         <label for="cost_distance_theory" class="block text-sm font-medium text-gray-700 mb-1">Теоретическое обучение с ДОТ</label>
-        <input type="number" step="0.01" name="cost_distance_theory" id="cost_distance_theory" value="{{ old('cost_distance_theory', $item->cost_distance_theory) }}"
+        <input type="number" min="0" step="0.1" placeholder="0.0" name="cost_distance_theory" id="cost_distance_theory" value="{{ old('cost_distance_theory', $item->cost_distance_theory) }}"
                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
         @error('cost_distance_theory') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
 
     <div>
         <label for="cost_industrial_practice" class="block text-sm font-medium text-gray-700 mb-1">Производственно-практическое</label>
-        <input type="number" step="0.01" name="cost_industrial_practice" id="cost_industrial_practice" value="{{ old('cost_industrial_practice', $item->cost_industrial_practice) }}"
+        <input type="number" min="0" step="0.1" placeholder="0.0" name="cost_industrial_practice" id="cost_industrial_practice" value="{{ old('cost_industrial_practice', $item->cost_industrial_practice) }}"
                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
         @error('cost_industrial_practice') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
 
     <div>
         <label for="cost_fulltime_practice" class="block text-sm font-medium text-gray-700 mb-1">Очное практическое обучение</label>
-        <input type="number" step="0.01" name="cost_fulltime_practice" id="cost_fulltime_practice" value="{{ old('cost_fulltime_practice', $item->cost_fulltime_practice) }}"
+        <input type="number" min="0" step="0.1" placeholder="0.0" name="cost_fulltime_practice" id="cost_fulltime_practice" value="{{ old('cost_fulltime_practice', $item->cost_fulltime_practice) }}"
                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
         @error('cost_fulltime_practice') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>
 
     <div>
         <label for="cost_distance_practice" class="block text-sm font-medium text-gray-700 mb-1">Практическое обучение с ДОТ</label>
-        <input type="number" step="0.01" name="cost_distance_practice" id="cost_distance_practice" value="{{ old('cost_distance_practice', $item->cost_distance_practice) }}"
+        <input type="number" min="0" step="0.1" placeholder="0.0" name="cost_distance_practice" id="cost_distance_practice" value="{{ old('cost_distance_practice', $item->cost_distance_practice) }}"
                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
         @error('cost_distance_practice') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </div>

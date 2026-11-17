@@ -423,4 +423,36 @@
 
     @stack('scripts')
 </body>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+
+    numberInputs.forEach(function (input) {
+        const isDecimal = input.step && input.step !== '1';
+        input.setAttribute('inputmode', isDecimal ? 'decimal' : 'numeric');
+
+        input.addEventListener('keydown', function (e) {
+            const forbidden = ['e', 'E', '+', '-'];
+            if (!isDecimal) {
+                forbidden.push('.', ',');
+            }
+
+            if (forbidden.includes(e.key)) {
+                e.preventDefault();
+                console.warn(`Заблокирован ввод недопустимого символа "${e.key}" в поле [${input.name || input.id}]`);
+            }
+        });
+
+        input.addEventListener('input', function () {
+            let val = this.value;
+            if (isDecimal && val.includes(',')) {
+                val = val.replace(',', '.');
+                this.value = val;
+            }
+        });
+    });
+});
+</script>
+
+
 </html>
