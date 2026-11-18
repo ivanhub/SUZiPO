@@ -31,3 +31,75 @@
   font-display: swap;
   src: url('../fonts/inter-v20-cyrillic_latin-700.woff2') format('woff2');
 }
+
+/* =========================================================
+   СИСТЕМА ТЕМ СУЗиПО (СВЕТЛАЯ И ТЕМНАЯ)
+   ========================================================= */
+:root {
+  --bg-page: #FFFFFF;
+  --bg-surface: #F5F5F7;
+  --bg-surface-hover: #EAEAEF;
+  --bg-input: #E5E7EB;
+  --bg-input-focus: #FFFFFF;
+  --border-color: #E5E7EB;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --brand-yellow: #FFD100;
+  --brand-yellow-hover: #F5C400;
+  --brand-yellow-text: #111827;
+}
+
+html.dark {
+  --bg-page: #141416;
+  --bg-surface: #1E1E22;
+  --bg-surface-hover: #27272D;
+  --bg-input: #27272A;
+  --bg-input-focus: #1E1E22;
+  --border-color: #2E2E34;
+  --text-primary: #F9FAFB;
+  --text-secondary: #9CA3AF;
+  --brand-yellow: #FFD100;
+  --brand-yellow-hover: #F5C400;
+  --brand-yellow-text: #111827;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Универсальные классы поверхностей и элементов */
+.suzipo-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+}
+
+.suzipo-input {
+  background-color: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  transition: all 0.15s ease;
+}
+
+.suzipo-input:focus {
+  background-color: var(--bg-input-focus) !important;
+  border-color: var(--brand-yellow) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(255, 209, 0, 0.25) !important;
+}
+
+.btn-rosneft {
+  background-color: var(--brand-yellow);
+  color: var(--brand-yellow-text);
+  font-weight: 600;
+  border-radius: 10px;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.btn-rosneft:hover {
+  background-color: var(--brand-yellow-hover);
+}

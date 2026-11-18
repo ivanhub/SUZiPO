@@ -34,6 +34,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ErrorController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AppDemandController;
+use App\Http\Controllers\DashboardController;
+
 
 use App\Models\Booking;
 
@@ -123,9 +125,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Dashboard
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    // Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
 
     // ==========================================
     // Пути заявок
@@ -337,9 +338,8 @@ Route::get('/', function () {
     return redirect('/login');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
 
 // Route::resource('requests', RequestController::class);
 Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
