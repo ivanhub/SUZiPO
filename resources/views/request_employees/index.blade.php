@@ -26,6 +26,7 @@
                     </p>
                 </div>
 
+@urp
                 <!-- Форма добавления сотрудника -->
                 <div class="bg-gray-50 p-4 rounded-lg mb-6">
                     <h3 class="text-md font-medium text-gray-700 mb-3">Добавить сотрудника</h3>
@@ -72,6 +73,8 @@
         </div>
     </form>
 </div>
+@endurp
+@ooo
 <!-- Форма ручного добавления сотрудника -->
 <div class="bg-purple-50 p-4 rounded-lg mb-6">
     <h3 class="text-md font-medium text-gray-700 mb-3">Ручной ввод сотрудника</h3>
@@ -79,20 +82,35 @@
         @csrf
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-                <label for="manual_last_name" class="block text-sm font-medium text-gray-700 mb-1">Фамилия *</label>
-                <input type="text" name="last_name" id="manual_last_name" value="{{ old('last_name') }}"
+                <label for="manual_full_name" class="block text-sm font-medium text-gray-700 mb-1">ФИО *</label>
+                <input type="text" name="full_name" id="manual_full_name" value="{{ old('full_name') }}"
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                       required>
+                       required placeholder="Фамилия Имя Отчество">
             </div>
             <div>
-                <label for="manual_first_name" class="block text-sm font-medium text-gray-700 mb-1">Имя *</label>
-                <input type="text" name="first_name" id="manual_first_name" value="{{ old('first_name') }}"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                       required>
+                <label for="manual_position" class="block text-sm font-medium text-gray-700 mb-1">Должность</label>
+                <input type="text" name="position" id="manual_position" value="{{ old('position') }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
             </div>
             <div>
-                <label for="manual_middle_name" class="block text-sm font-medium text-gray-700 mb-1">Отчество</label>
-                <input type="text" name="middle_name" id="manual_middle_name" value="{{ old('middle_name') }}"
+                <label for="manual_department" class="block text-sm font-medium text-gray-700 mb-1">Структурное подразделение</label>
+                <input type="text" name="department" id="manual_department" value="{{ old('department') }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+            </div>
+            <div>
+                <label for="manual_birth_date" class="block text-sm font-medium text-gray-700 mb-1">Дата рождения</label>
+                <input type="date" name="birth_date" id="manual_birth_date" value="{{ old('birth_date') }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+            </div>
+            <div>
+                <label for="manual_pfr" class="block text-sm font-medium text-gray-700 mb-1">СНИЛС</label>
+                <input type="text" name="pfr_certificate" id="manual_pfr" value="{{ old('pfr_certificate') }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                       placeholder="000-000-000 00">
+            </div>
+            <div>
+                <label for="manual_citizenship" class="block text-sm font-medium text-gray-700 mb-1">Гражданство</label>
+                <input type="text" name="citizenship" id="manual_citizenship" value="{{ old('citizenship', 'Российская Федерация') }}"
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
             </div>
         </div>
@@ -104,7 +122,7 @@
         </div>
     </form>
 </div>
-
+@endooo
 <!-- Список сотрудников -->
 <div class="overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200" style="table-layout: fixed;">

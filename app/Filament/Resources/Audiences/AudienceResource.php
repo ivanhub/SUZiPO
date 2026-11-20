@@ -65,8 +65,9 @@ class AudienceResource extends Resource
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
-                ]),
-            ]);
+                ]),	     
+            ])    ->paginated([5, 10, 25, 50])          
+        ->defaultPaginationPageOption(25);
     }
 
     public static function getPages(): array

@@ -83,13 +83,13 @@
         </a>
         
         <!-- Создать заявку -->
-        @urp
+	@if(auth()->user()->hasAnyRole(['urp', 'urp admin', 'ooo', 'ooo admin', 'ooo chief']))
         <a href="{{ route('requests.create') }}" 
            class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
                   {{ request()->routeIs('requests.create') ? 'bg-indigo-50 text-indigo-700' : '' }}">
             + Создать заявку
         </a>
-        @endurp
+        @endif
         
         <!-- По статусам -->
         <a href="{{ route('requests.index', ['status' => 'created']) }}" 

@@ -58,7 +58,7 @@ class RoleSeeder extends Seeder
         Role::findByName('urp')->givePermissionTo(['view_requests', 'create_requests', 'edit_requests', 'view_protocols', 'view_reports', 'export_data']);
         
         // ooo - просмотр заявок, редактирование (без создания)
-        Role::findByName('ooo')->givePermissionTo(['view_requests', 'edit_requests', 'view_protocols']);
+        Role::findByName('ooo')->givePermissionTo(['view_requests', 'create_requests', 'edit_requests', 'view_protocols']);
         
         // ookoit - только просмотр
         Role::findByName('ookoit')->givePermissionTo(['view_requests', 'view_protocols', 'view_reports']);
@@ -67,7 +67,7 @@ class RoleSeeder extends Seeder
         Role::findByName('metodist')->givePermissionTo(['view_requests', 'edit_requests', 'view_protocols', 'create_protocols', 'edit_protocols']);
         
         // ooo admin - как ooo + отчеты и экспорт
-        Role::findByName('ooo admin')->givePermissionTo(['view_requests', 'edit_requests', 'view_protocols', 'view_reports', 'export_data']);
+        Role::findByName('ooo admin')->givePermissionTo(['view_requests', 'create_requests', 'edit_requests', 'view_protocols', 'view_reports', 'export_data']);
         
         // ooo chief - как ooo + просмотр отчетов
         Role::findByName('ooo chief')->givePermissionTo(['view_requests', 'view_protocols', 'view_reports']);

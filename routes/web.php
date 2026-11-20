@@ -187,8 +187,8 @@ Route::get('requests/{id}/unlock', [RequestController::class, 'unlock'])->name('
 Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
 
 // Роут для экспорта отчета в Excel
-Route::get('/protocols/{id?}/export-excel', [ProtocolController::class, 'exportExcel'])
-    ->name('protocols.export-excel');
+//Route::get('/protocols/{id?}/export-excel', [ProtocolController::class, 'exportExcel'])
+//    ->name('protocols.export-excel');
 
 
 // История изменений заявки
