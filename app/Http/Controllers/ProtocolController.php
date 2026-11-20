@@ -228,6 +228,97 @@ class ProtocolController extends Controller
             ->get()
             ->keyBy('tab_number');
 
+        // =========================================================================
+        // АВТОМАТИЧЕСКИЙ ПОДБОР ЧАСОВ ИЗ МАТРИЦ (ПО, ДПО, КУРСЫ, ОТ)
+        // =========================================================================
+        $matrixHours = [
+            'program_hours'  => 0,
+            'theory_hours'   => 0,
+            'prod_hours'     => 0,
+            'practice_hours' => 0,
+            'self_hours'     => 0,
+            'matched_source' => null,
+        ];
+
+        try {
+            $tableMap = [
+                1 => 'matrix_dpo',
+                2 => 'matrix_po',
+                3 => 'matrix_courses',
+                4 => 'matrix_ot',
+            ];
+
+            $targetTable = $tableMap[(int)$matrixNum] ?? null;
+
+            // Резервное определение таблицы по тексту вида обучения, если matrix_num не задан
+            if (!$targetTable) {
+                $typeLower = mb_strtolower($learningTypeName);
+                if (str_contains($typeLower, 'дпо') || str_contains($typeLower, 'дополнительн')) {
+                    $targetTable = 'matrix_dpo';
+                } elseif (str_contains($typeLower, 'профессиональн') || $typeLower === 'по') {
+                    $targetTable = 'matrix_po';
+                } elseif (str_contains($typeLower, 'охрана труда') || $typeLower === 'от') {
+                    $targetTable = 'matrix_ot';
+                } else {
+                    $targetTable = 'matrix_courses';
+                }
+            }
+
+            if ($targetTable && \Illuminate\Support\Facades\Schema::hasTable($targetTable)) {
+                $courseObj     = $protocol->demand?->course;
+                $professionObj = $protocol->demand?->profession;
+                $searchCode    = trim((string)($courseObj?->code ?? $professionObj?->code ?? ''));
+                $searchName    = trim((string)($courseObj?->course ?? $courseObj?->name ?? $professionObj?->name ?? ''));
+                $searchForm    = trim((string)($protocol->demand?->learningType?->name ?? ''));
+
+                $query = DB::table($targetTable);
+
+                if ($searchCode !== '') {
+                    $query->where('code', $searchCode);
+                } elseif ($searchName !== '') {
+                    $tableCols = \Illuminate\Support\Facades\Schema::getColumnListing($targetTable);
+                    $query->where(function ($q) use ($searchName, $tableCols) {
+                        $q->where('full_name', 'ILIKE', "%{$searchName}%");
+                        if (in_array('program_name', $tableCols)) {
+                            $q->orWhere('program_name', 'ILIKE', "%{$searchName}%");
+                        }
+                        if (in_array('profession_name', $tableCols)) {
+                            $q->orWhere('profession_name', 'ILIKE', "%{$searchName}%");
+                        }
+                    });
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+
+                $candidates = $query->get();
+
+                if ($candidates->isNotEmpty()) {
+                    // Если у шифра несколько вариантов (очная/заочная), ищем совпадение по форме обучения
+                    $matchedRow = null;
+                    if ($searchForm !== '' && $candidates->count() > 1) {
+                        $formLower = mb_strtolower($searchForm);
+                        $matchedRow = $candidates->first(function ($row) use ($formLower) {
+                            return str_contains(mb_strtolower((string)($row->study_form ?? '')), $formLower);
+                        });
+                    }
+                    $matchedRow = $matchedRow ?? $candidates->first();
+
+                    // Маппим колонки в зависимости от структуры таблицы матрицы
+                    $matrixHours = [
+                        'program_hours'  => (int)round((float)($matchedRow->hours ?? $matchedRow->total_hours ?? 0)),
+                        'theory_hours'   => (int)round((float)($matchedRow->theory_hours ?? $matchedRow->theoretical_hours ?? $matchedRow->fulltime_theoretical_hours ?? 0)),
+                        'prod_hours'     => (int)round((float)($matchedRow->practical_hours ?? $matchedRow->industrial_practice_hours ?? 0)),
+                        'practice_hours' => (int)round((float)(in_array($targetTable, ['matrix_dpo', 'matrix_ot']) ? ($matchedRow->practical_hours ?? 0) : ($matchedRow->practice_hours ?? 0))),
+                        'self_hours'     => (int)round((float)($matchedRow->self_study_hours ?? $matchedRow->distance_theoretical_hours ?? 0)),
+                        'matched_source' => "{$targetTable} (ID: {$matchedRow->id}, Шифр: {$matchedRow->code})",
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Ошибка подбора часов из матрицы для протокола #{$id}: " . $e->getMessage());
+        }
+
+
         return view('protocols.report.create', compact(
             'protocol',
             'learningTypeName',
@@ -236,6 +327,7 @@ class ProtocolController extends Controller
             'refCurators',
             'report',
             'matrixNum',
+            'matrixHours',
             'allComissionMembers',
             'currentComission',
             'savedResults',
@@ -476,6 +568,62 @@ class ProtocolController extends Controller
         // \App\Models\ProtocolComission::where('protocol_id', $protocol->prot_id)->delete();
         \App\Models\UcExtCommissionprotocol::where('id_protocol', $protocol->prot_id)->delete();
 
+        // =========================================================================
+        // АВТОМАТИЧЕСКИЙ ПЕРЕСЧЕТ ИТОГОВ ОБУЧЕНИЯ ДЛЯ ТАБЛИЦЫ uc_ext_report
+        // =========================================================================
+        try {
+            $allSavedStudents = DB::table('uc_ext_studentsprotocol')
+                ->where('id_protocol', $protocol->prot_id)
+                ->get();
+
+            $appearedCount = $allSavedStudents->filter(function ($row) {
+                $mark = mb_strtolower(trim((string)($row->markitog ?? '')));
+                return $mark !== '' && !str_contains($mark, 'неяв');
+            })->count();
+
+            $passedCount = $allSavedStudents->filter(function ($row) {
+                $mark = mb_strtolower(trim((string)($row->markitog ?? '')));
+                if ($mark === '' || str_contains($mark, 'неяв') || str_contains($mark, 'незач') || str_contains($mark, 'не зач') || str_contains($mark, 'неуд')) {
+                    return false;
+                }
+                return in_array($mark, ['зачет', 'зачтено', 'удовл', 'удовлетворительно', 'хорошо', 'отлично', '3', '4', '5'])
+                    || ((int)($row->flagpassed ?? 0) === 1);
+            })->count();
+
+            $noShowCount = $allSavedStudents->filter(function ($row) {
+                $mark = mb_strtolower(trim((string)($row->markitog ?? '')));
+                return str_contains($mark, 'неяв');
+            })->count();
+
+            $noPassedCount = max(0, $appearedCount - $passedCount);
+
+            $employeesList = collect($protocol->demand?->employees ?? []);
+            $menCount   = $employeesList->where('gender_key', '1')->count();
+            $womenCount = $employeesList->where('gender_key', '2')->count();
+
+            if (\Illuminate\Support\Facades\Schema::hasTable('uc_ext_report')) {
+                $reportCols = \Illuminate\Support\Facades\Schema::getColumnListing('uc_ext_report');
+                $statsUpdate = [];
+
+                if (in_array('show', $reportCols))       { $statsUpdate['show']       = $appearedCount; }
+                if (in_array('Show', $reportCols))       { $statsUpdate['Show']       = $appearedCount; }
+                if (in_array('passed', $reportCols))     { $statsUpdate['passed']     = $passedCount; }
+                if (in_array('noshow', $reportCols))     { $statsUpdate['noshow']     = $noShowCount; }
+                if (in_array('nopassed', $reportCols))   { $statsUpdate['nopassed']   = $noPassedCount; }
+                if (in_array('countman', $reportCols))   { $statsUpdate['countman']   = $menCount; }
+                if (in_array('countwoman', $reportCols)) { $statsUpdate['countwoman'] = $womenCount; }
+
+                if (!empty($statsUpdate)) {
+                    DB::table('uc_ext_report')
+                        ->where('id_protocol', $protocol->prot_id)
+                        ->update($statsUpdate);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Ошибка пересчета итогов отчета для протокола #{$protocol->prot_id}: " . $e->getMessage());
+        }
+
+
         // Председатель
         $chairmanFio = $request->input('chairman_fio');
         $dbChairman = DB::table('comission_members')->where('fio', $chairmanFio)->first();
@@ -615,6 +763,36 @@ class ProtocolController extends Controller
             'Pragma' => 'public',
         ]);
     }
+
+    public function exportYukos(\App\Services\ExcelReportService $excelService, $id)
+    {
+        try {
+            $spreadsheet = $excelService->generateYukosProtocol($id);
+            $protocol = AppProtocol::findOrFail($id);
+            $fileName = "protocol_{$protocol->prot_num}.xlsx";
+
+            return response()->streamDownload(function () use ($spreadsheet) {
+                if (ob_get_contents()) {
+                    ob_end_clean();
+                }
+                $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+                $writer->save('php://output');
+            }, $fileName, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Cache-Control' => 'max-age=0',
+                'Pragma' => 'public',
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Ошибка экспорта ЮКОС: ' . $e->getMessage(), [
+                'protocol_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->back()->with('error', 'Ошибка формирования протокола: ' . $e->getMessage());
+        }
+    }
+
+
 
 
     // public function exportExcel(Request $request, $id = null)

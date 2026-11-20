@@ -233,4 +233,138 @@ class ExcelReportService
         }
         return $spreadsheet;
     }
+
+   
+    public function generateYukosProtocol($protocolId)
+    {
+        // 1. Загружаем протокол со всеми связями
+        $protocol = AppProtocol::with([
+            'demand.course',
+            'demand.learningType',
+            'demand.educationType',
+            'demand.teacher',
+            'demand.employees'
+        ])->findOrFail($protocolId);
+
+        $employees = collect($protocol->demand?->employees ?? [])->values();
+
+        // 2. Подгружаем сохраненные результаты студентов (snapshot)
+        $rawSavedResults = DB::table('uc_ext_studentsprotocol')->where('id_protocol', $protocolId)->get();
+        $savedResults = collect();
+        foreach ($rawSavedResults as $row) {
+            $studentInfo = DB::table('uc_ext_students')->where('id_student', $row->id_students)->first();
+            $key = $studentInfo?->snils ? preg_replace('/[^0-9]/', '', $studentInfo->snils) : ($studentInfo?->personnelnumber ?? null);
+            if (empty($key)) {
+                $key = (string)$row->id_students;
+            }
+            if (!empty($key)) {
+                $savedResults->put($key, $row);
+            }
+        }
+
+        // 3. Подгружаем состав комиссии
+        $commissionRows = DB::table('uc_ext_commissionprotocol')->where('id_protocol', $protocolId)->orderBy('sortorder')->get();
+        $chairmanFio = $commissionRows->where('note', 'Председатель')->first()?->fio ?? '';
+        $membersList = $commissionRows->where('note', 'Член комиссии')->pluck('fio')->join(', ');
+
+        // 4. Загружаем чистый шаблон ЮКОС
+        $templatePath = storage_path('app/templates/protocol_yukos_blank.xlsx');
+        if (!file_exists($templatePath)) {
+            throw new \Exception('Файл шаблона не найден по пути: storage/app/templates/protocol_yukos_blank.xlsx');
+        }
+
+        $reader = IOFactory::createReader('Xlsx');
+        $spreadsheet = $reader->load($templatePath);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $sheet->setCellValue('H2', $protocol->prot_num ?? '');
+        $sheet->setCellValue('L2', $protocol->prot_date ? Carbon::parse($protocol->prot_date)->format('d.m.Y') : ($protocol->date_end ? Carbon::parse($protocol->date_end)->format('d.m.Y') : ''));
+
+        $sheet->setCellValue('D4', $protocol->order_num ?? '');
+        $sheet->setCellValue('H4', $protocol->order_date ? Carbon::parse($protocol->order_date)->format('d.m.Y') : '');
+
+        $sheet->setCellValue('D5', $chairmanFio);
+        $sheet->setCellValue('D6', $membersList);
+
+        $sheet->setCellValue('E9', $protocol->prot_num ?? '');
+        $sheet->setCellValue('D10', $protocol->date_start ? Carbon::parse($protocol->date_start)->format('d.m.Y') : '');
+        $sheet->setCellValue('L10', $protocol->date_end ? Carbon::parse($protocol->date_end)->format('d.m.Y') : '');
+
+        $theoryHours = (int)($protocol->theory_hours ?? $protocol->theoryhours ?? 0);
+        $practiceHours = (int)($protocol->practice_hours ?? $protocol->practicehours ?? 0);
+
+        $sheet->setCellValue('F11', $theoryHours);
+        $sheet->setCellValue('N11', $theoryHours);
+        $sheet->setCellValue('F12', $practiceHours);
+        $sheet->setCellValue('N12', $practiceHours);
+
+        $teacherFios = $protocol->demand?->teacher?->fio ?? '';
+        $sheet->setCellValue('D13', $teacherFios);
+
+
+        $baseRow = 21;
+        $totalEmployees = $employees->count();
+        $courseName = $protocol->demand?->course?->course ?? '—';
+        $learningType = $protocol->demand?->learningType?->name ?? $protocol->demand?->educationType?->name ?? '—';
+
+        // Если обучаемых больше 2, вставляем недостающие строки единым блоком после 22-й строки,
+        // чтобы аккуратно сдвинуть подвал с подписями вниз
+        if ($totalEmployees > 2) {
+            $sheet->insertNewRowBefore($baseRow + 2, $totalEmployees - 2);
+        }
+
+        $baseRowHeight = $sheet->getRowDimension($baseRow)->getRowHeight();
+        if ($baseRowHeight <= 0) {
+            $baseRowHeight = 45; // Резервная высота под многострочный текст программы
+        }
+
+        foreach ($employees as $index => $employee) {
+            $currentRow = $baseRow + $index;
+
+            // Для всех новых строк (начиная со 23-й) копируем стили и объединение колонок J:K
+            if ($index >= 2) {
+                $sheet->getRowDimension($currentRow)->setRowHeight($baseRowHeight);
+                foreach (range('A', 'N') as $col) {
+                    $styleArray = $sheet->getStyle($col . $baseRow)->exportArray();
+                    $sheet->getStyle($col . $currentRow)->applyFromArray($styleArray);
+                }
+                // Восстанавливаем объединение колонок J и K под наименование курса
+                $sheet->mergeCells("J{$currentRow}:K{$currentRow}");
+            }
+
+            $empFullName = trim(($employee->last_name ?? '') . ' ' . ($employee->first_name ?? '') . ' ' . ($employee->middle_name ?? ''));
+            if (empty($empFullName)) {
+                $empFullName = $employee->fio ?? $employee->name ?? '—';
+            }
+
+            // Поиск сохраненных результатов студента
+            $empSnilsClean = !empty($employee->pfr_certificate) ? preg_replace('/[^0-9]/', '', $employee->pfr_certificate) : '';
+            $empTabNum = (string)($employee->tab_number ?? $employee->tab_num ?? '');
+
+            $dbRow = null;
+            if (!empty($empSnilsClean)) { $dbRow = $savedResults->get($empSnilsClean); }
+            if (!$dbRow && !empty($empTabNum)) { $dbRow = $savedResults->get($empTabNum); }
+            if (!$dbRow) { $dbRow = $savedResults->get((string)$employee->id); }
+
+            // Запись значений в ячейки строки
+            $sheet->setCellValue('A' . $currentRow, $index + 1); // № пп
+            $sheet->getCell('B' . $currentRow)->setValueExplicit($empTabNum ?: '—', DataType::TYPE_STRING); // Таб. Номер
+            $sheet->setCellValue('C' . $currentRow, $empFullName); // ФИО
+            $sheet->setCellValue('D' . $currentRow, $employee->position ?? '—'); // Профессия/должность
+            $sheet->setCellValue('E' . $currentRow, $employee->level_4_name ?? $employee->department ?? '—'); // Место работы
+            $sheet->setCellValue('F' . $currentRow, $employee->rank ?? '—'); // Разряд
+            $sheet->setCellValue('G' . $currentRow, $learningType); // Вид обучения
+            $sheet->setCellValue('H' . $currentRow, $dbRow?->markitog ?? 'зачет'); // Оценка теории
+            $sheet->setCellValue('I' . $currentRow, $dbRow?->markpractic ?? ''); // Оценка практики
+            $sheet->setCellValue('J' . $currentRow, $courseName); // Присваиваемая профессия / курс (J:K)
+            $sheet->setCellValue('L' . $currentRow, $dbRow?->assignedgrade ?? ''); // Присваиваемый разряд
+
+            $certNum = $dbRow?->documentnumber ?? $dbRow?->regnumber ?? '';
+            $sheet->getCell('M' . $currentRow)->setValueExplicit((string)$certNum, DataType::TYPE_STRING); // № удостоверения
+            $sheet->setCellValue('N' . $currentRow, ''); // Подпись
+        }
+
+        return $spreadsheet;
+    }
+
 }

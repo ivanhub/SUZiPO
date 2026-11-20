@@ -176,16 +176,34 @@
                         <input type="date" name="start_date_fact" value="{{ $protocol->date_start }}" style="width: 160px; padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; height: 34px;">
                     </div>
                     <!-- Блок Часов по программе -->
+                    @php
+                        $valProgramHours  = (!empty($protocol->program_hours) && $protocol->program_hours > 0) ? $protocol->program_hours : ($matrixHours['program_hours'] ?? 0);
+                        $valTheoryHours   = (!empty($protocol->theory_hours) && $protocol->theory_hours > 0) ? $protocol->theory_hours : ($matrixHours['theory_hours'] ?? 0);
+                        $valProdHours     = (!empty($protocol->prod_hours) && $protocol->prod_hours > 0) ? $protocol->prod_hours : ($matrixHours['prod_hours'] ?? 0);
+                        $valPracticeHours = (!empty($protocol->practice_hours) && $protocol->practice_hours > 0) ? $protocol->practice_hours : ($matrixHours['practice_hours'] ?? 0);
+                        $valSelfHours     = (!empty($protocol->self_hours) && $protocol->self_hours > 0) ? $protocol->self_hours : ($matrixHours['self_hours'] ?? 0);
+                    @endphp
                     <div style="display: grid; grid-template-columns: 240px 1fr; gap: 12px; border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">
-                        <label style="font-weight: 600; color: #111827; margin-top: 6px;">Распределение учебных часов:</label>
+                        <div>
+                            <label style="font-weight: 600; color: #111827; margin-top: 6px; display: block;">Распределение учебных часов:</label>
+                            @if(!empty($matrixHours['matched_source']))
+                                <div style="font-size: 11px; color: #16a34a; margin-top: 4px;">
+                                    ✓ Подтянуто из: {{ $matrixHours['matched_source'] }}
+                                </div>
+                            @endif
+                        </div>
                         <div style="display: flex; flex-direction: column; gap: 8px; max-width: 320px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;"><span>Кол-во часов по программе:</span> <input type="number" name="program_hours" value="{{ $protocol->program_hours ?? 0 }}" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center; height: 30px;"></div>
-                            <div style="display: flex; justify-content: space-between; align-items: center;"><span>Кол-во часов теоретического обучения:</span> <input type="number" name="theory_hours" value="{{ $protocol->theory_hours ?? 0 }}" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center; height: 30px;"></div>
-                            <div style="display: flex; justify-content: space-between; align-items: center;"><span>Кол-во часов производственно-практ.:</span> <input type="number" name="prod_hours" value="0" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center; height: 30px;"></div>
-                            <div style="display: flex; justify-content: space-between; align-items: center;"><span>Кол-во часов практического обучения:</span> <input type="number" name="practice_hours" value="{{ $protocol->practice_hours ?? 0 }}" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center; height: 30px;"></div>
-                            <div style="display: flex; justify-content: space-between; align-items: center;"><span>Кол-во часов самостоятельной подг.:</span> <input type="number" name="self_hours" value="0" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center; height: 30px;"></div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;"><span>Кол-во часов по программе:</span> <input type="number" name="program_hours" value="{{ $valProgramHours }}" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center; height: 30px;"></div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;"><span>Кол-во часов теоретического обучения:</span> <input type="number" name="theory_hours" value="{{ $valTheoryHours }}" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center; height: 30px;"></div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;"><span>Кол-во часов производственно-практ.:</span> <input type="number" name="prod_hours" value="{{ $valProdHours }}" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center; height: 30px;"></div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;"><span>Кол-во часов практического обучения:</span> <input type="number" name="practice_hours" value="{{ $valPracticeHours }}" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center; height: 30px;"></div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;"><span>Кол-во часов самостоятельной подг.:</span> <input type="number" name="self_hours" value="{{ $valSelfHours }}" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center; height: 30px;"></div>
                         </div>
                     </div>
+                    <script>
+                        console.info('Автоподбор часов из матрицы:', @json($matrixHours ?? []));
+                    </script>
+
                     <!-- Блок Категория обучаемых -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 12px;">
                         <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 12px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Категория обучаемых</span>
@@ -206,45 +224,93 @@
                     </div>
 
                     <!-- Блок Результаты обучения и пол -->
+                    @php
+                        $employeesList = collect($protocol->demand?->employees ?? []);
+                        $totalEmployeesCount = $employeesList->count();
+                        $hasSavedResults = isset($savedResults) && $savedResults->isNotEmpty();
+
+                        if ($hasSavedResults) {
+                            $appearedCount = $savedResults->filter(function ($row) {
+                                $mark = mb_strtolower(trim((string)($row->markitog ?? '')));
+                                return $mark !== '' && !str_contains($mark, 'неяв');
+                            })->count();
+
+                            $passedCount = $savedResults->filter(function ($row) {
+                                $mark = mb_strtolower(trim((string)($row->markitog ?? '')));
+                                if ($mark === '' || str_contains($mark, 'неяв') || str_contains($mark, 'незач') || str_contains($mark, 'не зач') || str_contains($mark, 'неуд')) {
+                                    return false;
+                                }
+                                return in_array($mark, ['зачет', 'зачтено', 'удовл', 'удовлетворительно', 'хорошо', 'отлично', '3', '4', '5'])
+                                    || ((int)($row->flagpassed ?? 0) === 1);
+                            })->count();
+
+                            $noShowCount = $savedResults->filter(function ($row) {
+                                $mark = mb_strtolower(trim((string)($row->markitog ?? '')));
+                                return str_contains($mark, 'неяв');
+                            })->count();
+
+                            $noPassedCount = max(0, $appearedCount - $passedCount);
+                        } else {
+                            $appearedCount = (int)($report->show ?? $report->Show ?? $totalEmployeesCount);
+                            $passedCount   = (int)($report->passed ?? $totalEmployeesCount);
+                            $noShowCount   = (int)($report->noshow ?? 0);
+                            $noPassedCount = (int)($report->nopassed ?? 0);
+                        }
+
+                        $menCount   = $employeesList->where('gender_key', '1')->count();
+                        $womenCount = $employeesList->where('gender_key', '2')->count();
+                    @endphp
+
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 14px; font-family: system-ui, -apple-system, sans-serif;">
-                        <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center; background: #f3f4f6; padding: 4px; border-radius: 4px;">Результаты обучения и пол</span>
+                        <span style="display: block; font-weight: 700; color: #4b5563; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 10px; text-align: center; background: #f9fafb; padding: 4px; border-radius: 4px;">
+                            Результаты обучения и пол
+                        </span>
 
+                        <!-- Первый ряд: Явилось, Сдали, Кол-во мужчин -->
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 10px; text-align: center;">
-                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center;">
                                 <span style="color: #6b7280; font-size: 11px; font-weight: 500;">Явилось на экзамены:</span>
-                                <strong style="font-size: 13px; color: #111827;">{{ $report ? $report->Show : count($protocol->demand?->employees ?? []) }}</strong>
+                                <strong style="font-size: 13px; color: #111827;">{{ $appearedCount }}</strong>
                             </div>
-                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center;">
                                 <span style="color: #059669; font-size: 11px; font-weight: 600;">Сдали:</span>
-                                <strong style="font-size: 13px; color: #059669;">{{ $report ? $report->passed : count($protocol->demand?->employees ?? []) }}</strong>
+                                <strong style="font-size: 13px; color: #059669;">{{ $passedCount }}</strong>
                             </div>
-                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center;">
                                 <span style="color: #6b7280; font-size: 11px; font-weight: 500;">Кол-во мужчин:</span>
-                                <strong style="font-size: 13px; color: #111827;">
-                                    {{ collect($protocol->demand?->employees ?? [])->where('gender_key', '1')->count() }}
-                                </strong>
+                                <strong style="font-size: 13px; color: #111827;">{{ $menCount }}</strong>
                             </div>
-
                         </div>
 
+                        <!-- Второй ряд: Не явилось, Не сдали, Кол-во женщин -->
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
-                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center;">
                                 <span style="color: #dc2626; font-size: 11px; font-weight: 600;">Не явилось (неявка):</span>
-                                <strong style="font-size: 13px; color: #dc2626;">{{ $report ? $report->noshow : 0 }}</strong>
+                                <strong style="font-size: 13px; color: #dc2626;">{{ $noShowCount }}</strong>
                             </div>
-                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center;">
                                 <span style="color: #dc2626; font-size: 11px; font-weight: 600;">Не сдали:</span>
-                                <strong style="font-size: 13px; color: #dc2626;">{{ $report ? $report->nopassed : 0 }}</strong>
+                                <strong style="font-size: 13px; color: #dc2626;">{{ $noPassedCount }}</strong>
                             </div>
-
-                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0 12px; height: 34px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center;">
                                 <span style="color: #6b7280; font-size: 11px; font-weight: 500;">Кол-во женщин:</span>
-                                <strong style="font-size: 13px; color: #111827;">
-                                    {{ collect($protocol->demand?->employees ?? [])->where('gender_key', '2')->count() }}
-                                </strong>
+                                <strong style="font-size: 13px; color: #111827;">{{ $womenCount }}</strong>
                             </div>
                         </div>
                     </div>
+
+                    <script>
+                        console.info('Статистика результатов обучения и пола:', {
+                            hasSavedResults: @json($hasSavedResults),
+                            appeared: @json($appearedCount),
+                            passed: @json($passedCount),
+                            noShow: @json($noShowCount),
+                            noPassed: @json($noPassedCount),
+                            men: @json($menCount),
+                            women: @json($womenCount)
+                        });
+                    </script>
+
 
                     <!-- Блок Группы предприятий -->
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 4px;">

@@ -13,32 +13,34 @@ final class MatrixCourse extends Model
 
     protected $table = 'matrix_courses';
 
-    protected $fillable = [
-        'program',
-        'number',
-        'code',
-        'education_type',
-        'program_name',
-        'full_name',
-        'study_form',
-        'hours',
-        'theory_hours',
-        'self_study_hours',
-        'practical_hours',
-        'practice_hours',
-        'listener_category',
-        'group_size',
-        'control_form',
-        'commission_type',
-        'document_type',
-        'notes',
-        'uchipro',
-        'info_system',
-        'teacher_requirements',
-        'equipment',
-        'equipment_location',
-        'teacher_fio',
-    ];
+    // protected $fillable = [
+    //     'program',
+    //     'number',
+    //     'code',
+    //     'education_type',
+    //     'program_name',
+    //     'full_name',
+    //     'study_form',
+    //     'hours',
+    //     'theory_hours',
+    //     'self_study_hours',
+    //     'practical_hours',
+    //     'practice_hours',
+    //     'listener_category',
+    //     'group_size',
+    //     'control_form',
+    //     'commission_type',
+    //     'document_type',
+    //     'notes',
+    //     'uchipro',
+    //     'info_system',
+    //     'teacher_requirements',
+    //     'equipment',
+    //     'equipment_location',
+    //     'teacher_fio',
+    // ];
+    protected $guarded = [];
+
 
     protected $casts = [
         'hours' => 'integer',

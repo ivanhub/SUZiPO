@@ -23,6 +23,7 @@ use App\Http\Controllers\RequestsAudienceController;
 use App\Http\Controllers\RequestsDisciplineController;
 use App\Http\Controllers\AllUserSapController;
 use App\Http\Controllers\RequestEmployeeController;
+use App\Http\Controllers\MatrixController;
 use App\Http\Controllers\MatrixCourseController;
 use App\Http\Controllers\MatrixDpoController;
 use App\Http\Controllers\MatrixOtController;
@@ -33,6 +34,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ErrorController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AppDemandController;
+use App\Http\Controllers\DashboardController;
+
 
 use App\Models\Booking;
 
@@ -114,9 +117,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Dashboard
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    // Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
 
     // ==========================================
     // Пути заявок
@@ -187,8 +189,11 @@ Route::get('requests/{id}/unlock', [RequestController::class, 'unlock'])->name('
 Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
 
 // Роут для экспорта отчета в Excel
-//Route::get('/protocols/{id?}/export-excel', [ProtocolController::class, 'exportExcel'])
-//    ->name('protocols.export-excel');
+Route::get('/protocols/{id?}/export-excel', [ProtocolController::class, 'exportExcel'])
+    ->name('protocols.export-excel');
+Route::get('/protocols/{id}/export-yukos', [ProtocolController::class, 'exportYukos'])
+    ->name('protocols.export-yukos');
+
 
 
 // История изменений заявки
@@ -209,7 +214,7 @@ Route::resource('protocols', ProtocolController::class);
 Route::get('/protocols', [ProtocolController::class, 'index'])->name('protocols.index');
 Route::get('/protocols/{id}/json', [ProtocolController::class, 'getJson'])->name('protocols.json');
 Route::get('/protocols/{id}/report/create', [ProtocolController::class, 'createReport'])->name('protocols.report.create');
-Route::post('/protocols/export-excel', [ProtocolController::class, 'exportExcel'])->name('protocols.export-excel');
+//Route::post('/protocols/export-excel', [ProtocolController::class, 'exportExcel'])->name('protocols.export-excel');
 Route::post('/protocols/report/store', [ProtocolController::class, 'storeReport'])->name('protocols.report.store');
 
 // Поиск по номеру договора (Orders)
@@ -232,13 +237,15 @@ Route::post('/api/courses', [CourseController::class, 'store'])
 
 Route::prefix('matrices')->name('matrices.')->group(function () {
     Route::resource('courses', MatrixCourseController::class);
-    //Route::resource('courses', MatrixCourseController::class)->parameters(['course' => 'matrixCourse']);
-    //    Route::resource('dpo', MatrixDpoController::class);
     Route::resource('dpo', MatrixDpoController::class)->parameters(['dpo' => 'matrixDpo']);
-    //    Route::resource('ot', MatrixOtController::class);
     Route::resource('ot', MatrixOtController::class)->parameters(['ot' => 'matrixOt']);
     Route::resource('po', MatrixPoController::class);
 });
+
+
+Route::get('/matrices', [MatrixController::class, 'index'])->name('matrices.index');
+Route::post('/matrices/import', [MatrixController::class, 'import'])->name('matrices.import');
+
 
 // Справочники
 Route::prefix('directories')->name('directories.')->group(function () {
@@ -324,9 +331,8 @@ Route::get('/', function () {
     return redirect('/login');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
 
 // Route::resource('requests', RequestController::class);
 Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');

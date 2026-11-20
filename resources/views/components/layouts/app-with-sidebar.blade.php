@@ -1,426 +1,300 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="app()">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="suzipoLayout()" :class="{ 'dark': darkMode }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'СУЗиПО') }}</title>
 
-    <!-- Fonts -->
-
-    <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-   <!-- Подключение main.css -->
-    <link href="{{ asset('css/main.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/mermaid.min.css') }}" rel="stylesheet">
-
-  
-    @stack('styles')
-
-<style>
-    [x-cloak] { display: none !important; }
-</style>
-</head>
-<body class="font-sans antialiased bg-gray-50">
-    <div class="min-h-screen flex">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-white border-r border-gray-200 shadow-sm flex flex-col" 
-               :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-               x-show="sidebarOpen"
-               @click.away="sidebarOpen = false">
-            
-            <!-- Logo -->
-            <div class="h-16 flex items-center justify-center border-b border-gray-200">
-                <a href="{{ route('dashboard') }}" class="flex items-center space-x-2">
-                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                    </svg>
-                    <span class="text-lg font-bold text-gray-800">СУЗиПО</span>
-                </a>
-            </div>
-
-            <!-- Navigation -->
-            <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-                <!-- Главная -->
-                <a href="{{ route('dashboard') }}" 
-                   class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150 ease-in-out
-                          {{ request()->routeIs('dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-100' }}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                    </svg>
-                    Главная
-                </a>
-
-                <!-- Заявки -->
-<!-- Заявки -->
-<div x-data="{ open: true }">
-    <button @click="open = !open" 
-            class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150 ease-in-out
-                   {{ request()->routeIs('requests.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-100' }}">
-        <span class="flex items-center">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            Заявки
-        </span>
-        <svg class="w-4 h-4 transition-transform duration-200" 
-             :class="open ? 'rotate-90' : ''" 
-             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-        </svg>
-    </button>
-    <div x-show="open" 
-         x-transition:enter="transition ease-out duration-100"
-         x-transition:enter-start="opacity-0 transform -translate-y-2"
-         x-transition:enter-end="opacity-100 transform translate-y-0"
-         class="mt-1 ml-8 space-y-1">
-        
-        <!-- Все заявки -->
-        <a href="{{ route('requests.index') }}" 
-           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
-                  {{ request()->routeIs('requests.index') && !request()->has('status') ? 'bg-indigo-50 text-indigo-700' : '' }}">
-            Все заявки
-        </a>
-        
-        <!-- Создать заявку -->
-	@if(auth()->user()->hasAnyRole(['urp', 'urp admin', 'ooo', 'ooo admin', 'ooo chief']))
-        <a href="{{ route('requests.create') }}" 
-           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
-                  {{ request()->routeIs('requests.create') ? 'bg-indigo-50 text-indigo-700' : '' }}">
-            + Создать заявку
-        </a>
-        @endif
-        
-        <!-- По статусам -->
-        <a href="{{ route('requests.index', ['status' => 'created']) }}" 
-           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
-                  {{ request()->get('status') === 'created' ? 'bg-indigo-50 text-indigo-700' : '' }}">
-            Создана
-        </a>
-        
-        <a href="{{ route('requests.index', ['status' => 'sent']) }}" 
-           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
-                  {{ request()->get('status') === 'sent' ? 'bg-indigo-50 text-indigo-700' : '' }}">
-            Отправлена
-        </a>
-        
-        <a href="{{ route('requests.index', ['status' => 'in_progress']) }}" 
-           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
-                  {{ request()->get('status') === 'in_progress' ? 'bg-indigo-50 text-indigo-700' : '' }}">
-            В работе
-        </a>
-        
-        <a href="{{ route('requests.index', ['status' => 'urpedit']) }}" 
-           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
-                  {{ request()->get('status') === 'urpedit' ? 'bg-indigo-50 text-indigo-700' : '' }}">
-            На доработке
-        </a>
-        
-        <a href="{{ route('requests.index', ['status' => 'accepted']) }}" 
-           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
-                  {{ request()->get('status') === 'accepted' ? 'bg-indigo-50 text-indigo-700' : '' }}">
-            Принята
-        </a>
-        
-        <a href="{{ route('requests.index', ['status' => 'rejected']) }}" 
-           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
-                  {{ request()->get('status') === 'rejected' ? 'bg-indigo-50 text-indigo-700' : '' }}">
-            Отклонена
-        </a>
-        
-        <!-- Экспорт -->
-        <a href="{{ route('requests.export-form') }}" 
-           class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150
-                  {{ request()->routeIs('requests.export-form') ? 'bg-indigo-50 text-indigo-700' : '' }}">
-            Экспорт заявок
-        </a>
-    </div>
-</div>
-
-                <!-- Протоколы -->
-                <div x-data="{ open: true }">
-                    <button @click="open = !open" 
-                            class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150 ease-in-out
-                                   {{ request()->routeIs('protocols.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-100' }}">
-                        <span class="flex items-center">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                            </svg>
-                            Протоколы
-                        </span>
-                        <svg class="w-4 h-4 transition-transform duration-200" 
-                             :class="open ? 'rotate-90' : ''" 
-                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </button>
-                    <div x-show="open" 
-                         x-transition:enter="transition ease-out duration-100"
-                         x-transition:enter-start="opacity-0 transform -translate-y-2"
-                         x-transition:enter-end="opacity-100 transform translate-y-0"
-                         class="mt-1 ml-8 space-y-1">
-                        <a href="{{ route('protocols.index', ['status' => 'draft']) }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Черновик</a>
-                        <a href="{{ route('protocols.index', ['status' => 'rejected']) }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Отвергнутые</a>
-                        <a href="{{ route('protocols.index', ['status' => 'pending']) }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">На утверждении</a>
-                        <a href="{{ route('protocols.index', ['status' => 'approved']) }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Принятые</a>
-                        <a href="{{ route('protocols.index', ['status' => 'trash']) }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Корзина</a>
-                        <a href="{{ route('protocols.index', ['status' => 'archive']) }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Архив</a>
-                    </div>
-                </div>
-
-                <!-- Бронирование аудиторий -->
-                <a href="{{ route('bookings.index') }}" 
-                   class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150 ease-in-out
-                          {{ request()->routeIs('bookings.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-100' }}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                    Бронирование аудиторий
-                </a>
-
-                <!-- Справочники -->
-                <div x-data="{ open: true }">
-                    <button @click="open = !open" 
-                            class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150 ease-in-out
-                                   {{ request()->routeIs('directories.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-100' }}">
-                        <span class="flex items-center">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                            </svg>
-                            Справочники
-                        </span>
-                        <svg class="w-4 h-4 transition-transform duration-200" 
-                             :class="open ? 'rotate-90' : ''" 
-                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </button>
-                    <div x-show="open" 
-                         x-transition:enter="transition ease-out duration-100"
-                         x-transition:enter-start="opacity-0 transform -translate-y-2"
-                         x-transition:enter-end="opacity-100 transform translate-y-0"
-                         class="mt-1 ml-8 space-y-1 max-h-48 overflow-y-auto">
-                        <a href="{{ route('directories.reasons-non-certification') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Причины не аттестации</a>
-			            <a href="{{ route('directories.providers.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Учебные заведения</a>
-                        <a href="{{ route('directories.courses.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Курсы</a>
-                        <a href="{{ route('directories.cities.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Города</a>
-                        <a href="{{ route('directories.professions.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Профессии</a>
-                        <a href="{{ route('directories.qualifications') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Квалификация</a>
-                        <a href="{{ route('directories.employees') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Работники</a>
-                        <a href="{{ route('directories.departments') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Учебные отделы</a>
-                        <a href="{{ route('directories.learning-types.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Виды обучения</a>
-                        <a href="{{ route('directories.reasons-rejection') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Причины отказа</a>
-                        <a href="{{ route('directories.categories') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Категории</a>
-                        <a href="{{ route('directories.document-types') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Типы документов</a>
-                        <a href="{{ route('directories.training-type') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Тип обучения</a>
-                        <a href="{{ route('directories.course-authors') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Автор курса</a>
-                        <a href="{{ route('directories.training-directions') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Направление обучения</a>
-                        <a href="{{ route('directories.cost-allocation') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Отнесение затрат</a>
-                        <a href="{{ route('directories.orders') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Приказы</a>
-                        <a href="{{ route('directories.learn-reasons.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Причины обучения</a>
-                        <a href="{{ route('directories.contracts') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Договора на обучение/оценку</a>
-                        <a href="{{ route('directories.disciplines.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Дисциплины</a>
-                        <a href="{{ route('directories.learning-types.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Вид обучения/оценки</a>
-                        <a href="{{ route('directories.learning-resources.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Ресурс обучения/оценки</a>
-                        <a href="{{ route('directories.events-type.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Виды мероприятий</a>
-                        <a href="{{ route('directories.teachers.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Преподаватели УЦ</a>
-                        <a href="{{ route('directories.audiences.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Аудитории УЦ</a>
-                        <a href="{{ route('directories.curators.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Кураторы групп</a>
-                        <a href="{{ route('directories.absence-types') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Виды отсутствий</a>
-                    </div>
-                </div>
-
-                <!-- Отчёты -->
-                <div x-data="{ open: true }">
-                    <button @click="open = !open" 
-                            class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150 ease-in-out
-                                   {{ request()->routeIs('reports.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-100' }}">
-                        <span class="flex items-center">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
-                            Отчёты
-                        </span>
-                        <svg class="w-4 h-4 transition-transform duration-200" 
-                             :class="open ? 'rotate-90' : ''" 
-                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </button>
-                    <div x-show="open" 
-                         x-transition:enter="transition ease-out duration-100"
-                         x-transition:enter-start="opacity-0 transform -translate-y-2"
-                         x-transition:enter-end="opacity-100 transform translate-y-0"
-                         class="mt-1 ml-8 space-y-1">
-                        <a href="{{ route('reports.auditorium-load') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Аудиторная нагрузка</a>
-                        <a href="{{ route('reports.training-journal') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Журнал обучения</a>
-                        <a href="{{ route('reports.certificate-register') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Журнал регистрации удостоверений</a>
-                        <a href="{{ route('reports.certificate-print') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Печать удостоверений</a>
-                    </div>
-                </div>
-
-                <!-- Администрирование -->
-                <div x-data="{ open: true }">
-                    <button @click="open = !open" 
-                            class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150 ease-in-out
-                                   {{ request()->routeIs('admin.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-100' }}">
-                        <span class="flex items-center">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            Администрирование
-                        </span>
-                        <svg class="w-4 h-4 transition-transform duration-200" 
-                             :class="open ? 'rotate-90' : ''" 
-                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </button>
-                    <div x-show="open" 
-                         x-transition:enter="transition ease-out duration-100"
-                         x-transition:enter-start="opacity-0 transform -translate-y-2"
-                         x-transition:enter-end="opacity-100 transform translate-y-0"
-                         class="mt-1 ml-8 space-y-1">
-                        <a href="{{ route('admin.users.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Пользователи</a>
-                        <a href="{{ route('admin.technical-task') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Техническое задание</a>
-                        <a href="{{ route('admin.notifications') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Уведомления</a>
-                        <a href="{{ route('admin.global-settings') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Глобальные настройки</a>
-                    </div>
-                </div>
-
-                <!-- Ошибки -->
-                <div x-data="{ open: true }">
-                    <button @click="open = !open" 
-                            class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150 ease-in-out
-                                   {{ request()->routeIs('errors.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-100' }}">
-                        <span class="flex items-center">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                            </svg>
-                            Ошибки
-                        </span>
-                        <svg class="w-4 h-4 transition-transform duration-200" 
-                             :class="open ? 'rotate-90' : ''" 
-                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </button>
-                    <div x-show="open" 
-                         x-transition:enter="transition ease-out duration-100"
-                         x-transition:enter-start="opacity-0 transform -translate-y-2"
-                         x-transition:enter-end="opacity-100 transform translate-y-0"
-                         class="mt-1 ml-8 space-y-1">
-                        <a href="{{ route('errors.index') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Посмотреть</a>
-                        <a href="{{ route('errors.create') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Добавить</a>
-                        <a href="{{ route('errors.non-certified') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Список не аттестованных</a>
-                        <a href="{{ route('errors.analysis') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Анализ данных</a>
-                        <a href="{{ route('errors.help-admin') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Справка - Администратор</a>
-                        <a href="{{ route('errors.help-muo') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Справка - МУО</a>
-                        <a href="{{ route('errors.help-srp') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Справка - СРП</a>
-                        <a href="{{ route('errors.help-sumo') }}" class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">Справка - СУМО</a>
-                    </div>
-                </div>
-            </nav>
-
-<!-- User info -->
-<div class="border-t border-gray-200 p-4">
-    @if(auth()->user())
-    <div class="flex items-center space-x-3">
-        <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-medium">
-            {{ substr(auth()->user()->name, 0, 1) }}
-        </div>
-        <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 truncate">{{ auth()->user()->name }}</p>
-            <p class="text-xs text-gray-500 truncate">{{ auth()->user()->email }}</p>
-        </div>
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                </svg>
-            </button>
-        </form>
-    </div>
-    @endif
-</div>        </aside>
-
-        <!-- Main Content -->
-        <div class="flex-1 flex flex-col min-h-screen">
-            <!-- Top Header -->
-            <header class="bg-white shadow-sm border-b border-gray-200 h-16 flex items-center px-6">
-                <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 hover:text-gray-700 focus:outline-none mr-4">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
-                <!-- Breadcrumbs or page title -->
-                <h1 class="text-lg font-semibold text-gray-800" x-text="pageTitle">Dashboard</h1>
-                <div class="ml-auto flex items-center space-x-4">
-                    <!-- Search -->
-                    <div class="relative">
-                        <input type="text" 
-                               placeholder="Быстрый поиск..."
-                               class="w-64 pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                        <svg class="absolute left-3 top-2.5 text-gray-400 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
-                    <!-- Notifications -->
-                    <button class="relative text-gray-400 hover:text-gray-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                        </svg>
-                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-                    </button>
-                </div>
-            </header>
-
-            <!-- Page Content -->
-            <main class="flex-1 p-6">
-                {{ $slot }}
-            </main>
-
-            <!-- Footer -->
-            <footer class="bg-white border-t border-gray-200 py-4 px-6">
-                <div class="flex items-center justify-between text-sm text-gray-500">
-                    <p>© {{ date('Y') }} СУЗиПО. Все права защищены.</p>
-                    <p>Версия 0.1</p>
-                </div>
-            </footer>
-        </div>
-    </div>
-
+    <!-- Мгновенная инициализация темы до отрисовки страницы (без мерцания) -->
     <script>
-        function app() {
-            return {
-                sidebarOpen: false,
-                pageTitle: 'Главная',
-                init() {
-                    const path = window.location.pathname;
-                    if (path === '/dashboard' || path === '/') {
-                        this.pageTitle = 'Главная';
-                    } else if (path.includes('/requests')) {
-                        this.pageTitle = 'Заявки';
-                    } else if (path.includes('/protocols')) {
-                        this.pageTitle = 'Протоколы';
-                    } else if (path.includes('/bookings')) {
-                        this.pageTitle = 'Бронирование аудиторий';
-                    } else if (path.includes('/directories')) {
-                        this.pageTitle = 'Справочники';
-                    } else if (path.includes('/reports')) {
-                        this.pageTitle = 'Отчёты';
-                    } else if (path.includes('/admin')) {
-                        this.pageTitle = 'Администрирование';
-                    } else if (path.includes('/errors')) {
-                        this.pageTitle = 'Ошибки';
-                    }
-                }
-            }
+        if (localStorage.getItem('suzipo_theme') === 'dark' || (!('suzipo_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
         }
     </script>
 
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link href="{{ asset('css/main.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/mermaid.min.css') }}" rel="stylesheet">
+
+    @stack('styles')
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Верхняя адаптивная шапка (Top Header) -->
+    <header class="sticky top-0 z-40 h-16 px-6 flex items-center justify-between border-b transition-colors"
+            style="background-color: var(--bg-page); border-color: var(--border-color);">
+
+        <!-- Левая часть: Логотип РОСНЕФТЬ | СУЗиПО -->
+                <!-- Левая часть: Логотип -->
+                <!-- Левая часть: Адаптивный логотип под светлую и тёмную тему -->
+        <div class="flex items-center space-x-3">
+            <a href="{{ route('dashboard') }}" class="flex items-center group">
+                <img x-show="!darkMode" src="{{ asset('images/logo-light.svg') }}" alt="РОСНЕФТЬ СУЗиПО" style="height: 42px; width: auto;">
+                <img x-show="darkMode" x-cloak src="{{ asset('images/logo-dark.svg') }}" alt="РОСНЕФТЬ СУЗиПО" style="height: 42px; width: auto;">
+            </a>
+        </div>
+        <!-- Центральная капсула навигации (показывается только на внутренних страницах) -->
+        @if(!request()->routeIs('dashboard') && request()->path() !== '/')
+        <nav class="hidden lg:flex items-center px-2 py-1.5 rounded-full border space-x-1"
+             style="background-color: var(--bg-surface); border-color: var(--border-color);">
+
+            <a href="{{ route('dashboard') }}"
+               class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors"
+               style="color: var(--text-secondary);">
+                Главная
+            </a>
+
+            <!-- Заявки -->
+            <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                <a href="{{ route('requests.index') }}"
+                   class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors inline-flex items-center gap-1"
+                   style="{{ request()->routeIs('requests.*') ? 'background-color: var(--brand-yellow); color: #111827; font-weight: 600;' : 'color: var(--text-primary);' }}">
+                    Заявки
+                </a>
+                <div x-show="open" x-cloak x-transition
+                     class="absolute left-0 mt-1 w-48 rounded-xl shadow-lg border py-1.5 z-50"
+                     style="background-color: var(--bg-surface); border-color: var(--border-color);">
+                    <a href="{{ route('requests.index') }}" class="block px-4 py-1.5 text-xs hover:opacity-80" style="color: var(--text-primary);">Все заявки</a>
+                    @if(auth()->user()->hasAnyRole(['urp', 'urp admin', 'ooo', 'ooo admin', 'ooo chief']))
+                    <a href="{{ route('requests.create') }}" class="block px-4 py-1.5 text-xs font-semibold" style="color: #D97706;">+ Создать заявку</a>
+                    @endif
+                    <div class="my-1 border-t" style="border-color: var(--border-color);"></div>
+                    <a href="{{ route('requests.index', ['status' => 'created']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">Создана</a>
+                    <a href="{{ route('requests.index', ['status' => 'sent']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">Отправлена</a>
+                    <a href="{{ route('requests.index', ['status' => 'in_progress']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">В работе</a>
+                    <a href="{{ route('requests.index', ['status' => 'urpedit']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">На доработке</a>
+                    <a href="{{ route('requests.index', ['status' => 'accepted']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">Принята</a>
+                    <a href="{{ route('requests.index', ['status' => 'rejected']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">Отклонена</a>
+                    <div class="my-1 border-t" style="border-color: var(--border-color);"></div>
+                    <a href="{{ route('requests.export-form') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Экспорт заявок</a>
+                </div>
+            </div>
+
+            <!-- Протоколы -->
+            <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                <a href="{{ route('protocols.index') }}"
+                   class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors inline-flex items-center gap-1"
+                   style="{{ request()->routeIs('protocols.*') ? 'background-color: var(--brand-yellow); color: #111827; font-weight: 600;' : 'color: var(--text-primary);' }}">
+                    Протоколы
+                </a>
+                <div x-show="open" x-cloak x-transition
+                     class="absolute left-0 mt-1 w-44 rounded-xl shadow-lg border py-1.5 z-50"
+                     style="background-color: var(--bg-surface); border-color: var(--border-color);">
+                    <a href="{{ route('protocols.index', ['status' => 'draft']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Черновик</a>
+                    <a href="{{ route('protocols.index', ['status' => 'rejected']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Отвергнутые</a>
+                    <a href="{{ route('protocols.index', ['status' => 'pending']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">На утверждении</a>
+                    <a href="{{ route('protocols.index', ['status' => 'approved']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Принятые</a>
+                    <a href="{{ route('protocols.index', ['status' => 'trash']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">Корзина</a>
+                    <a href="{{ route('protocols.index', ['status' => 'archive']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">Архив</a>
+                </div>
+            </div>
+
+            <!-- Матрицы / Программы -->
+            <a href="{{ route('matrices.index') }}"
+               class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors"
+               style="{{ request()->routeIs('matrices.*') ? 'background-color: var(--brand-yellow); color: #111827; font-weight: 600;' : 'color: var(--text-primary);' }}">
+                Программы
+            </a>
+
+            <!-- Справочники -->
+            <a href="{{ route('directories.courses.index') }}"
+               class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors"
+               style="{{ request()->routeIs('directories.*') ? 'background-color: var(--brand-yellow); color: #111827; font-weight: 600;' : 'color: var(--text-primary);' }}">
+                Справочники
+            </a>
+            <!-- Отчёты (дропдаун) -->
+            <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                <a href="{{ route('reports.training-journal') }}"
+                   class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors"
+                   style="{{ request()->routeIs('reports.*') ? 'background-color: var(--brand-yellow); color: #111827; font-weight: 600;' : 'color: var(--text-primary);' }}">
+                    Отчёты
+                </a>
+                <div x-show="open" x-cloak x-transition
+                     class="absolute left-0 mt-1 w-56 rounded-xl shadow-lg border py-1.5 z-50"
+                     style="background-color: var(--bg-surface); border-color: var(--border-color);">
+                    <a href="{{ route('reports.auditorium-load') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Аудиторная нагрузка</a>
+                    <a href="{{ route('reports.training-journal') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Журнал обучения</a>
+                    <a href="{{ route('reports.certificate-register') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Журнал регистрации удостоверений</a>
+                    <a href="{{ route('reports.certificate-print') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Печать удостоверений</a>
+                </div>
+            </div>
+
+            <!-- Ещё (Бронирование, Админка, Ошибки) -->
+            <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                <button type="button"
+                        class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors inline-flex items-center gap-1"
+                        style="color: var(--text-secondary);">
+                    Ещё
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="open" x-cloak x-transition
+                     class="absolute right-0 mt-1 w-52 rounded-xl shadow-lg border py-1.5 z-50"
+                     style="background-color: var(--bg-surface); border-color: var(--border-color);">
+                    <a href="{{ route('bookings.index') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Бронирование аудиторий</a>
+                    <div class="my-1 border-t" style="border-color: var(--border-color);"></div>
+                    <a href="{{ route('admin.users.index') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Пользователи</a>
+                    <a href="{{ route('admin.global-settings') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Настройки</a>
+                    <div class="my-1 border-t" style="border-color: var(--border-color);"></div>
+                    <a href="{{ route('errors.index') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">Журнал ошибок</a>
+                </div>
+            </div>
+        </nav>
+        @endif
+
+                <!-- Правая часть: Поиск, Уведомления, Переключатель темы и Профиль (без зависимости от npm run build) -->
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <!-- 1. Иконка поиска -->
+            <button type="button" title="Поиск"
+                    style="background: transparent; border: none; padding: 4px; color: var(--text-primary); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/>
+                </svg>
+            </button>
+
+            <!-- 2. Иконка уведомлений -->
+            <button type="button" title="Уведомления"
+                    style="background: transparent; border: none; padding: 4px; color: var(--text-primary); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
+            </button>
+
+            <!-- 3. Переключатель темы (Солнце / Луна) -->
+            <button type="button" @click="toggleTheme()" title="Переключить тему"
+                    style="background: transparent; border: none; padding: 4px; color: var(--text-primary); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+                <!-- Иконка Солнца (для светлой темы) -->
+                <svg x-show="!darkMode" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="4"/>
+                    <path stroke-linecap="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/>
+                </svg>
+                <!-- Иконка Луны (для тёмной темы) -->
+                <svg x-show="darkMode" x-cloak width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                </svg>
+            </button>
+
+            <!-- 4. Профиль текущего пользователя -->
+            @if(auth()->user())
+            @php
+                $user = auth()->user();
+                $parts = preg_split('/\s+/u', trim((string)$user->name)) ?: [];
+                $firstChar = mb_substr($parts[0] ?? '', 0, 1);
+                $secondChar = isset($parts[1]) ? mb_substr($parts[1], 0, 1) : mb_substr($parts[0] ?? '', 1, 1);
+                $initials = mb_strtoupper($firstChar . $secondChar);
+
+                // Определяем статус/роль пользователя (если есть роль, иначе email)
+                $roleMap = [
+                    'admin'     => 'Администратор',
+                    'urp'       => 'Куратор УРП',
+                    'uc'        => 'Сотрудник УЦ',
+                    'methodist' => 'Методист',
+                ];
+                $rawRole = $user->role ?? $user->status ?? null;
+                $userSubtext = $rawRole ? ($roleMap[mb_strtolower((string)$rawRole)] ?? $rawRole) : $user->email;
+            @endphp
+            <div style="position: relative;" x-data="{ userOpen: false }">
+                <button type="button" @click="userOpen = !userOpen" @click.away="userOpen = false"
+                        style="display: flex; align-items: center; gap: 12px; background: transparent; border: none; padding: 0; text-align: left; cursor: pointer;">
+                    <!-- Круглый серый аватар с инициалами -->
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--bg-surface); color: var(--text-primary); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0;">
+                        {{ $initials }}
+                    </div>
+                    <!-- ФИО и статус/email в две строки -->
+                    <div style="line-height: 1.25;">
+                        <div style="font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap;">
+                            {{ $user->name }}
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px; white-space: nowrap;">
+                            {{ $userSubtext }}
+                        </div>
+                    </div>
+                </button>
+
+                <!-- Выпадающее меню (строго position: absolute) -->
+                <div x-show="userOpen" x-cloak
+                     style="position: absolute; right: 0; top: calc(100% + 10px); width: 210px; border-radius: 12px; background-color: var(--bg-surface); border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.12); padding: 6px 0; z-index: 999;">
+                    <div style="padding: 8px 14px; border-bottom: 1px solid var(--border-color); font-size: 11px; color: var(--text-secondary);">
+                        {{ $user->email }}
+                    </div>
+                    <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                        @csrf
+                        <button type="submit"
+                                style="width: 100%; text-align: left; padding: 8px 14px; font-size: 12px; color: #EF4444; background: transparent; border: none; cursor: pointer;">
+                            Выйти из системы
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @endif
+        </div>
+    </header>
+    <!-- Основной контейнер контента -->
+    <main class="flex-1 w-full max-w-[1440px] mx-auto px-6 py-6">
+        {{ $slot }}
+    </main>
+
+    <!-- Лаконичный подвал -->
+    <footer class="border-t py-4 px-6 mt-auto transition-colors"
+            style="border-color: var(--border-color); color: var(--text-secondary);">
+        <div class="max-w-[1440px] mx-auto flex items-center justify-between text-xs">
+            <p>© {{ date('Y') }} ООО «СИБИНТЕК-СОФТ» — СУЗиПО. Все права защищены.</p>
+            <p>Версия 0.1</p>
+        </div>
+    </footer>
+
+    <script>
+        function suzipoLayout() {
+            return {
+                darkMode: document.documentElement.classList.contains('dark'),
+                toggleTheme() {
+                    this.darkMode = !this.darkMode;
+                    if (this.darkMode) {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('suzipo_theme', 'dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('suzipo_theme', 'light');
+                    }
+                    console.info('Тема интерфейса переключена на:', this.darkMode ? 'Темную (Dark)' : 'Светлую (Light)');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const numberInputs = document.querySelectorAll('input[type="number"]');
+
+            numberInputs.forEach(function (input) {
+                const isDecimal = input.step && input.step !== '1';
+                input.setAttribute('inputmode', isDecimal ? 'decimal' : 'numeric');
+
+                input.addEventListener('keydown', function (e) {
+                    const forbidden = ['e', 'E', '+', '-'];
+                    if (!isDecimal) {
+                        forbidden.push('.', ',');
+                    }
+
+                    if (forbidden.includes(e.key)) {
+                        e.preventDefault();
+                        console.warn(`Заблокирован ввод недопустимого символа "${e.key}" в поле [${input.name || input.id}]`);
+                    }
+                });
+
+                input.addEventListener('input', function () {
+                    let val = this.value;
+                    if (isDecimal && val.includes(',')) {
+                        val = val.replace(',', '.');
+                        this.value = val;
+                    }
+                });
+            });
+        });
+    </script>
     @stack('scripts')
 </body>
 </html>
