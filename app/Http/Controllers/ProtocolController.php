@@ -15,7 +15,7 @@ class ProtocolController extends Controller
 {
     public function index(Request $request)
     {
-                $query = AppProtocol::with([
+        $query = AppProtocol::with([
             'demand.course',
             'demand.provider',
             'demand.profession',

@@ -94,10 +94,25 @@
             </a>
 
             <!-- Справочники -->
-            <a href="{{ route('directories.courses.index') }}"
-               class="suzipo-nav-link {{ request()->routeIs('directories.*') ? 'active' : '' }}">
-                Справочники
-            </a>
+            <div class="suzipo-nav-item" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                <a href="{{ route('directories.index') }}"
+                   class="suzipo-nav-link {{ request()->routeIs('directories.*') || request()->routeIs('all-users-sap.*') ? 'active' : '' }}">
+                    Справочники
+                </a>
+                <div x-show="open" x-cloak class="suzipo-nav-dropdown">
+                    <a href="{{ route('directories.index') }}" class="suzipo-nav-dropdown-link" style="font-weight: 600; color: #D97706;">Все справочники (Хаб)</a>
+                    <div style="margin: 4px 0; border-top: 1px solid var(--border-color);"></div>
+                    <a href="{{ route('directories.courses.index') }}" class="suzipo-nav-dropdown-link">Курсы</a>
+                    <a href="{{ route('directories.providers.index') }}" class="suzipo-nav-dropdown-link">Провайдеры (УЦ)</a>
+                    <a href="{{ route('all-users-sap.index') }}" class="suzipo-nav-dropdown-link">Сотрудники (SAP)</a>
+                    <a href="{{ route('directories.teachers.index') }}" class="suzipo-nav-dropdown-link">Преподаватели</a>
+                    <a href="{{ route('directories.curators.index') }}" class="suzipo-nav-dropdown-link">Кураторы</a>
+                    <a href="{{ route('directories.audiences.index') }}" class="suzipo-nav-dropdown-link">Аудитории</a>
+                    <a href="{{ route('directories.professions.index') }}" class="suzipo-nav-dropdown-link">Профессии</a>
+                    <a href="{{ route('directories.cities.index') }}" class="suzipo-nav-dropdown-link">Города</a>
+                </div>
+            </div>
+
 
             <!-- Отчёты -->
             <div class="suzipo-nav-item" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
