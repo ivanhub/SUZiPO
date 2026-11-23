@@ -51,12 +51,19 @@ class RequestController extends Controller
             $status = $statusFilter;
         }
 
+        $perPage = (int) request()->input('per_page', 10);
+        if (!in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
+
         $requests = RequestModel::with(['user', 'provider', 'course', 'city'])
             ->withCount('employees')
             ->when($status, function ($query, $status) {
                 return $query->where('status', $status);
             })
-            ->paginate(15);
+            ->paginate($perPage)
+            ->withQueryString();
+
 
         return view('requests.index', compact('requests'));
     }

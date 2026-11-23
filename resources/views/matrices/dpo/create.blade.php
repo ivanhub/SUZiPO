@@ -1,27 +1,38 @@
 ﻿<x-layouts.app-with-sidebar>
-    <div class="max-w-7xl mx-auto py-12">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Добавление новой программы ДПО</h2>
+    <div style="padding: 8px 0 32px 0;">
+        <div class="suzipo-breadcrumbs">
+            <a href="{{ route('matrices.dpo.index') }}" class="suzipo-back-btn" title="Назад к списку ДПО">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <div style="font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+                <a href="{{ route('dashboard') }}" style="color: var(--text-secondary); text-decoration: none;">Главная</a>
+                <span>›</span>
+                <a href="{{ route('matrices.dpo.index') }}" style="color: var(--text-secondary); text-decoration: none;">ДПО</a>
+                <span>›</span>
+                <span style="color: var(--text-primary); font-weight: 500;">Добавление программы ДПО</span>
             </div>
-
-            @if(session('error'))
-                <div class="mx-6 mt-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
-                    ⚠️ {{ session('error') }}
-                </div>
-            @endif
-
-            <form action="{{ route('matrices.dpo.store') }}" method="POST" class="p-6">
-                @csrf
-
-                @include('matrices.dpo._form')
-
-                <div class="flex justify-end space-x-2 mt-6 pt-4 border-t border-gray-200">
-                    <a href="{{ route('matrices.dpo.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Отмена</a>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Создать</button>
-                </div>
-            </form>
         </div>
+
+        <h1 class="suzipo-form-title">Добавление новой программы ДПО</h1>
+
+        @if(session('error'))
+            <div style="margin-bottom: 16px; padding: 12px 16px; background-color: rgba(239, 68, 68, 0.1); border: 1px solid #EF4444; color: #EF4444; border-radius: 10px; font-size: 13px;">
+                ⚠️ {{ session('error') }}
+            </div>
+        @endif
+
+        <form action="{{ route('matrices.dpo.store') }}" method="POST">
+            @csrf
+
+            @include('matrices.dpo._form')
+
+            <div class="suzipo-actions">
+                <a href="{{ route('matrices.dpo.index') }}" class="btn-suzipo-cancel">Отмена</a>
+                <button type="submit" class="btn-suzipo-save">Создать</button>
+            </div>
+        </form>
     </div>
 
     @if(session('error') || $errors->any())
