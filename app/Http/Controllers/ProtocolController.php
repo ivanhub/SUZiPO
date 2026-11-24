@@ -100,8 +100,6 @@ class ProtocolController extends Controller
 
         $protocols = $query->paginate($perPage)->withQueryString();
 
-        // $protocols = $query->orderBy('prot_id', 'desc')->paginate(15);
-
         $protocols->appends($request->all());
 
         $totalCount = AppProtocol::count();
@@ -133,8 +131,6 @@ class ProtocolController extends Controller
         return view('protocols.index', compact('protocols', 'totalCount', 'counts', 'popupTeachers', 'popupLearningTypes', 'jsonProtocols'));
     }
 
-
-
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -150,7 +146,6 @@ class ProtocolController extends Controller
             'hoursbyprogram' => 'nullable|integer',        // Часы по программе
             'typedoc_id'     => 'nullable|string|max:100', // Тип документа
         ]);
-
 
         $protocol = AppProtocol::findOrFail($id);
 
@@ -197,9 +192,7 @@ class ProtocolController extends Controller
             ->orderBy('fio')
             ->get();
 
-        // Подгружаем справочник аудиторий для ручного выбора на вкладке "Отчет"
         $audiences = \App\Models\RequestsAudience::orderBy('number')->get();
-        // Подгружаем справочник преподавателей для множественного выбора
         $refCurators = DB::table('ref_curators')->orderBy('fio')->get();
         $teachers = \App\Models\RequestsTeachers::orderBy('fio')->get();
         $report = \App\Models\UcExtReport::where('id_protocol', $id)->first();
@@ -236,9 +229,7 @@ class ProtocolController extends Controller
         }
 
         $allComissionMembers = \App\Models\ComissionMember::orderBy('fio')->get();
-        // $currentComission = \App\Models\ProtocolComission::where('protocol_id', $id)->get();
         $currentComission = DB::table('uc_ext_commissionprotocol')->where('id_protocol', $id)->get();
-
         $tabNumbers = $protocol->demand?->employees->pluck('tab_number')->filter()->toArray() ?? [];
 
         $sapUsers = DB::table('all_users_sap')
@@ -336,7 +327,6 @@ class ProtocolController extends Controller
             \Illuminate\Support\Facades\Log::warning("Ошибка подбора часов из матрицы для протокола #{$id}: " . $e->getMessage());
         }
 
-
         return view('protocols.report.create', compact(
             'protocol',
             'learningTypeName',
@@ -393,11 +383,6 @@ class ProtocolController extends Controller
 
         foreach ($employees as $employee) {
             $empId = $employee->id;
-
-            // $personnelNumber = $employee->tab_num ?? $employee->personnel_number ?? null;
-            // $empSnilsRaw     = $employee->snils ?? null;
-            // $empSnilsClean   = $cleanSnils($empSnilsRaw);
-
             $personnelNumber = $employee->tab_number ?? null;
             $empSnilsRaw     = $employee->pfr_certificate ?? null;
             $empSnilsClean   = $cleanSnils($empSnilsRaw);
@@ -583,7 +568,6 @@ class ProtocolController extends Controller
             ]);
         }
 
-        // \App\Models\ProtocolComission::where('protocol_id', $protocol->prot_id)->delete();
         \App\Models\UcExtCommissionprotocol::where('id_protocol', $protocol->prot_id)->delete();
 
         // =========================================================================
@@ -640,7 +624,6 @@ class ProtocolController extends Controller
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error("Ошибка пересчета итогов отчета для протокола #{$protocol->prot_id}: " . $e->getMessage());
         }
-
 
         // Председатель
         $chairmanFio = $request->input('chairman_fio');

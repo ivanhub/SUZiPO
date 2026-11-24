@@ -18,7 +18,7 @@
         </div>
         @endif
 
-        <!-- Панель вкладок и кнопка выгрузки (строго НАД таблицей в одну строку) -->
+        <!-- Панель вкладок и кнопка выгрузки -->
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; flex-wrap: wrap;">
                 <div style="display: flex; align-items: center; gap: 22px; flex-wrap: wrap;">
                 <span @click="switchTab('all')" class="suzipo-tab-item" :class="{ 'active': activeTab === 'all' }">
@@ -177,7 +177,7 @@
                 </thead>
             </table>
 
-            <!-- 2. Внутренний белый скруглённый блок строк (bodySlot1: border-radius 12px) -->
+            <!-- 2. Внутренний белый скруглённый блок строк -->
             <div class="suzipo-table-body-box">
                 <table class="suzipo-table-body">
                     {!! $colGroupHtml !!}
@@ -202,29 +202,50 @@
                 ->values();
         @endphp
         <div id="pagination-container" style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 10px 8px 10px 16px; min-height: 56px; gap: 16px; font-size: 14px; color: var(--table-head-text); box-sizing: border-box;">
-                <!-- Левая часть: Показывать [InputGroup 83x36] из 120 -->
-                <div style="display: flex; flex-direction: row; align-items: center; gap: 12px;">
+                @php
+                    $allLimits = array(10, 25, 50, 100);
+                    $availableLimits = array();
+                    foreach ($allLimits as $idx => $lim) {
+                        if ($idx === 0 || $totalRows > $allLimits[$idx - 1]) {
+                            $availableLimits[] = $lim;
+                        }
+                    }
+                @endphp
+
+                <div style="display: flex; flex-direction: row; align-items: center; gap: 12px;" x-data="{ perPageOpen: false }">
                     <span>Показывать</span>
-                    <div style="position: relative; width: 83px; height: 36px; display: inline-flex; align-items: center;">
-                        <select onchange="changePerPage(this.value)"
-                                style="appearance: none; -webkit-appearance: none; width: 83px; height: 36px; background-color: var(--table-body-bg); color: var(--table-row-text); border: none; border-radius: 8px; padding: 8px 28px 8px 12px; font-size: 14px; font-weight: 400; line-height: 20px; cursor: pointer; box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.06), 0px 1px 2px rgba(0, 0, 0, 0.06), 0px 2px 4px rgba(0, 0, 0, 0.04);">
-                            @foreach([10, 25, 50, 100] as $limit)
+                    <div style="position: relative; display: inline-flex; align-items: center;">
+                        <button type="button"
+                                @click="perPageOpen = !perPageOpen"
+                                @click.away="perPageOpen = false"
+                                style="display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 83px; height: 36px; background-color: var(--table-body-bg); color: var(--table-row-text); border: none; border-radius: 8px; padding: 8px 12px; font-size: 14px; font-weight: 400; line-height: 20px; cursor: pointer; box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.06), 0px 1px 2px rgba(0, 0, 0, 0.06), 0px 2px 4px rgba(0, 0, 0, 0.04);">
+                            <span>{{ $totalRows > 0 ? $firstItem . '-' . $protocols->lastItem() : '0' }}</span>
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--table-row-text);">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
+
+                        <div x-show="perPageOpen" x-cloak
+                             style="position: absolute; bottom: calc(100% + 6px); left: 0; min-width: 96px; padding: 4px; border-radius: 12px; background-color: var(--table-body-bg); border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.14); z-index: 999;">
+                            @foreach($availableLimits as $limit)
                                 @php
                                     $rangeStart = $totalRows > 0 ? $firstItem : 1;
                                     $rangeEnd   = $totalRows > 0 ? min($firstItem + $limit - 1, $totalRows) : $limit;
                                 @endphp
-                                <option value="{{ $limit }}" {{ $perPage === $limit ? 'selected' : '' }}>
-                                    {{ $rangeStart }}-{{ $rangeEnd }}
-                                </option>
+                                <button type="button"
+                                        onclick="changePerPage({{ $limit }})"
+                                        style="width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 12px; border: none; border-radius: 8px; font-size: 13px; text-align: left; cursor: pointer; {{ $perPage === $limit ? 'background-color: var(--pill-btn-bg); font-weight: 600; color: var(--table-row-text);' : 'background: transparent; color: var(--table-row-text);' }}">
+                                    <span>{{ $totalRows > 0 ? $rangeStart . '-' . $rangeEnd : '0' }}</span>
+                                    @if($perPage === $limit)
+                                        <span style="color: #D97706;">✓</span>
+                                    @endif
+                                </button>
                             @endforeach
-                        </select>
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"
-                             style="position: absolute; right: 10px; pointer-events: none; color: var(--table-row-text);">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
-                        </svg>
+                        </div>
                     </div>
                     <span>из {{ number_format($totalRows, 0, '', ' ') }}</span>
                 </div>
+
 
                 <!-- Правая часть: < Назад  1  2  3 ... 10  11  Вперёд > -->
                 <div style="display: flex; flex-direction: row; align-items: center; gap: 8px;">

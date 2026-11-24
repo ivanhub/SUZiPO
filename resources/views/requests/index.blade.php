@@ -1,7 +1,7 @@
 <x-layouts.app-with-sidebar>
     <div style="padding: 8px 0 32px 0;">
 
-        <!-- Успешные уведомления -->
+        <!-- уведомления -->
         @if(session('success'))
         <div style="padding: 12px 16px; background-color: rgba(16, 185, 129, 0.12); border: 1px solid #10B981; color: #10B981; border-radius: 10px; font-size: 13px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center;">
             <span>✅ {{ session('success') }}</span>
@@ -21,7 +21,7 @@
         </div>
         @endif
 
-        <!-- Форма массовой отправки + Заголовок и кнопка "+ Добавить заявку" (как в Figma) -->
+        <!-- Форма массовой отправки + Заголовок и кнопка "+ Добавить заявку" -->
         <form id="mass-send-form" action="{{ route('requests.send-to-ooo') }}" method="POST">
             @csrf
             <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px;">
@@ -49,17 +49,16 @@
             @php
                 $reqColGroup = '
                 <colgroup>
-                    <col style="width: 3.5%;">
+                    <col style="width: 2%;">
+                    <col style="width: 4%;">
+                    <col style="width: 2.5%;">
                     <col style="width: 4.5%;">
-                    <col style="width: 9%;">
-                    <col style="width: 5.5%;">
-                    <col style="width: 7.5%;">
-                    <col style="width: 7.5%;">
+                    <col style="width: 4.5%;"> <!-- дата оконч. -->
                     <col style="width: 19%;">
-                    <col style="width: 16%;">
-                    <col style="width: 10.5%;">
+                    <col style="width: 12%;">
+                    <col style="width: 8.5%;"> <!-- автор -->
+                    <col style="width: 4.5%;">
                     <col style="width: 7.5%;">
-                    <col style="width: 9.5%;">
                 </colgroup>';
             @endphp
 
@@ -71,7 +70,6 @@
                         <th style="text-align: center;">
                             <input type="checkbox" id="select-all-requests" style="width: 15px; height: 15px; border-radius: 4px; cursor: pointer;">
                         </th>
-                        <th>ID</th>
                         <th>Статус</th>
                         <th>Разов.</th>
                         <th>Дата нач.</th>
@@ -84,14 +82,13 @@
                     </tr>
                 </thead>
             </table>
-            <!-- 2. Внутренний скруглённый блок строк -->
+            <!-- 2. Внутренний блок строк -->
             <div class="suzipo-table-body-box">
                 <table class="suzipo-table-body">
                     {!! $reqColGroup !!}
                     <tbody>
                         @forelse($requests as $request)
                         <tr style="text-align: center;">
-                            <!-- Чекбокс строки -->
                             <td style="text-align: center;">
                                 @if(($request->status === 'Создана' || $request->status === 'created' || $request->status === 'urpedit') && $request->employees_count > 0)
                                     <input type="checkbox" name="request_ids[]" value="{{ $request->id }}" form="mass-send-form" class="request-checkbox" style="width: 15px; height: 15px; border-radius: 4px; cursor: pointer;">
@@ -99,10 +96,6 @@
                                     <input type="checkbox" disabled style="width: 15px; height: 15px; border-radius: 4px; opacity: 0.4; cursor: not-allowed;" title="{{ ($request->status !== 'Создана' && $request->status !== 'created' && $request->status !== 'urpedit') ? 'Заявка не в статусе Создана' : 'В заявке нет сотрудников' }}">
                                 @endif
                             </td>
-
-                            <!-- ID -->
-                            <td style="font-weight: 500; color: var(--table-row-text);">{{ $request->id }}</td>
-
                             <!-- Статус -->
                             <td>
                                 @php
@@ -120,41 +113,34 @@
                                     } elseif ($st === 'in_progress') {
                                         $badgeBg = 'rgba(139, 92, 246, 0.14)'; $badgeColor = '#8B5CF6';
                                     } else {
-                                        $badgeBg = 'var(--pill-btn-bg)'; $badgeColor = 'var(--table-head-text)';
+                                        $badgeBg = 'var(--pill-btn-bg)'; $badgeColor = 'var(--table-row-text)';
                                     }
                                 @endphp
                                 <span style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 12px; font-size: 11.5px; font-weight: 500; background-color: {{ $badgeBg }}; color: {{ $badgeColor }};">
                                     {{ $request->status_label }}
                                 </span>
                             </td>
-
                             <!-- Разов. -->
-                            <td style="color: var(--table-head-text);">{{ $request->one_time ? 'Да' : 'Нет' }}</td>
-
+                            <td style="color: var(--table-row-text);">{{ $request->one_time ? 'Да' : 'Нет' }}</td>
                             <!-- Дата нач. -->
-                            <td style="color: var(--table-head-text);">{{ $request->start_date ? $request->start_date->format('d.m') : '—' }}</td>
-
+                            <td style="color: var(--table-row-text);">{{ $request->start_date ? $request->start_date->format('d.m') : '—' }}</td>
                             <!-- Дата окон. -->
-                            <td style="color: var(--table-head-text);">{{ $request->end_date ? $request->end_date->format('d.m') : '—' }}</td>
-
+                            <td style="color: var(--table-row-text);">{{ $request->end_date ? $request->end_date->format('d.m') : '—' }}</td>
                             <!-- Курс -->
                             <td style="font-weight: 500; color: var(--table-row-text); text-align:left" title="{{ $request->course->course ?? '' }}">
                                 {{ $request->course->course ?? '—' }}
                             </td>
-
                             <!-- Провайдер -->
-                            <td style="color: var(--table-head-text);" title="{{ $request->provider->name ?? '' }}">
+                            <td style="color: var(--table-row-text);" title="{{ $request->provider->name ?? '' }}">
                                 {{ $request->provider->name ?? '—' }}
                             </td>
-
                             <!-- Автор -->
                             <td style="color: var(--table-row-text);" title="{{ $request->user->name ?? '' }}">
                                 {{ $request->user->name ?? '—' }}
                             </td>
-
                             <!-- Создана -->
-                            <td style="color: var(--table-head-text);">{{ $request->created_at->format('d.m.Y') }}</td>
-                            <!-- Действия (круглые кнопки 32x32px в стиле Figma) -->
+                            <td style="color: var(--table-row-text);">{{ $request->created_at->format('d.m.Y') }}</td>
+                            <!-- Действия -->
                             <td style="text-align: center; overflow: visible;">
                                 <div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
                                     <!-- Одиночная отправка -->
@@ -170,7 +156,6 @@
                                         </svg>
                                     </button>
                                     @endif
-
                                     <!-- Посмотреть -->
                                     <a href="{{ route('requests.show', $request) }}" class="suzipo-action-circle" title="Посмотреть">
                                         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
@@ -178,7 +163,6 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                         </svg>
                                     </a>
-
                                     <!-- Редактировать -->
                                     @if(auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']) || ($request->status !== 'Создана' && $request->status !== 'created' && $request->status !== 'urpedit'))
                                     <a href="{{ route('requests.edit', $request) }}" class="suzipo-action-circle" title="Редактировать">
@@ -187,7 +171,6 @@
                                         </svg>
                                     </a>
                                     @endif
-
                                     <!-- Сотрудники -->
                                     @if(auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']) || ($request->status !== 'Создана' && $request->status !== 'created' && $request->status !== 'urpedit'))
                                     <a href="{{ route('request-employees.index', $request->id) }}" class="suzipo-action-circle" style="position: relative;" title="Сотрудники">
@@ -201,7 +184,6 @@
                                         @endif
                                     </a>
                                     @endif
-
                                     <!-- Удалить -->
                                     @if(auth()->user()->hasRole('admin') ||
                                         (auth()->user()->hasAnyRole(['urp', 'urp admin']) && ($request->status === 'Создана' || $request->status === 'created' || $request->status === 'urpedit')) ||
@@ -221,7 +203,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="11" style="padding: 28px; text-align: center; color: var(--table-head-text); font-size: 13px;">
+                            <td colspan="11" style="padding: 28px; text-align: center; color: var(--table-row-text); font-size: 13px;">
                                 Заявок пока нет
                             </td>
                         </tr>
@@ -229,7 +211,7 @@
                     </tbody>
                 </table>
             </div>
-            <!-- 3. Пагинация _TableFooter ВНУТРИ серой оболочки таблицы -->
+            <!-- 3. Пагинация -->
             @php
                 $curPage   = $requests->currentPage();
                 $lastPage  = $requests->lastPage();
@@ -243,30 +225,50 @@
                     ->sort()
                     ->values();
             @endphp
-            <div style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 10px 8px 10px 16px; min-height: 56px; gap: 16px; font-size: 14px; color: var(--table-head-text); box-sizing: border-box;">
-                <!-- Левая часть: Показывать [1-10 v] из 120 -->
-                <div style="display: flex; flex-direction: row; align-items: center; gap: 12px;">
+            <div style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 10px 8px 10px 16px; min-height: 56px; gap: 16px; font-size: 14px; color: var(--table-row-text); box-sizing: border-box;">
+                @php
+                    $allLimits = array(10, 25, 50, 100);
+                    $availableLimits = array();
+                    foreach ($allLimits as $idx => $lim) {
+                        if ($idx === 0 || $totalRows > $allLimits[$idx - 1]) {
+                            $availableLimits[] = $lim;
+                        }
+                    }
+                @endphp
+                <div style="display: flex; flex-direction: row; align-items: center; gap: 12px;" x-data="{ perPageOpen: false }">
                     <span>Показывать</span>
-                    <div style="position: relative; width: 83px; height: 36px; display: inline-flex; align-items: center;">
-                        <select onchange="changeRequestsPerPage(this.value)"
-                                style="appearance: none; -webkit-appearance: none; width: 83px; height: 36px; background-color: var(--table-body-bg); color: var(--table-row-text); border: none; border-radius: 8px; padding: 8px 28px 8px 12px; font-size: 14px; font-weight: 400; line-height: 20px; cursor: pointer; box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.06), 0px 1px 2px rgba(0, 0, 0, 0.06), 0px 2px 4px rgba(0, 0, 0, 0.04);">
-                            @foreach([10, 25, 50, 100] as $limit)
+                    <div style="position: relative; display: inline-flex; align-items: center;">
+                        <button type="button"
+                                @click="perPageOpen = !perPageOpen"
+                                @click.away="perPageOpen = false"
+                                style="display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 83px; height: 36px; background-color: var(--table-body-bg); color: var(--table-row-text); border: none; border-radius: 8px; padding: 8px 12px; font-size: 14px; font-weight: 400; line-height: 20px; cursor: pointer; box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.06), 0px 1px 2px rgba(0, 0, 0, 0.06), 0px 2px 4px rgba(0, 0, 0, 0.04);">
+                            <span>{{ $totalRows > 0 ? $firstItem . '-' . $requests->lastItem() : '0' }}</span>
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--table-row-text);">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
+
+                        <div x-show="perPageOpen" x-cloak
+                             style="position: absolute; bottom: calc(100% + 6px); left: 0; min-width: 96px; padding: 4px; border-radius: 12px; background-color: var(--table-body-bg); border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.14); z-index: 999;">
+                            @foreach($availableLimits as $limit)
                                 @php
                                     $rangeStart = $totalRows > 0 ? $firstItem : 1;
                                     $rangeEnd   = $totalRows > 0 ? min($firstItem + $limit - 1, $totalRows) : $limit;
                                 @endphp
-                                <option value="{{ $limit }}" {{ $perPage === $limit ? 'selected' : '' }}>
-                                    {{ $rangeStart }}-{{ $rangeEnd }}
-                                </option>
+                                <button type="button"
+                                        onclick="changeRequestsPerPage({{ $limit }})"
+                                        style="width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 12px; border: none; border-radius: 8px; font-size: 13px; text-align: left; cursor: pointer; {{ $perPage === $limit ? 'background-color: var(--pill-btn-bg); font-weight: 600; color: var(--table-row-text);' : 'background: transparent; color: var(--table-row-text);' }}">
+                                    <span>{{ $totalRows > 0 ? $rangeStart . '-' . $rangeEnd : '0' }}</span>
+                                    @if($perPage === $limit)
+                                        <span style="color: #D97706;">✓</span>
+                                    @endif
+                                </button>
                             @endforeach
-                        </select>
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"
-                             style="position: absolute; right: 10px; pointer-events: none; color: var(--table-row-text);">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
-                        </svg>
+                        </div>
                     </div>
                     <span>из {{ number_format($totalRows, 0, '', ' ') }}</span>
                 </div>
+
 
                 <!-- Правая часть: < Назад  1  2  3 ... 10  11  Вперёд > -->
                 <div style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
@@ -285,7 +287,7 @@
                     <div style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
                         @foreach($pages as $idx => $page)
                             @if($idx > 0 && $page - $pages[$idx - 1] > 1)
-                                <span style="font-size: 14px; font-weight: 500; color: var(--table-head-text); padding: 0 2px;">...</span>
+                                <span style="font-size: 14px; font-weight: 500; color: var(--table-row-text); padding: 0 2px;">...</span>
                             @endif
 
                             @if($page === $curPage)
@@ -316,7 +318,6 @@
         </div>
     </div>
 
-    <!-- Логика работы UI на JavaScript -->
     <script>
         function changeRequestsPerPage(limit) {
             const url = new URL(window.location.href);
