@@ -247,7 +247,7 @@
                 </div>
 
 
-                <!-- Правая часть: < Назад  1  2  3 ... 10  11  Вперёд > -->
+                <!-- Правая часть: Пагинация -->
                 <div style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
                     @if ($protocols->onFirstPage())
                         <span style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; padding: 6px 12px; border-radius: 16px; font-size: 14px; font-weight: 500; color: var(--table-row-text); opacity: 0.5; cursor: not-allowed;">

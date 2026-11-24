@@ -6,7 +6,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'СУЗиПО') }}</title>
 
-    <!-- Мгновенная инициализация темы до отрисовки страницы (без мерцания) -->
     <script>
         if (localStorage.getItem('suzipo_theme') === 'dark' || (!('suzipo_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
@@ -26,21 +25,16 @@
 </head>
 <body class="antialiased min-h-screen flex flex-col">
 
-    <!-- Верхняя адаптивная шапка (Top Header) -->
-    <header class="sticky top-0 z-40 flex items-center justify-between border-b transition-colors"
-            style="min-height: 76px; padding: 12px 24px; background-color: var(--bg-page); border-color: var(--border-color);">
-
-
-        <!-- Левая часть: Логотип РОСНЕФТЬ | СУЗиПО -->
-                <!-- Левая часть: Логотип -->
-                <!-- Левая часть: Адаптивный логотип под светлую и тёмную тему -->
+    <!-- шапка -->
+    <header class="sticky top-0 flex items-center justify-between border-b transition-colors"
+            style="min-height: 76px; padding: 12px 24px; background-color: var(--bg-page); border-color: var(--border-color); z-index: 1000;">
         <div class="flex items-center space-x-3">
             <a href="{{ route('dashboard') }}" class="flex items-center group">
                 <img x-show="!darkMode" src="{{ asset('images/logo-light.svg') }}" alt="РОСНЕФТЬ СУЗиПО" style="height: 42px; width: auto;">
                 <img x-show="darkMode" x-cloak src="{{ asset('images/logo-dark.svg') }}" alt="РОСНЕФТЬ СУЗиПО" style="height: 42px; width: auto;">
             </a>
         </div>
-                <!-- Центральная капсула навигации (показывается только на внутренних страницах) -->
+        <!-- Центральная капсула навигации -->
         @if(!request()->routeIs('dashboard') && request()->path() !== '/')
         <nav class="suzipo-nav-capsule">
 
@@ -149,7 +143,6 @@
         </nav>
         @endif
 
-                <!-- Правая часть: Поиск, Уведомления, Переключатель темы и Профиль (без зависимости от npm run build) -->
         <div style="display: flex; align-items: center; gap: 20px;">
             <!-- 1. Иконка поиска -->
             <button type="button" title="Поиск"
@@ -167,15 +160,15 @@
                 </svg>
             </button>
 
-            <!-- 3. Переключатель темы (Солнце / Луна) -->
+            <!-- 3. Переключатель темы -->
             <button type="button" @click="toggleTheme()" title="Переключить тему"
                     style="background: transparent; border: none; padding: 4px; color: var(--text-primary); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
-                <!-- Иконка Солнца (для светлой темы) -->
+                <!-- Иконка Солнца -->
                 <svg x-show="!darkMode" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="4"/>
                     <path stroke-linecap="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/>
                 </svg>
-                <!-- Иконка Луны (для тёмной темы) -->
+                <!-- Иконка Луны -->
                 <svg x-show="darkMode" x-cloak width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
                 </svg>
@@ -218,7 +211,7 @@
                     </div>
                 </button>
 
-                <!-- Выпадающее меню (строго position: absolute) -->
+                <!-- Выпадающее меню -->
                 <div x-show="userOpen" x-cloak
                      style="position: absolute; right: 0; top: calc(100% + 10px); width: 210px; border-radius: 12px; background-color: var(--bg-surface); border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.12); padding: 6px 0; z-index: 999;">
                     <div style="padding: 8px 14px; border-bottom: 1px solid var(--border-color); font-size: 11px; color: var(--text-secondary);">
@@ -241,8 +234,6 @@
         {{ $slot }}
     </main>
 
-
-    <!-- Лаконичный подвал -->
     <footer class="border-t py-4 px-6 mt-auto transition-colors"
             style="border-color: var(--border-color); color: var(--text-secondary);">
         <div class="max-w-[1440px] mx-auto flex items-center justify-between text-xs">

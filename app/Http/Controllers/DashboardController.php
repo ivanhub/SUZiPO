@@ -49,7 +49,7 @@ class DashboardController extends Controller
                     ->get();
             }
 
-            // 3. Последние записи по обучению (результаты протоколов)
+            // 3. Последние записи по обучению
             if (Schema::hasTable('uc_ext_studentsprotocol')) {
                 $recentTraining = DB::table('uc_ext_studentsprotocol')
                     ->orderByDesc('id')

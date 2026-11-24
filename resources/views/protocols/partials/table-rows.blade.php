@@ -84,7 +84,7 @@
         {{ $protocol->demand?->curator?->fio ?? '—' }}
     </td>
 
-    <!-- Действия (Справа, как в Figma: Отчёт, Скачать, Редактировать) -->
+    <!-- Действия -->
     <td style="text-align: right;">
         <div style="display: inline-flex; align-items: center; gap: 4px;">
             <a href="{{ route('protocols.report.create', $protocol->prot_id) }}"

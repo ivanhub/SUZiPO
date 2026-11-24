@@ -65,26 +65,22 @@
 
                     <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
                         <span style="color: #6b7280;">Аудитории:</span>
-                        <!-- Исправлено: Ссылка на поле number согласно вашей модели -->
                         <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.audience?.number || '—'"></span>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
                         <span style="color: #6b7280;">ФИО преподавателей:</span>
-                        <!-- ИСПРАВЛЕНО: Заменено .name на .fio согласно модели Teacher -->
                         <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.teacher?.fio || '—'"></span>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
                         <span style="color: #6b7280;">Кураторы группы:</span>
-                        <!-- ИСПРАВЛЕНО: Заменено .name на .fio согласно модели RequestsCurator -->
                         <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.curator?.fio || '—'"></span>
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
                         <span style="color: #4b5563; font-weight: 500;">Профессия, присваиваемая по результатам обучения:</span>
                         <select name="assigned_profession_id" disabled style="width: 100%; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background-color: #f3f4f6; cursor: not-allowed;">
-                            <!-- ИСПРАВЛЕНО: Заменено .profession на .name согласно модели RequestsProfession -->
                             <option value="" x-text="editData.demand?.profession?.name || 'Не указана'"></option>
                         </select>
                     </div>
@@ -170,8 +166,8 @@
                     </div>
 
                     <input type="hidden" name="flagapproved" :value="editData.prot_status || 1">
-                </div> <!-- Конец правой колонки -->
-            </div> <!-- Конец двухколоночного контейнера -->
+                </div>
+            </div>
 
             <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
                 <button type="button" @click="isEditOpen = false" style="padding: 7px 16px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; font-weight: 500; cursor: pointer;">Отмена</button>

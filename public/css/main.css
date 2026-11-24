@@ -219,6 +219,7 @@ body {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 16px 14px;
+  align-items: start;
 }
 
 .suzipo-col-1 { grid-column: span 1; }
@@ -611,4 +612,8 @@ html.dark .suzipo-tab-item {
   border-radius: 8px !important;
   padding: 5px 8px !important;
   font-size: 11px !important;
+}
+
+[x-cloak] {
+  display: none !important;
 }

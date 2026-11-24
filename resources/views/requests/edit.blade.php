@@ -1,574 +1,523 @@
 ﻿<x-layouts.app-with-sidebar>
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-6">Редактирование заявки #{{ $request->id }}</h2>
-
-                <form action="{{ route('requests.update', $request) }}" method="POST">
-                    @csrf
-                    @method('PUT')
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        
-                        <!-- Одноразовая заявка -->
-                        <div class="col-span-full">
-                            <label class="inline-flex items-center">
-                                <input type="checkbox" name="one_time" value="1" {{ old('one_time', $request->one_time) ? 'checked' : '' }}
-                                       class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                                <span class="ml-2 text-sm font-medium text-gray-700">Одноразовая заявка</span>
-                            </label>
-                        </div>
-<!-- Текущий номер заявки -->
-<div class="col-span-full">
-    <label class="block text-sm font-medium text-gray-700 mb-1">Номер заявки</label>
-    <input type="text" value="{{ $request->req_id ?? '—' }}" 
-           class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
-           readonly>
-</div>
-<!-- Дата начала обучения -->
-<div>
-    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Дата начала обучения</label>
-    <input type="date" name="start_date" id="start_date" 
-           value="{{ $request->start_date ? $request->start_date->format('Y-m-d') : old('start_date', '') }}"
-           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-    @error('start_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-</div>
-
-<!-- Дата окончания обучения -->
-<div>
-    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Дата окончания обучения</label>
-    <input type="date" name="end_date" id="end_date" 
-           value="{{ $request->end_date ? $request->end_date->format('Y-m-d') : old('end_date', '') }}"
-           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-    @error('end_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-</div>
-
-<!-- Дата оформления -->
-<div>
-    <label for="issue_date" class="block text-sm font-medium text-gray-700 mb-1">Дата оформления</label>
-    <input type="date" name="issue_date" id="issue_date" 
-           value="{{ $request->issue_date ? $request->issue_date->format('Y-m-d') : old('issue_date', '') }}"
-           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-    @error('issue_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-</div>
-                        <!-- Форма образования -->
-                        <div>
-                            <label for="education_form" class="block text-sm font-medium text-gray-700 mb-1">Форма образования</label>
-                            <select name="education_form" id="education_form"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="">---</option>
-                                <option value="дистанционное" {{ old('education_form', $request->education_form) == 'дистанционное' ? 'selected' : '' }}>Дистанционное</option>
-                                <option value="заочное" {{ old('education_form', $request->education_form) == 'заочное' ? 'selected' : '' }}>Заочное</option>
-                                <option value="очное" {{ old('education_form', $request->education_form) == 'очное' ? 'selected' : '' }}>Очное</option>
-                                <option value="очное-заочное (вечернее)" {{ old('education_form', $request->education_form) == 'очное-заочное (вечернее)' ? 'selected' : '' }}>Очное-заочное (вечернее)</option>
-                                <option value="прочее" {{ old('education_form', $request->education_form) == 'прочее' ? 'selected' : '' }}>Прочее</option>
-                                <option value="самообразование" {{ old('education_form', $request->education_form) == 'самообразование' ? 'selected' : '' }}>Самообразование</option>
-                                <option value="семейное образование" {{ old('education_form', $request->education_form) == 'семейное образование' ? 'selected' : '' }}>Семейное образование</option>
-                                <option value="экстернат" {{ old('education_form', $request->education_form) == 'экстернат' ? 'selected' : '' }}>Экстернат</option>
-                            </select>
-                        </div>
-
-                        <!-- ИТР/рабочие -->
-                        <div>
-                            <label for="employee_type" class="block text-sm font-medium text-gray-700 mb-1">ИТР/рабочие</label>
-                            <select name="employee_type" id="employee_type"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="">---</option>
-                                <option value="ИТР(РСС)" {{ old('employee_type', $request->employee_type) == 'ИТР(РСС)' ? 'selected' : '' }}>ИТР(РСС)</option>
-                                <option value="Рабочие" {{ old('employee_type', $request->employee_type) == 'Рабочие' ? 'selected' : '' }}>Рабочие</option>
-                            </select>
-                        </div>
-
-                        <!-- С отрывом от производства -->
-                        <div>
-                            <label for="production_break" class="block text-sm font-medium text-gray-700 mb-1">С отрывом от производства</label>
-                            <select name="production_break" id="production_break"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="">---</option>
-                                <option value="с отрывом от производства" {{ old('production_break', $request->production_break) == 'с отрывом от производства' ? 'selected' : '' }}>С отрывом от производства</option>
-                                <option value="без отрыва от производства" {{ old('production_break', $request->production_break) == 'без отрыва от производства' ? 'selected' : '' }}>Без отрыва от производства</option>
-                                <option value="без отрыва от производства с применением электронного обучения и дистанционных образовательных технологий" {{ old('production_break', $request->production_break) == 'без отрыва от производства с применением электронного обучения и дистанционных образовательных технологий' ? 'selected' : '' }}>Без отрыва от производства с применением электронного обучения и дистанционных образовательных технологий</option>
-                            </select>
-                        </div>
-
-<!-- Учебное заведение (провайдер) -->
-<div x-data="editProviderSelector()" class="relative z-10">
-    <label class="block text-sm font-medium text-gray-700 mb-1">Учебное заведение (провайдер)</label>
-    <input type="hidden" name="provider_id" x-model="selectedId">
-    <input type="hidden" name="new_provider_name" x-model="newProviderName">
-    <div @click="open = !open; if(!open) search = ''" 
-         class="w-full px-3 py-2 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white min-h-[38px]">
-        <span x-text="selectedName || '--- Выберите или введите провайдера ---'" class="text-sm" :class="{'text-gray-400': !selectedName}"></span>
-    </div>
-    <div x-show="open" @click.away="open = false"
-         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg"
-         style="max-height: 450px; display: flex; flex-direction: column;">
-        <div class="sticky top-0 bg-white border-b border-gray-200 p-2 flex-shrink-0">
-            <input type="text" x-model="search" placeholder="Поиск по провайдерам или введите новый..."
-                   class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                   @click.stop @keydown.enter.prevent="addNewProvider()">
-        </div>
-        <div class="overflow-y-auto flex-1" style="max-height: 350px;">
-            <div x-show="search && !isExistingProvider" @click="addNewProvider()"
-                 class="px-3 py-3 cursor-pointer hover:bg-green-50 text-sm border-b border-green-200 bg-green-50 flex items-center">
-                <span class="text-green-600 font-medium mr-2">+</span>
-                <span>Добавить нового провайдера: "<span x-text="search" class="font-semibold"></span>"</span>
-            </div>
-            <template x-for="provider in filteredProviders" :key="provider.id">
-                <div @click="selectProvider(provider)"
-                     class="px-3 py-2 cursor-pointer hover:bg-indigo-50 text-sm border-b border-gray-100 last:border-b-0"
-                     :class="{'bg-indigo-100': selectedId == provider.id}"
-                     style="white-space: normal; word-wrap: break-word; line-height: 1.4;">
-                    <span x-text="provider.name"></span>
-                </div>
-            </template>
-            <div x-show="filteredProviders.length === 0 && !search" class="px-3 py-4 text-sm text-gray-400 text-center">
-                Начните вводить название провайдера
+    <div style="padding: 8px 0 32px 0;">
+        <div class="suzipo-breadcrumbs">
+            <a href="{{ route('requests.index') }}" class="suzipo-back-btn" title="Назад к списку заявок">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <div style="font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+                <a href="{{ route('dashboard') }}" style="color: var(--text-secondary); text-decoration: none;">Главная</a>
+                <span>›</span>
+                <a href="{{ route('requests.index') }}" style="color: var(--text-secondary); text-decoration: none;">Заявки на обучение</a>
+                <span>›</span>
+                <span style="color: var(--text-primary); font-weight: 500;">Редактирование заявки #{{ $request->id }}</span>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Наименование курса (тематика) -->
-<div x-data="editCourseSelector()" class="relative z-30">
-    <label class="block text-sm font-medium text-gray-700 mb-1">Наименование курса (тематика)</label>
-    <input type="hidden" name="course_id" x-model="selectedId">
-    <input type="hidden" name="new_course_name" x-model="newCourseName">
-    <input type="hidden" name="matrix_num" x-model="selectedMatrixNum">
-    
-    <div @click="open = !open; if(!open) search = ''" 
-         class="w-full px-3 py-2 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white min-h-[38px]">
-        <span x-text="selectedName || message" class="text-sm" :class="{'': !selectedName && !providerSelected}"></span>
-    </div>
-    
-    <div x-show="open" @click.away="open = false"
-         class="course-dropdown absolute z-30 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg"
-         style="max-height: 450px; display: flex; flex-direction: column;">
-        
-        <!-- Если провайдер не выбран -->
-        <template x-if="!providerSelected && !loading">
-            <div class="px-6 py-8 text-center">
-                <p class="text-base font-bold text-gray-700">Выберите учебное заведение</p>
-            </div>
-        </template>
-        
-        <!-- Если загрузка -->
-        <template x-if="loading">
-            <div class="px-6 py-8 text-center">
-                <div class="inline-flex items-center">
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span class="text-gray-600">Загрузка курсов...</span>
-                </div>
-            </div>
-        </template>
-        
-        <!-- Если провайдер выбран и курсы не найдены -->
-        <template x-if="providerSelected && !loading && courses.length === 0">
-            <div class="px-6 py-8 text-center text-gray-500">
-                Курсы не найдены
-            </div>
-        </template>
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px;">
+            <h1 class="suzipo-form-title" style="margin-bottom: 0;">Редактирование заявки #{{ $request->id }}</h1>
+            <label style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 10px; background-color: var(--bg-surface); border: 1px solid var(--border-color); cursor: pointer;">
+                <input type="checkbox" name="one_time" form="request-edit-form" value="1" {{ old('one_time', $request->one_time) ? 'checked' : '' }}
+                       style="width: 16px; height: 16px; accent-color: #FFD100; cursor: pointer;">
+                <span style="font-size: 13px; font-weight: 500; color: var(--text-primary);">Одноразовая заявка</span>
+            </label>
+        </div>
 
-        <!-- Если провайдер выбран и есть курсы -->
-        <template x-if="providerSelected && !loading && courses.length > 0">
-            <div>
-                <div class="sticky top-0 bg-white border-b border-gray-200 p-2 flex-shrink-0">
-                    <input type="text" x-model="search" placeholder="Поиск по курсам или введите новый..."
-                           class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                           @click.stop @keydown.enter.prevent="addNewCourse()">
+        <form id="request-edit-form" action="{{ route('requests.update', $request) }}" method="POST">
+            @csrf
+            @method('PUT')
+
+            <div class="suzipo-grid-6">
+                <!-- Ряд 1: Номер заявки и 3 даты -->
+                <div class="suzipo-col-2">
+                    <label class="suzipo-label">Номер заявки</label>
+                    <input type="text" value="{{ $request->req_id ?? '—' }}" class="suzipo-field" style="opacity: 0.7; cursor: not-allowed;" readonly>
                 </div>
-                <div class="overflow-y-auto flex-1" style="max-height: 350px;">
-                    <div x-show="search && !isExistingCourse" @click="addNewCourse()"
-                         class="px-3 py-3 cursor-pointer hover:bg-green-50 text-sm border-b border-green-200 bg-green-50 flex items-center"
-                         style="white-space: normal; word-wrap: break-word; line-height: 1.4;">
-                        <span class="text-green-600 font-medium mr-2">+</span>
-                        <span>Добавить новый курс: "<span x-text="search" class="font-semibold"></span>"</span>
+
+                <div class="suzipo-col-1">
+                    <label for="start_date" class="suzipo-label">Дата начала</label>
+                    <input type="date" name="start_date" id="start_date"
+                           value="{{ $request->start_date ? $request->start_date->format('Y-m-d') : old('start_date', '') }}"
+                           class="suzipo-field">
+                    @error('start_date') <p style="color: #EF4444; font-size: 11px; margin-top: 4px;">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="suzipo-col-1">
+                    <label for="end_date" class="suzipo-label">Дата окончания</label>
+                    <input type="date" name="end_date" id="end_date"
+                           value="{{ $request->end_date ? $request->end_date->format('Y-m-d') : old('end_date', '') }}"
+                           class="suzipo-field">
+                    @error('end_date') <p style="color: #EF4444; font-size: 11px; margin-top: 4px;">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="suzipo-col-2">
+                    <label for="issue_date" class="suzipo-label">Дата оформления</label>
+                    <input type="date" name="issue_date" id="issue_date"
+                           value="{{ $request->issue_date ? $request->issue_date->format('Y-m-d') : old('issue_date', '') }}"
+                           class="suzipo-field">
+                    @error('issue_date') <p style="color: #EF4444; font-size: 11px; margin-top: 4px;">{{ $message }}</p> @enderror
+                </div>
+
+                <!-- Ряд 2: Форма образования, ИТР/рабочие, С отрывом от производства -->
+                <div class="suzipo-col-2">
+                    <label for="education_form" class="suzipo-label">Форма образования</label>
+                    <select name="education_form" id="education_form" class="suzipo-field">
+                        <option value="">---</option>
+                        <option value="дистанционное" {{ old('education_form', $request->education_form) == 'дистанционное' ? 'selected' : '' }}>Дистанционное</option>
+                        <option value="заочное" {{ old('education_form', $request->education_form) == 'заочное' ? 'selected' : '' }}>Заочное</option>
+                        <option value="очное" {{ old('education_form', $request->education_form) == 'очное' ? 'selected' : '' }}>Очное</option>
+                        <option value="очное-заочное (вечернее)" {{ old('education_form', $request->education_form) == 'очное-заочное (вечернее)' ? 'selected' : '' }}>Очное-заочное (вечернее)</option>
+                        <option value="прочее" {{ old('education_form', $request->education_form) == 'прочее' ? 'selected' : '' }}>Прочее</option>
+                        <option value="самообразование" {{ old('education_form', $request->education_form) == 'самообразование' ? 'selected' : '' }}>Самообразование</option>
+                        <option value="семейное образование" {{ old('education_form', $request->education_form) == 'семейное образование' ? 'selected' : '' }}>Семейное образование</option>
+                        <option value="экстернат" {{ old('education_form', $request->education_form) == 'экстернат' ? 'selected' : '' }}>Экстернат</option>
+                    </select>
+                </div>
+
+                <div class="suzipo-col-2">
+                    <label for="employee_type" class="suzipo-label">ИТР/рабочие</label>
+                    <select name="employee_type" id="employee_type" class="suzipo-field">
+                        <option value="">---</option>
+                        <option value="ИТР(РСС)" {{ old('employee_type', $request->employee_type) == 'ИТР(РСС)' ? 'selected' : '' }}>ИТР(РСС)</option>
+                        <option value="Рабочие" {{ old('employee_type', $request->employee_type) == 'Рабочие' ? 'selected' : '' }}>Рабочие</option>
+                    </select>
+                </div>
+
+                <div class="suzipo-col-2">
+                    <label for="production_break" class="suzipo-label">С отрывом от производства</label>
+                    <select name="production_break" id="production_break" class="suzipo-field">
+                        <option value="">---</option>
+                        <option value="с отрывом от производства" {{ old('production_break', $request->production_break) == 'с отрывом от производства' ? 'selected' : '' }}>С отрывом от производства</option>
+                        <option value="без отрыва от производства" {{ old('production_break', $request->production_break) == 'без отрыва от производства' ? 'selected' : '' }}>Без отрыва от производства</option>
+                        <option value="без отрыва от производства с применением электронного обучения и дистанционных образовательных технологий" {{ old('production_break', $request->production_break) == 'без отрыва от производства с применением электронного обучения и дистанционных образовательных технологий' ? 'selected' : '' }}>Без отрыва от производства с применением ЭО и ДОТ</option>
+                    </select>
+                </div>
+                <!-- Ряд 3: Учебное заведение (провайдер) и Наименование курса -->
+                <div x-data="editProviderSelector()" class="suzipo-col-3" style="z-index: 25;">
+                    <label class="suzipo-label">Учебное заведение (провайдер)</label>
+                    <input type="hidden" name="provider_id" x-model="selectedId">
+                    <input type="hidden" name="new_provider_name" x-model="newProviderName">
+                    <div style="position: relative;">
+                    <div @click="open = !open; if(!open) search = ''" class="suzipo-field" style="cursor: pointer; min-height: 40px; display: flex; align-items: center; justify-content: space-between;">
+                        <span x-text="selectedName || '--- Выберите или введите провайдера ---'"
+                              :style="!selectedName ? 'color: var(--text-secondary);' : 'color: var(--text-primary);'"></span>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--text-secondary); flex-shrink: 0;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
                     </div>
-                    <template x-for="course in filteredCourses" :key="course">
-                        <div @click="selectCourse(course)"
-                             class="px-3 py-2 cursor-pointer hover:bg-indigo-50 text-sm border-b border-gray-100 last:border-b-0"
-                             :class="{'bg-indigo-100': selectedName === course}"
-                             style="white-space: normal; word-wrap: break-word; line-height: 1.4;">
-                            <span x-text="course"></span>
+
+                    <div x-show="open" @click.away="open = false" x-cloak
+                         style="position: absolute; left: 0; right: 0; top: calc(100% + 4px); background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.18); max-height: 380px; z-index: 50; overflow: hidden;">
+                        <div style="display: flex; flex-direction: column; max-height: 380px;">
+                        <div style="padding: 8px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-surface);">
+                            <input type="text" x-model="search" placeholder="Поиск по провайдерам или введите новый..."
+                                   class="suzipo-field" style="background-color: var(--bg-page) !important; padding: 7px 10px !important;"
+                                   @click.stop @keydown.enter.prevent="addNewProvider()">
+                        </div>
+                        <div style="overflow-y: auto; flex: 1;">
+                            <div x-show="search && !isExistingProvider" @click="addNewProvider()"
+                                 style="padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); background-color: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; gap: 6px;">
+                                <span style="font-weight: 700;">+</span>
+                                <span>Добавить нового провайдера: "<strong x-text="search"></strong>"</span>
+                            </div>
+                            <template x-for="provider in filteredProviders" :key="provider.id">
+                                <div @click="selectProvider(provider)"
+                                     style="padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); line-height: 1.4; color: var(--text-primary);"
+                                     :style="selectedId == provider.id ? 'background-color: rgba(255, 209, 0, 0.2); font-weight: 600;' : ''">
+                                    <span x-text="provider.name"></span>
+                                </div>
+                            </template>
+                            <div x-show="filteredProviders.length === 0 && !search" style="padding: 16px; font-size: 13px; color: var(--text-secondary); text-align: center;">
+                                Начните вводить название провайдера
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    </div>
+                </div>
+                <!-- Наименование курса (тематика) -->
+                <div x-data="editCourseSelector()" class="suzipo-col-3" style="z-index: 25;">
+                    <label class="suzipo-label">Наименование курса (тематика)</label>
+                    <input type="hidden" name="course_id" x-model="selectedId">
+                    <input type="hidden" name="new_course_name" x-model="newCourseName">
+                    <input type="hidden" name="matrix_num" x-model="selectedMatrixNum">
+                    <div style="position: relative;">
+                    <div @click="open = !open; if(!open) search = ''" class="suzipo-field" style="cursor: pointer; min-height: 40px; display: flex; align-items: center; justify-content: space-between;">
+                        <span x-text="selectedName || message"
+                              :style="(!selectedName && !providerSelected) ? 'color: var(--text-secondary);' : 'color: var(--text-primary);'"></span>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--text-secondary); flex-shrink: 0;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+
+                    <div x-show="open" @click.away="open = false" x-cloak
+                         style="position: absolute; left: 0; right: 0; top: calc(100% + 4px); background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.18); max-height: 380px; display: flex; flex-direction: column; z-index: 50; overflow: hidden;">
+
+                        <template x-if="!providerSelected && !loading">
+                            <div style="padding: 24px; text-align: center; font-weight: 600; color: var(--text-secondary);">
+                                Выберите учебное заведение
+                            </div>
+                        </template>
+
+                        <template x-if="loading">
+                            <div style="padding: 24px; text-align: center; color: var(--text-secondary);">
+                                Загрузка курсов...
+                            </div>
+                        </template>
+
+                        <template x-if="providerSelected && !loading && courses.length === 0">
+                            <div style="padding: 24px; text-align: center; color: var(--text-secondary);">
+                                Курсы не найдены
+                            </div>
+                        </template>
+
+                        <template x-if="providerSelected && !loading && courses.length > 0">
+                            <div style="display: flex; flex-direction: column; overflow: hidden;">
+                                <div style="padding: 8px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-surface);">
+                                    <input type="text" x-model="search" placeholder="Поиск по курсам или введите новый..."
+                                           class="suzipo-field" style="background-color: var(--bg-page) !important; padding: 7px 10px !important;"
+                                           @click.stop @keydown.enter.prevent="addNewCourse()">
+                                </div>
+                                <div style="overflow-y: auto; max-height: 300px;">
+                                    <div x-show="search && !isExistingCourse" @click="addNewCourse()"
+                                         style="padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); background-color: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; gap: 6px;">
+                                        <span style="font-weight: 700;">+</span>
+                                        <span>Добавить новый курс: "<strong x-text="search"></strong>"</span>
+                                    </div>
+                                    <template x-for="course in filteredCourses" :key="course">
+                                        <div @click="selectCourse(course)"
+                                             style="padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); line-height: 1.4; color: var(--text-primary);"
+                                             :style="selectedName === course ? 'background-color: rgba(255, 209, 0, 0.2); font-weight: 600;' : ''">
+                                            <span x-text="course"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    </div>
+                    <!-- Модальное окно выбора матрицы -->
+                    <template x-teleport="body">
+                        <div x-show="showMatrixModal" x-cloak
+                             @click="showMatrixModal = false; open = false; $dispatch('close-provider-dropdown')"
+                             style="position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.55); padding: 16px;">
+                            <div @click.stop style="background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 16px; max-width: 440px; width: 100%; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.25); color: var(--text-primary);">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                                    <h3 style="font-size: 16px; font-weight: 700; margin: 0;">Добавление нового курса</h3>
+                                    <button type="button" @click="showMatrixModal = false" style="background: none; border: none; font-size: 22px; color: var(--text-secondary); cursor: pointer;">&times;</button>
+                                </div>
+                                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">Выберите матрицу для добавления курса в справочник:</p>
+                                <div style="font-size: 13px; font-weight: 600; background-color: var(--bg-surface); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px;">
+                                    <span x-text="pendingCourseName"></span>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background-color: var(--bg-surface);">
+                                        <input type="radio" name="matrix_select" value="matrix_courses" x-model="selectedMatrix">
+                                        <span style="font-size: 13px; font-weight: 500;">Matrix Courses</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background-color: var(--bg-surface);">
+                                        <input type="radio" name="matrix_select" value="matrix_dpo" x-model="selectedMatrix">
+                                        <span style="font-size: 13px; font-weight: 500;">Matrix DPO</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background-color: var(--bg-surface);">
+                                        <input type="radio" name="matrix_select" value="matrix_ot" x-model="selectedMatrix">
+                                        <span style="font-size: 13px; font-weight: 500;">Matrix OT</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background-color: var(--bg-surface);">
+                                        <input type="radio" name="matrix_select" value="matrix_po" x-model="selectedMatrix">
+                                        <span style="font-size: 13px; font-weight: 500;">Matrix PO</span>
+                                    </label>
+                                </div>
+                                <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                                    <button type="button" @click="showMatrixModal = false" class="btn-suzipo-cancel">Отмена</button>
+                                    <button type="button" @click="saveSelectedMatrix(); open = false; $dispatch('close-provider-dropdown')"
+                                            class="btn-suzipo-save" :disabled="!selectedMatrix">Сохранить</button>
+                                </div>
+                            </div>
                         </div>
                     </template>
-                </div>
-            </div>
-        </template>
-    </div>
 
-    {{-- МОДАЛЬНОЕ ОКНО --}}
-    <template x-teleport="body">
-        <div x-show="showMatrixModal"
-             x-cloak
-             class="fixed inset-0 z-[99999] overflow-y-auto"
-             @click="showMatrixModal = false; open = false; $dispatch('close-provider-dropdown')"
-             style="display: none;">
-            <div class="flex items-center justify-center min-h-screen px-4">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-                     @click="showMatrixModal = false"></div>
-                <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-auto p-6" @click.stop>
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-medium text-gray-900">Добавление нового курса</h3>
-                        <button @click="showMatrixModal = false" class="text-gray-400 hover:text-gray-500">
-                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-4">Выберите матрицу для добавления курса в справочник:</p>
-                    <div class="text-sm font-semibold text-gray-800 bg-gray-100 rounded p-3 mb-4">
-                        <span x-text="pendingCourseName"></span>
-                    </div>
-                    <div class="space-y-3">
-                        <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-indigo-50 transition">
-                            <input type="radio" name="matrix_select" value="matrix_courses" x-model="selectedMatrix"
-                                   class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
-                            <span class="ml-3 text-sm font-medium text-gray-700">Matrix Courses</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-green-50 transition">
-                            <input type="radio" name="matrix_select" value="matrix_dpo" x-model="selectedMatrix"
-                                   class="h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500">
-                            <span class="ml-3 text-sm font-medium text-gray-700">Matrix DPO</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-amber-50 transition">
-                            <input type="radio" name="matrix_select" value="matrix_ot" x-model="selectedMatrix"
-                                   class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500">
-                            <span class="ml-3 text-sm font-medium text-gray-700">Matrix OT</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-purple-50 transition">
-                            <input type="radio" name="matrix_select" value="matrix_po" x-model="selectedMatrix"
-                                   class="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500">
-                            <span class="ml-3 text-sm font-medium text-gray-700">Matrix PO</span>
-                        </label>
-                    </div>
-                    <div class="mt-6 flex justify-end space-x-2">
-                        <button @click="showMatrixModal = false"
-                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition">
-                            Отмена
-                        </button>
-                        <button @click="saveSelectedMatrix(); open = false; $dispatch('close-provider-dropdown')"
-                                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
-                                :disabled="!selectedMatrix">
-                            Сохранить
-                        </button>
+                    <!-- Информация о выбранном курсе -->
+                    <div x-show="selectedName !== '' && selectedMatrixNum !== 5" x-cloak
+                         style="margin-top: 10px; padding: 12px; background-color: var(--bg-surface); border-radius: 12px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase;">Информация о курсе</div>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 12px;">
+                            <div style="display: flex; justify-content: space-between; padding: 5px 8px; background-color: var(--bg-page); border-radius: 6px;">
+                                <span style="color: var(--text-secondary);">Объём нагрузки:</span>
+                                <span style="font-weight: 600; color: var(--text-primary);" x-text="courseInfo.hours || '—'"></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 5px 8px; background-color: var(--bg-page); border-radius: 6px;">
+                                <span style="color: var(--text-secondary);">Теория:</span>
+                                <span style="font-weight: 600; color: var(--text-primary);" x-text="courseInfo.theory_hours || '—'"></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 5px 8px; background-color: var(--bg-page); border-radius: 6px;">
+                                <span style="color: var(--text-secondary);">Самост. подг.:</span>
+                                <span style="font-weight: 600; color: var(--text-primary);" x-text="courseInfo.self_study_hours || '—'"></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 5px 8px; background-color: var(--bg-page); border-radius: 6px;">
+                                <span style="color: var(--text-secondary);">Практика:</span>
+                                <span style="font-weight: 600; color: var(--text-primary);" x-text="courseInfo.practical_hours || '—'"></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 5px 8px; background-color: var(--bg-page); border-radius: 6px;">
+                                <span style="color: var(--text-secondary);">Разряд:</span>
+                                <span style="font-weight: 600; color: var(--text-primary);" x-text="courseInfo.rank || '—'"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </template>
+                <!-- Ряд 4: Страна, Город, Профессия -->
+                <div class="suzipo-col-2">
+                    <label for="country" class="suzipo-label">Место проведения (страна)</label>
+                    <input type="text" name="country" id="country" value="{{ old('country', $request->country) }}" class="suzipo-field">
+                </div>
 
-<!-- Информация о выбранном курсе -->
-<div x-show="selectedName !== '' && selectedMatrixNum !== 5" 
-     x-cloak
-     class="mt-2 p-3 bg-gray-50 rounded-md border border-gray-200">
-    <div class="text-xs font-medium text-gray-500 mb-2">Информация о курсе</div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-        <div class="flex justify-between px-2 py-1 bg-white rounded">
-            <span class="text-gray-500">Объем учебной нагрузки:</span>
-            <span class="font-medium" x-text="courseInfo.hours || '—'"></span>
-        </div>
-        <div class="flex justify-between px-2 py-1 bg-white rounded">
-            <span class="text-gray-500">Теоретическое обучение:</span>
-            <span class="font-medium" x-text="courseInfo.theory_hours || '—'"></span>
-        </div>
-        <div class="flex justify-between px-2 py-1 bg-white rounded">
-            <span class="text-gray-500">Самост. подготовка:</span>
-            <span class="font-medium" x-text="courseInfo.self_study_hours || '—'"></span>
-        </div>
-        <div class="flex justify-between px-2 py-1 bg-white rounded">
-            <span class="text-gray-500">Производ.-практич.:</span>
-            <span class="font-medium" x-text="courseInfo.practical_hours || '—'"></span>
-        </div>
-        <div class="flex justify-between px-2 py-1 bg-white rounded">
-            <span class="text-gray-500">Разряд:</span>
-            <span class="font-medium" x-text="courseInfo.rank || '—'"></span>
-        </div>
-    </div>
-</div>
+                <!-- Место проведения (город) -->
+                <div x-data="editCitySelector()" class="suzipo-col-2" style="position: relative; z-index: 20;">
+                    <label class="suzipo-label">Место проведения (город)</label>
+                    <input type="hidden" name="city_id" x-model="selectedId">
+                    <input type="hidden" name="new_city_name" x-model="newCityName">
 
-</div>
-                        <!-- Место проведения (страна) -->
-                        <div>
-                            <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Место проведения (страна)</label>
-                            <input type="text" name="country" id="country" value="{{ old('country', $request->country) }}"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                        </div>
-
-                        <!-- Место проведения (город) -->
-                        <div x-data="editCitySelector()" class="relative">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Место проведения (город)</label>
-                            <input type="hidden" name="city_id" x-model="selectedId">
-                            <input type="hidden" name="new_city_name" x-model="newCityName">
-                            <div @click="open = !open; if(!open) search = ''" 
-                                 class="w-full px-3 py-2 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white min-h-[38px]">
-                                <span x-text="selectedName || '--- Выберите или введите город ---'" class="text-sm" :class="{'text-gray-400': !selectedName}"></span>
-                            </div>
-                            <div x-show="open" @click.away="open = false"
-                                 class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg"
-                                 style="max-height: 400px; display: flex; flex-direction: column;">
-                                <div class="sticky top-0 bg-white border-b border-gray-200 p-2 flex-shrink-0">
-                                    <input type="text" x-model="search" placeholder="Поиск по городам или введите новый..."
-                                           class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                           @click.stop @keydown.enter.prevent="addNewCity()">
-                                </div>
-                                <div class="overflow-y-auto flex-1" style="max-height: 350px;">
-                                    <div x-show="search && !isExistingCity" @click="addNewCity()"
-                                         class="px-3 py-3 cursor-pointer hover:bg-green-50 text-sm border-b border-green-200 bg-green-50 flex items-center">
-                                        <span class="text-green-600 font-medium mr-2">+</span>
-                                        <span>Добавить новый город: "<span x-text="search" class="font-semibold"></span>"</span>
-                                    </div>
-                                    <template x-for="city in filteredCities" :key="city.id">
-                                        <div @click="selectCity(city)"
-                                             class="px-3 py-2 cursor-pointer hover:bg-indigo-50 text-sm border-b border-gray-100 last:border-b-0"
-                                             :class="{'bg-indigo-100': selectedId == city.id}"
-                                             style="white-space: normal; word-wrap: break-word; line-height: 1.4;">
-                                            <span x-text="city.name"></span>
-                                        </div>
-                                    </template>
-                                    <div x-show="filteredCities.length === 0 && !search" class="px-3 py-4 text-sm text-gray-400 text-center">
-                                        Начните вводить название города
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Профессия, присваиваемая по результатам обучения -->
-                        <div x-data="editProfessionSelector()" class="relative">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Профессия, присваиваемая по результатам обучения</label>
-                            <input type="hidden" name="profession_id" x-model="selectedId">
-                            <input type="hidden" name="new_profession_name" x-model="newProfessionName">
-                            <div @click="open = !open; if(!open) search = ''" 
-                                 class="w-full px-3 py-2 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white min-h-[38px]">
-                                <span x-text="selectedName || '--- Выберите или введите профессию ---'" class="text-sm" :class="{'text-gray-400': !selectedName}"></span>
-                            </div>
-                            <div x-show="open" @click.away="open = false"
-                                 class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg"
-                                 style="max-height: 400px; display: flex; flex-direction: column;">
-                                <div class="sticky top-0 bg-white border-b border-gray-200 p-2 flex-shrink-0">
-                                    <input type="text" x-model="search" placeholder="Поиск по профессиям или введите новую..."
-                                           class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                           @click.stop @keydown.enter.prevent="addNewProfession()">
-                                </div>
-                                <div class="overflow-y-auto flex-1" style="max-height: 350px;">
-                                    <div x-show="search && !isExistingProfession" @click="addNewProfession()"
-                                         class="px-3 py-3 cursor-pointer hover:bg-green-50 text-sm border-b border-green-200 bg-green-50 flex items-center">
-                                        <span class="text-green-600 font-medium mr-2">+</span>
-                                        <span>Добавить новую профессию: "<span x-text="search" class="font-semibold"></span>"</span>
-                                    </div>
-                                    <template x-for="profession in filteredProfessions" :key="profession.id">
-                                        <div @click="selectProfession(profession)"
-                                             class="px-3 py-2 cursor-pointer hover:bg-indigo-50 text-sm border-b border-gray-100 last:border-b-0"
-                                             :class="{'bg-indigo-100': selectedId == profession.id}"
-                                             style="white-space: normal; word-wrap: break-word; line-height: 1.4;">
-                                            <span x-text="profession.name"></span>
-                                        </div>
-                                    </template>
-                                    <div x-show="filteredProfessions.length === 0 && !search" class="px-3 py-4 text-sm text-gray-400 text-center">
-                                        Начните вводить название профессии
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Причина обучения -->
-                        <div>
-                            <label for="learn_reason_id" class="block text-sm font-medium text-gray-700 mb-1">Причина обучения</label>
-                            <select name="learn_reason_id" id="learn_reason_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="">---</option>
-                                @foreach($learnReasons as $reason)
-                                    <option value="{{ $reason->id }}" {{ old('learn_reason_id', $request->learn_reason_id) == $reason->id ? 'selected' : '' }}>{{ $reason->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Ресурс обучения/оценки -->
-                        <div>
-                            <label for="learning_resource_id" class="block text-sm font-medium text-gray-700 mb-1">Ресурс обучения/оценки</label>
-                            <select name="learning_resource_id" id="learning_resource_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="">---</option>
-                                @foreach($learningResources as $resource)
-                                    <option value="{{ $resource->id }}" {{ old('learning_resource_id', $request->learning_resource_id) == $resource->id ? 'selected' : '' }}>{{ $resource->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Вид обучения/оценки -->
-                        <div>
-                            <label for="learning_type_id" class="block text-sm font-medium text-gray-700 mb-1">Вид обучения/оценки</label>
-                            <select name="learning_type_id" id="learning_type_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="">---</option>
-                                @foreach($learningTypes as $type)
-                                    <option value="{{ $type->id }}" {{ old('learning_type_id', $request->learning_type_id) == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Вид мероприятия -->
-                        <div>
-                            <label for="event_type_id" class="block text-sm font-medium text-gray-700 mb-1">Вид мероприятия</label>
-                            <select name="event_type_id" id="event_type_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="">---</option>
-                                @foreach($eventsTypes as $eventType)
-                                    <option value="{{ $eventType->id }}" {{ old('event_type_id', $request->event_type_id) == $eventType->id ? 'selected' : '' }}>{{ $eventType->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Дисциплина -->
-                        <div>
-                            <label for="discipline_id" class="block text-sm font-medium text-gray-700 mb-1">Дисциплина</label>
-                            <select name="discipline_id" id="discipline_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="">---</option>
-                                @foreach($disciplines as $discipline)
-                                    <option value="{{ $discipline->id }}" {{ old('discipline_id', $request->discipline_id) == $discipline->id ? 'selected' : '' }}>{{ $discipline->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Себестоимость/Прибыль -->
-                        <div>
-                            <label for="cost_profit" class="block text-sm font-medium text-gray-700 mb-1">Себестоимость/Прибыль</label>
-                            <select name="cost_profit" id="cost_profit" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="">---</option>
-                                <option value="Себестоимость" {{ old('cost_profit', $request->cost_profit) == 'Себестоимость' ? 'selected' : '' }}>Себестоимость</option>
-                                <option value="Прибыль" {{ old('cost_profit', $request->cost_profit) == 'Прибыль' ? 'selected' : '' }}>Прибыль</option>
-                            </select>
-                        </div>
+                    <div @click="open = !open; if(!open) search = ''" class="suzipo-field" style="cursor: pointer; min-height: 40px; display: flex; align-items: center; justify-content: space-between;">
+                        <span x-text="selectedName || '--- Выберите или введите город ---'"
+                              :style="!selectedName ? 'color: var(--text-secondary);' : 'color: var(--text-primary);'"></span>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--text-secondary); flex-shrink: 0;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
                     </div>
 
-                    <!-- Только для просмотра и редактирования -->
-                    <div class="mt-8 pt-6 border-t border-gray-200">
-                        <h3 class="text-md font-semibold text-gray-900 mb-4">Назначенные ресурсы (только для просмотра и редактирования)</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-<!-- Аудитория -->
-<div>
-    <label for="audience_id" class="block text-sm font-medium text-gray-700 mb-1">Аудитория</label>
-    <select name="audience_id" id="audience_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-        <option value="">---</option>
-        @foreach($audiences as $audience)
-@php
-    $isBusy = false;
-    if ($request->start_date && $request->end_date) {
-        $isBusy = \App\Models\Booking::where('audience_id', $audience->id)
-            ->where(function ($query) use ($request) {
-                $query->whereBetween('start_date', [$request->start_date, $request->end_date])
-                      ->orWhereBetween('end_date', [$request->start_date, $request->end_date])
-                      ->orWhere(function ($query) use ($request) {
-                          $query->where('start_date', '<=', $request->start_date)
-                                ->where('end_date', '>=', $request->end_date);
-                      });
-            })
-            ->where('id', '!=', $request->booking_id ?? null)
-            ->exists();
-    }
-    
-    // Количество сотрудников в заявке
-    $employeesCount = \App\Models\RequestEmployee::where('request_id', $request->id)->count();
-    
-    // Количество свободных мест
-    $availableSeats = null;
-    if ($audience->seats && $audience->number !== 'ДОТ' && $audience->location !== 'Свободное местоположение') {
-        $availableSeats = (int)$audience->seats - $employeesCount;
-    }
-@endphp
-<option value="{{ $audience->id }}" 
-    data-seats="{{ $audience->seats }}"
-    {{ old('audience_id', $request->audience_id) == $audience->id ? 'selected' : '' }}
-    {{ $isBusy ? 'disabled class="text-red-500"' : '' }}>
-    {{ $audience->number }} ({{ $audience->location }})
-    @if($availableSeats !== null)
-        - свободно: {{ $availableSeats }}
-        @if($audience->seats)
-            / {{ $audience->seats }}
-        @endif
-        мест
-    @endif
-    @if($isBusy) - ЗАНЯТА @endif
-</option>
-        @endforeach
-    </select>
-    @if(isset($isBusy) && $isBusy)
-        <p class="text-red-500 text-xs mt-1">Эта аудитория уже занята на выбранную дату</p>
-    @endif
-</div>
-
-<div>
-    <label for="teacher_id" class="block text-sm font-medium text-gray-700 mb-1">ФИО преподавателя</label>
-    <select name="teacher_id" id="teacher_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-        <option value="">---</option>
-        @foreach($teachers as $teacher)
-@php
-    $isBusy = false;
-    if ($request->start_date && $request->end_date) {
-        $isBusy = \App\Models\Booking::where('teacher_id', $teacher->id)
-            ->where(function ($query) use ($request) {
-                $query->whereBetween('start_date', [$request->start_date, $request->end_date])
-                      ->orWhereBetween('end_date', [$request->start_date, $request->end_date])
-                      ->orWhere(function ($query) use ($request) {
-                          $query->where('start_date', '<=', $request->start_date)
-                                ->where('end_date', '>=', $request->end_date);
-                      });
-            })
-            ->where('id', '!=', $request->booking_id ?? null)
-            ->exists();
-    }
-@endphp
-            <option value="{{ $teacher->id }}" 
-                {{ old('teacher_id', $request->teacher_id) == $teacher->id ? 'selected' : '' }}
-                {{ $isBusy ? 'disabled class="text-red-500"' : '' }}>
-                {{ $teacher->fio }}
-                @if($isBusy) - ЗАНЯТ @endif
-            </option>
-        @endforeach
-    </select>
-    @if(isset($isBusy) && $isBusy)
-        <p class="text-red-500 text-xs mt-1">Этот преподаватель уже занят на выбранную дату</p>
-    @endif
-</div>                            <div>
-                                <label for="curator_id" class="block text-sm font-medium text-gray-700 mb-1">Куратор группы</label>
-                                <select name="curator_id" id="curator_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                    <option value="">---</option>
-                                    @foreach($curators as $curator)
-                                        <option value="{{ $curator->id }}" {{ old('curator_id', $request->curator_id) == $curator->id ? 'selected' : '' }}>{{ $curator->fio }}</option>
-                                    @endforeach
-                                </select>
+                    <div x-show="open" @click.away="open = false" x-cloak
+                         style="position: absolute; left: 0; right: 0; top: calc(100% + 4px); background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.18); max-height: 360px; display: flex; flex-direction: column; z-index: 50; overflow: hidden;">
+                        <div style="padding: 8px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-surface);">
+                            <input type="text" x-model="search" placeholder="Поиск по городам или введите новый..."
+                                   class="suzipo-field" style="background-color: var(--bg-page) !important; padding: 7px 10px !important;"
+                                   @click.stop @keydown.enter.prevent="addNewCity()">
+                        </div>
+                        <div style="overflow-y: auto; flex: 1;">
+                            <div x-show="search && !isExistingCity" @click="addNewCity()"
+                                 style="padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); background-color: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; gap: 6px;">
+                                <span style="font-weight: 700;">+</span>
+                                <span>Добавить новый город: "<strong x-text="search"></strong>"</span>
                             </div>
-
-<!-- Резерв -->
-<div>
-    <label for="reserve" class="block text-sm font-medium text-gray-700 mb-1">Резерв</label>
-    <input type="text" name="reserve" id="reserve" value="{{ old('reserve', $request->reserve) }}"
-           class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
-           readonly>
-</div>
-
+                            <template x-for="city in filteredCities" :key="city.id">
+                                <div @click="selectCity(city)"
+                                     style="padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); color: var(--text-primary);"
+                                     :style="selectedId == city.id ? 'background-color: rgba(255, 209, 0, 0.2); font-weight: 600;' : ''">
+                                    <span x-text="city.name"></span>
+                                </div>
+                            </template>
                         </div>
                     </div>
+                </div>
 
-<div class="flex justify-end space-x-2 mt-8">
-    <a href="{{ route('requests.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition">Отмена</a>
-    
-    <!-- Кнопка "Сохранить и добавить сотрудников" -->
-    <button type="submit" name="action" value="save_and_employees" 
-            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
-        Сохранить и добавить сотрудников
-    </button>
-    
-    <button type="submit" name="action" value="save" 
-            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
-        Сохранить и закрыть
-    </button>
-</div>
-                </form>
+                <!-- Профессия -->
+                <div x-data="editProfessionSelector()" class="suzipo-col-2" style="position: relative; z-index: 15;">
+                    <label class="suzipo-label">Присваиваемая профессия</label>
+                    <input type="hidden" name="profession_id" x-model="selectedId">
+                    <input type="hidden" name="new_profession_name" x-model="newProfessionName">
+
+                    <div @click="open = !open; if(!open) search = ''" class="suzipo-field" style="cursor: pointer; min-height: 40px; display: flex; align-items: center; justify-content: space-between;">
+                        <span x-text="selectedName || '--- Выберите или введите профессию ---'"
+                              :style="!selectedName ? 'color: var(--text-secondary);' : 'color: var(--text-primary);'"></span>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--text-secondary); flex-shrink: 0;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+
+                    <div x-show="open" @click.away="open = false" x-cloak
+                         style="position: absolute; left: 0; right: 0; top: calc(100% + 4px); background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.18); max-height: 360px; display: flex; flex-direction: column; z-index: 50; overflow: hidden;">
+                        <div style="padding: 8px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-surface);">
+                            <input type="text" x-model="search" placeholder="Поиск по профессиям или введите новую..."
+                                   class="suzipo-field" style="background-color: var(--bg-page) !important; padding: 7px 10px !important;"
+                                   @click.stop @keydown.enter.prevent="addNewProfession()">
+                        </div>
+                        <div style="overflow-y: auto; flex: 1;">
+                            <div x-show="search && !isExistingProfession" @click="addNewProfession()"
+                                 style="padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); background-color: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; gap: 6px;">
+                                <span style="font-weight: 700;">+</span>
+                                <span>Добавить новую профессию: "<strong x-text="search"></strong>"</span>
+                            </div>
+                            <template x-for="profession in filteredProfessions" :key="profession.id">
+                                <div @click="selectProfession(profession)"
+                                     style="padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); color: var(--text-primary);"
+                                     :style="selectedId == profession.id ? 'background-color: rgba(255, 209, 0, 0.2); font-weight: 600;' : ''">
+                                    <span x-text="profession.name"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                <!-- Ряд 5: Причина, Ресурс, Вид обучения -->
+                <div class="suzipo-col-2">
+                    <label for="learn_reason_id" class="suzipo-label">Причина обучения</label>
+                    <select name="learn_reason_id" id="learn_reason_id" class="suzipo-field">
+                        <option value="">---</option>
+                        @foreach($learnReasons as $reason)
+                            <option value="{{ $reason->id }}" {{ old('learn_reason_id', $request->learn_reason_id) == $reason->id ? 'selected' : '' }}>{{ $reason->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="suzipo-col-2">
+                    <label for="learning_resource_id" class="suzipo-label">Ресурс обучения/оценки</label>
+                    <select name="learning_resource_id" id="learning_resource_id" class="suzipo-field">
+                        <option value="">---</option>
+                        @foreach($learningResources as $resource)
+                            <option value="{{ $resource->id }}" {{ old('learning_resource_id', $request->learning_resource_id) == $resource->id ? 'selected' : '' }}>{{ $resource->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="suzipo-col-2">
+                    <label for="learning_type_id" class="suzipo-label">Вид обучения/оценки</label>
+                    <select name="learning_type_id" id="learning_type_id" class="suzipo-field">
+                        <option value="">---</option>
+                        @foreach($learningTypes as $type)
+                            <option value="{{ $type->id }}" {{ old('learning_type_id', $request->learning_type_id) == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Ряд 6: Вид мероприятия, Дисциплина, Себестоимость/Прибыль -->
+                <div class="suzipo-col-2">
+                    <label for="event_type_id" class="suzipo-label">Вид мероприятия</label>
+                    <select name="event_type_id" id="event_type_id" class="suzipo-field">
+                        <option value="">---</option>
+                        @foreach($eventsTypes as $eventType)
+                            <option value="{{ $eventType->id }}" {{ old('event_type_id', $request->event_type_id) == $eventType->id ? 'selected' : '' }}>{{ $eventType->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="suzipo-col-2">
+                    <label for="discipline_id" class="suzipo-label">Дисциплина</label>
+                    <select name="discipline_id" id="discipline_id" class="suzipo-field">
+                        <option value="">---</option>
+                        @foreach($disciplines as $discipline)
+                            <option value="{{ $discipline->id }}" {{ old('discipline_id', $request->discipline_id) == $discipline->id ? 'selected' : '' }}>{{ $discipline->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="suzipo-col-2">
+                    <label for="cost_profit" class="suzipo-label">Себестоимость/Прибыль</label>
+                    <select name="cost_profit" id="cost_profit" class="suzipo-field">
+                        <option value="">---</option>
+                        <option value="Себестоимость" {{ old('cost_profit', $request->cost_profit) == 'Себестоимость' ? 'selected' : '' }}>Себестоимость</option>
+                        <option value="Прибыль" {{ old('cost_profit', $request->cost_profit) == 'Прибыль' ? 'selected' : '' }}>Прибыль</option>
+                    </select>
+                </div>
             </div>
-        </div>
-    </div>
+            <div class="suzipo-section-title">Назначенные ресурсы</div>
+            <div class="suzipo-grid-6">
+                <!-- Аудитория -->
+                <div class="suzipo-col-2">
+                    <label for="audience_id" class="suzipo-label">Аудитория</label>
+                    <select name="audience_id" id="audience_id" class="suzipo-field">
+                        <option value="">---</option>
+                        @foreach($audiences as $audience)
+                            @php
+                                $isBusy = false;
+                                if ($request->start_date && $request->end_date) {
+                                    $isBusy = \App\Models\Booking::where('audience_id', $audience->id)
+                                        ->where(function ($query) use ($request) {
+                                            $query->whereBetween('start_date', [$request->start_date, $request->end_date])
+                                                  ->orWhereBetween('end_date', [$request->start_date, $request->end_date])
+                                                  ->orWhere(function ($query) use ($request) {
+                                                      $query->where('start_date', '<=', $request->start_date)
+                                                            ->where('end_date', '>=', $request->end_date);
+                                                  });
+                                        })
+                                        ->where('id', '!=', $request->booking_id ?? null)
+                                        ->exists();
+                                }
+                                $employeesCount = \App\Models\RequestEmployee::where('request_id', $request->id)->count();
+                                $availableSeats = null;
+                                if ($audience->seats && $audience->number !== 'ДОТ' && $audience->location !== 'Свободное местоположение') {
+                                    $availableSeats = (int)$audience->seats - $employeesCount;
+                                }
+                            @endphp
+                            <option value="{{ $audience->id }}"
+                                    data-seats="{{ $audience->seats }}"
+                                    {{ old('audience_id', $request->audience_id) == $audience->id ? 'selected' : '' }}
+                                    {{ $isBusy ? 'disabled style="color:#EF4444;"' : '' }}>
+                                {{ $audience->number }} ({{ $audience->location }})
+                                @if($availableSeats !== null)
+                                    — свободно: {{ $availableSeats }}@if($audience->seats) / {{ $audience->seats }}@endif мест
+                                @endif
+                                @if($isBusy) — ЗАНЯТА @endif
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
+                <!-- ФИО преподавателя -->
+                <div class="suzipo-col-2">
+                    <label for="teacher_id" class="suzipo-label">ФИО преподавателя</label>
+                    <select name="teacher_id" id="teacher_id" class="suzipo-field">
+                        <option value="">---</option>
+                        @foreach($teachers as $teacher)
+                            @php
+                                $isBusy = false;
+                                if ($request->start_date && $request->end_date) {
+                                    $isBusy = \App\Models\Booking::where('teacher_id', $teacher->id)
+                                        ->where(function ($query) use ($request) {
+                                            $query->whereBetween('start_date', [$request->start_date, $request->end_date])
+                                                  ->orWhereBetween('end_date', [$request->start_date, $request->end_date])
+                                                  ->orWhere(function ($query) use ($request) {
+                                                      $query->where('start_date', '<=', $request->start_date)
+                                                            ->where('end_date', '>=', $request->end_date);
+                                                  });
+                                        })
+                                        ->where('id', '!=', $request->booking_id ?? null)
+                                        ->exists();
+                                }
+                            @endphp
+                            <option value="{{ $teacher->id }}"
+                                    {{ old('teacher_id', $request->teacher_id) == $teacher->id ? 'selected' : '' }}
+                                    {{ $isBusy ? 'disabled style="color:#EF4444;"' : '' }}>
+                                {{ $teacher->fio }}@if($isBusy) — ЗАНЯТ @endif
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Куратор группы -->
+                <div class="suzipo-col-1">
+                    <label for="curator_id" class="suzipo-label">Куратор группы</label>
+                    <select name="curator_id" id="curator_id" class="suzipo-field">
+                        <option value="">---</option>
+                        @foreach($curators as $curator)
+                            <option value="{{ $curator->id }}" {{ old('curator_id', $request->curator_id) == $curator->id ? 'selected' : '' }}>
+                                {{ $curator->fio }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Резерв -->
+                <div class="suzipo-col-1">
+                    <label for="reserve" class="suzipo-label">Резерв</label>
+                    <input type="text" name="reserve" id="reserve" value="{{ old('reserve', $request->reserve) }}"
+                           class="suzipo-field" style="opacity: 0.7; cursor: not-allowed;" readonly>
+                </div>
+            </div>
+
+            <!-- Нижние кнопки действий -->
+            <div class="suzipo-actions">
+                <a href="{{ route('requests.index') }}" class="btn-suzipo-cancel">Отмена</a>
+
+                <button type="submit" name="action" value="save_and_employees"
+                        style="padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; background-color: rgba(16, 185, 129, 0.14); color: #10B981; border: 1px solid #10B981; cursor: pointer;">
+                    Сохранить и добавить сотрудников
+                </button>
+
+                <button type="submit" name="action" value="save" class="btn-suzipo-save">
+                    Сохранить и закрыть
+                </button>
+            </div>
+        </form>
+    </div>
 <script>
 
 function editProviderSelector() {
@@ -1049,8 +998,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.classList.add('text-red-500');
             } else {
                 option.disabled = false;
-                // Убираем пометку "ЗАНЯТ"
-//                option.textContent = option.textContent.replace(' - ЗАНЯТ', '');
 		option.textContent = option.textContent.replace(' - ЗАНЯТ', '').trim();
                 option.classList.remove('text-red-500');
             }
@@ -1117,5 +1064,5 @@ document.getElementById('audience_id').addEventListener('change', updateReserve)
 // Обновляем при загрузке
 updateReserve();
 </script>
-
 </x-layouts.app-with-sidebar>
+

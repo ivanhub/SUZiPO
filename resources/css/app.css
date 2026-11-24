@@ -70,7 +70,6 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Универсальные классы поверхностей и элементов */
 .suzipo-card {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-color);

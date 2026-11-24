@@ -56,11 +56,11 @@
                      onerror="this.style.display='none';">
             </a>
         </div>
-                <!-- Общая шапка секции: слева «Обзор обучения», справа переключатель вкладок (СНАРУЖИ карточки) -->
+
         <div class="flex flex-wrap items-center justify-between gap-4 mb-4 mt-2">
             <h2 class="text-lg font-bold" style="color: var(--text-primary);">Обзор обучения</h2>
 
-            <!-- Переключатель вкладок-пилюль -->
+            <!-- Переключатель вкладок -->
             <div class="inline-flex p-1 rounded-full border"
                  style="background-color: var(--bg-surface); border-color: var(--border-color);">
                 <button type="button" @click="activeTab = 'training'"
@@ -76,12 +76,9 @@
             </div>
         </div>
 
-        <!-- Основная двухколоночная сетка (Левая и Правая колонки строго на одном уровне) -->
+        <!-- Основная двухколоночная сетка -->
         <div class="dashboard-main-grid" style="align-items: stretch;">
-
-                        <!-- Левая колонка: 4 отдельные серые плашки KPI + отдельная серая карточка диаграммы на белом фоне -->
             <div class="flex flex-col gap-3">
-                <!-- Сетка 2x2: Отдельные серые плашки KPI -->
                 <div class="kpi-grid-2x2" style="margin-bottom: 0;">
                     <div class="suzipo-card p-4" style="border: none;">
                         <div class="text-xs font-medium mb-1" style="color: var(--text-secondary);">Сотрудников</div>
@@ -158,7 +155,6 @@
                         </div>
                     </div>
 
-                    <!-- Компактная легенда в 2 строки по центру -->
                     <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 mt-4 text-[11px]">
                         <span class="inline-flex items-center gap-1.5" style="color: var(--text-secondary);">
                             <span class="w-2 h-2 rounded-full" style="background-color: #10B981;"></span>Актуально ({{ $actualPct }}%)
@@ -179,7 +175,7 @@
                 </div>
             </div>
 
-            <!-- Правая колонка: Оперативная лента (без лишних заголовков внутри) -->
+            <!-- Правая колонка: Оперативная лента -->
             <div class="suzipo-card px-6 py-2 flex flex-col justify-between">
                 <!-- Вкладка 1: Обучение -->
                 <div x-show="activeTab === 'training'" class="divide-y" style="border-color: var(--border-color);">
