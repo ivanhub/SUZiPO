@@ -39,7 +39,7 @@
             </p>
         </div>
 
-        <!-- Карточка добавления сотрудников с переключением режимов (Figma style) -->
+        <!-- Карточка добавления сотрудников с переключением режимов -->
         <div class="suzipo-card" style="padding: 18px 20px; margin-bottom: 24px; border: 1px solid var(--border-color);">
             <div style="display: flex; align-items: center; gap: 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 16px; flex-wrap: wrap;">
                 <span @click="addTab = 'single'" class="suzipo-tab-item" :class="{ 'active': addTab === 'single' }">
