@@ -12,14 +12,26 @@ class MatrixOtController extends Controller
     public function index(Request $request): View
     {
         $search = $request->input('search');
-        
-        $matrixOts = MatrixOt::when($search, function ($query, $search) {
-            return $query->where('program_name', 'like', "%{$search}%")
-                ->orWhere('code', 'like', "%{$search}%")
-                ->orWhere('training_type', 'like', "%{$search}%");
+
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, array(10, 25, 50, 100), true)) {
+            $perPage = 10;
+        }
+
+        $matrixOts = \App\Models\MatrixOt::when($search, function ($query, $search) {
+            $upper = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            $lower = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяabcdefghijklmnopqrstuvwxyz';
+            $needle = mb_strtolower(trim($search), 'UTF-8');
+
+            return $query->where(function ($q) use ($upper, $lower, $needle) {
+                $q->whereRaw("TRANSLATE(CAST(program_name AS TEXT), '{$upper}', '{$lower}') LIKE ?", ["%{$needle}%"])
+                  ->orWhereRaw("TRANSLATE(CAST(code AS TEXT), '{$upper}', '{$lower}') LIKE ?", ["%{$needle}%"])
+                  ->orWhereRaw("TRANSLATE(CAST(training_type AS TEXT), '{$upper}', '{$lower}') LIKE ?", ["%{$needle}%"]);
+            });
         })
         ->orderBy('row_number')
-        ->paginate(20);
+        ->paginate($perPage)
+        ->withQueryString();
 
         return view('matrices.ot.index', compact('matrixOts', 'search'));
     }

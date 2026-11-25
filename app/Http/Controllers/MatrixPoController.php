@@ -9,20 +9,33 @@ use Illuminate\Http\RedirectResponse;
 
 class MatrixPoController extends Controller
 {
-    public function index(Request $request): View
+        public function index(Request $request): View
     {
         $search = $request->input('search');
-        
+
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, array(10, 25, 50, 100), true)) {
+            $perPage = 10;
+        }
+
         $matrixPos = MatrixPo::when($search, function ($query, $search) {
-            return $query->where('profession_name', 'like', "%{$search}%")
-                ->orWhere('code', 'like', "%{$search}%")
-                ->orWhere('education_type', 'like', "%{$search}%");
+            $upper = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            $lower = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяabcdefghijklmnopqrstuvwxyz';
+            $needle = mb_strtolower(trim($search), 'UTF-8');
+
+            return $query->where(function ($q) use ($upper, $lower, $needle) {
+                $q->whereRaw("TRANSLATE(CAST(profession_name AS TEXT), '{$upper}', '{$lower}') LIKE ?", ["%{$needle}%"])
+                  ->orWhereRaw("TRANSLATE(CAST(code AS TEXT), '{$upper}', '{$lower}') LIKE ?", ["%{$needle}%"])
+                  ->orWhereRaw("TRANSLATE(CAST(education_type AS TEXT), '{$upper}', '{$lower}') LIKE ?", ["%{$needle}%"]);
+            });
         })
         ->orderBy('number')
-        ->paginate(20);
+        ->paginate($perPage)
+        ->withQueryString();
 
         return view('matrices.po.index', compact('matrixPos', 'search'));
     }
+
 
     public function create(): View
     {

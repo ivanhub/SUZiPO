@@ -12,17 +12,30 @@ class MatrixCourseController extends Controller
     public function index(Request $request): View
     {
         $search = $request->input('search');
-        
-        $matrixCourses = MatrixCourse::when($search, function ($query, $search) {
-            return $query->where('program_name', 'like', "%{$search}%")
-                ->orWhere('code', 'like', "%{$search}%")
-                ->orWhere('program', 'like', "%{$search}%");
+
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, array(10, 25, 50, 100), true)) {
+            $perPage = 10;
+        }
+
+        $matrixCourses = \App\Models\MatrixCourse::when($search, function ($query, $search) {
+            $upper = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            $lower = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяabcdefghijklmnopqrstuvwxyz';
+            $needle = mb_strtolower(trim($search), 'UTF-8');
+
+            return $query->where(function ($q) use ($upper, $lower, $needle) {
+                $q->whereRaw("TRANSLATE(CAST(program_name AS TEXT), '{$upper}', '{$lower}') LIKE ?", ["%{$needle}%"])
+                  ->orWhereRaw("TRANSLATE(CAST(program AS TEXT), '{$upper}', '{$lower}') LIKE ?", ["%{$needle}%"])
+                  ->orWhereRaw("TRANSLATE(CAST(code AS TEXT), '{$upper}', '{$lower}') LIKE ?", ["%{$needle}%"]);
+            });
         })
         ->orderBy('number')
-        ->paginate(20);
+        ->paginate($perPage)
+        ->withQueryString();
 
         return view('matrices.courses.index', compact('matrixCourses', 'search'));
     }
+
 
     public function create(): View
     {
