@@ -51,105 +51,18 @@ class RequestController extends Controller
             $status = $statusFilter;
         }
 
-      //  $requests = RequestModel::with(['user', 'provider', 'course', 'city'])
+        $perPage = (int) request()->input('per_page', 10);
+        if (!in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
 
-  $requests = RequestModel::with(['user', 'provider', 'course', 'city', 'profession', 'learnReason', 'learningResource', 'learningType', 'eventType', 'discipline'])
-        ->withCount('employees')
-
-         // ОБЩИЙ ПОИСК 
-    ->when($httpRequest->filled('q'), function ($query) use ($httpRequest) {
-        $q = $httpRequest->get('q');
-        $query->where(function ($query) use ($q) {
-            $query->where('req_id', 'ilike', "%{$q}%")
-                ->orWhere('id', 'ilike', "%{$q}%")
-                ->orWhereHas('course', function ($query) use ($q) {
-                    $query->where('course', 'ilike', "%{$q}%");
-                })
-                ->orWhereHas('provider', function ($query) use ($q) {
-                    $query->where('name', 'ilike', "%{$q}%");
-                })
-                ->orWhereHas('user', function ($query) use ($q) {
-                    $query->where('name', 'ilike', "%{$q}%");
-                })
-                ->orWhereHas('city', function ($query) use ($q) {
-                    $query->where('city', 'ilike', "%{$q}%");
-                })
-                ->orWhereHas('profession', function ($query) use ($q) {
-                    $query->where('name', 'ilike', "%{$q}%");
-                })
-                ->orWhere('country', 'ilike', "%{$q}%")
-                ->orWhere('education_form', 'ilike', "%{$q}%")
-                ->orWhere('employee_type', 'ilike', "%{$q}%")
-                ->orWhere('production_break', 'ilike', "%{$q}%");
-        });
-    })
-        // ID
-        ->when($httpRequest->filled('filter_id'), fn($q) => $q->where('id', $httpRequest->get('filter_id')))
-        
-        // № заявки
-        ->when($httpRequest->filled('filter_req_id'), fn($q) => $q->where('req_id', 'ilike', '%' . $httpRequest->get('filter_req_id') . '%'))
-        
-        // Статус
-        ->when($httpRequest->filled('filter_status'), function($q) use ($httpRequest) {
-            $status = $httpRequest->get('filter_status');
-            $q->where(function($query) use ($status) {
-                $query->where('status', $status)
-                    ->orWhere('status', $this->getEnglishStatus($status));
-            });
-        })
-        
-        // Разовая
-        ->when($httpRequest->filled('filter_one_time'), fn($q) => $q->where('one_time', $httpRequest->get('filter_one_time')))
-        
-        // Даты
-        ->when($httpRequest->filled('filter_start_from'), fn($q) => $q->whereDate('start_date', '>=', $httpRequest->get('filter_start_from')))
-        ->when($httpRequest->filled('filter_end_to'), fn($q) => $q->whereDate('end_date', '<=', $httpRequest->get('filter_end_to')))
-        ->when($httpRequest->filled('filter_issue_date'), fn($q) => $q->whereDate('issue_date', $httpRequest->get('filter_issue_date')))
-        
-        // Курс
-        ->when($httpRequest->filled('filter_course'), fn($q) => $q->whereHas('course', fn($query) => $query->where('course', 'ilike', '%' . $httpRequest->get('filter_course') . '%')))
-        
-        // Провайдер
-        ->when($httpRequest->filled('filter_provider'), fn($q) => $q->whereHas('provider', fn($query) => $query->where('name', 'ilike', '%' . $httpRequest->get('filter_provider') . '%')))
-        
-        // Форма
-        ->when($httpRequest->filled('filter_form'), fn($q) => $q->where('education_form', 'ilike', '%' . $httpRequest->get('filter_form') . '%'))
-        
-        // ИТР/рабочие
-        ->when($httpRequest->filled('filter_employee_type'), fn($q) => $q->where('employee_type', 'ilike', '%' . $httpRequest->get('filter_employee_type') . '%'))
-        
-        // Отрыв
-        ->when($httpRequest->filled('filter_production_break'), fn($q) => $q->where('production_break', 'ilike', '%' . $httpRequest->get('filter_production_break') . '%'))
-        
-        // Город
-        ->when($httpRequest->filled('filter_city'), fn($q) => $q->whereHas('city', fn($query) => $query->where('city', 'ilike', '%' . $httpRequest->get('filter_city') . '%')))
-        
-        // Профессия
-        ->when($httpRequest->filled('filter_profession'), fn($q) => $q->whereHas('profession', fn($query) => $query->where('name', 'ilike', '%' . $httpRequest->get('filter_profession') . '%')))
-        
-        // Причина
-        ->when($httpRequest->filled('filter_reason'), fn($q) => $q->whereHas('learnReason', fn($query) => $query->where('name', 'ilike', '%' . $httpRequest->get('filter_reason') . '%')))
-        
-        // Ресурс
-        ->when($httpRequest->filled('filter_resource'), fn($q) => $q->whereHas('learningResource', fn($query) => $query->where('name', 'ilike', '%' . $httpRequest->get('filter_resource') . '%')))
-        
-        // Вид обучения
-        ->when($httpRequest->filled('filter_learning_type'), fn($q) => $q->whereHas('learningType', fn($query) => $query->where('name', 'ilike', '%' . $httpRequest->get('filter_learning_type') . '%')))
-        
-        // Вид мероприятия
-        ->when($httpRequest->filled('filter_event_type'), fn($q) => $q->whereHas('eventType', fn($query) => $query->where('name', 'ilike', '%' . $httpRequest->get('filter_event_type') . '%')))
-        
-        // Дисциплина
-        ->when($httpRequest->filled('filter_discipline'), fn($q) => $q->whereHas('discipline', fn($query) => $query->where('name', 'ilike', '%' . $httpRequest->get('filter_discipline') . '%')))
-        
-        // Себестоимость/Прибыль
-        ->when($httpRequest->filled('filter_cost_profit'), fn($q) => $q->where('cost_profit', $httpRequest->get('filter_cost_profit')))
-        
-        // Автор
-        ->when($httpRequest->filled('filter_author'), fn($q) => $q->whereHas('user', fn($query) => $query->where('name', 'ilike', '%' . $httpRequest->get('filter_author') . '%')))
-        
-        ->paginate(15)
-        ->withQueryString();
+        $requests = RequestModel::with(['user', 'provider', 'course', 'city'])
+            ->withCount('employees')
+            ->when($status, function ($query, $status) {
+                return $query->where('status', $status);
+            })
+            ->paginate($perPage)
+            ->withQueryString();
 
 
     $providers = RequestsProvider::orderBy('name')->get();

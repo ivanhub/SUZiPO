@@ -249,6 +249,7 @@ Route::post('/matrices/import', [MatrixController::class, 'import'])->name('matr
 
 // Справочники
 Route::prefix('directories')->name('directories.')->group(function () {
+    Route::get('/', [DirectoryController::class, 'index'])->name('index');
     Route::get('reasons-non-certification', [DirectoryController::class, 'reasonsNonCertification'])->name('reasons-non-certification');
     Route::get('reasons-non-certification', [DirectoryController::class, 'reasonsNonCertification'])->name('reasons-non-certification');
     Route::post('reasons-non-certification', [DirectoryController::class, 'storeReason'])->name('reasons-non-certification.store');

@@ -48,13 +48,13 @@
    ========================================================= */
 :root {
   --bg-page: #FFFFFF;
-  --bg-surface: #F5F5F7;
+  --bg-surface: #EBEBEA;
   --bg-surface-hover: #EAEAEF;
   --bg-input: #E5E7EB;
   --bg-input-focus: #FFFFFF;
   --border-color: #E5E7EB;
   --text-primary: #111827;
-  --text-secondary: #6B7280;
+  --text-secondary: #191818;
   --brand-yellow: #FFD100;
   --brand-yellow-hover: #F5C400;
   --brand-yellow-text: #111827;
@@ -62,13 +62,13 @@
 
 html.dark {
   --bg-page: #141416;
-  --bg-surface: #1E1E22;
+  --bg-surface: #282727;
   --bg-surface-hover: #27272D;
   --bg-input: #27272A;
   --bg-input-focus: #1E1E22;
   --border-color: #2E2E34;
   --text-primary: #F9FAFB;
-  --text-secondary: #9CA3AF;
+  --text-secondary: #FCFCFB;
   --brand-yellow: #FFD100;
   --brand-yellow-hover: #F5C400;
   --brand-yellow-text: #111827;
@@ -166,4 +166,439 @@ body {
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-bottom: 16px;
+}
+
+/* ====================================
+   СТИЛИ ФОРМ РЕДАКТИРОВАНИЯ И СОЗДАНИЯ 
+   ==================================== */
+.suzipo-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.suzipo-back-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border: 1px solid var(--border-color);
+  transition: background-color 0.15s ease;
+}
+
+.suzipo-back-btn:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+.suzipo-form-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+}
+
+.suzipo-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin: 28px 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* 6-колоночная адаптивная сетка формы из Figma */
+.suzipo-grid-6 {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px 14px;
+}
+
+.suzipo-col-1 { grid-column: span 1; }
+.suzipo-col-2 { grid-column: span 2; }
+.suzipo-col-3 { grid-column: span 3; }
+.suzipo-col-4 { grid-column: span 4; }
+.suzipo-col-6 { grid-column: span 6; }
+
+@media (max-width: 1100px) {
+  .suzipo-grid-6 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .suzipo-col-1, .suzipo-col-2, .suzipo-col-3, .suzipo-col-4, .suzipo-col-6 {
+    grid-column: span 1;
+  }
+  .suzipo-col-6 { grid-column: span 2; }
+}
+
+@media (max-width: 640px) {
+  .suzipo-grid-6 {
+    grid-template-columns: 1fr;
+  }
+  .suzipo-col-1, .suzipo-col-2, .suzipo-col-3, .suzipo-col-4, .suzipo-col-6 {
+    grid-column: span 1;
+  }
+}
+
+.suzipo-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.suzipo-field {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  transition: all 0.15s ease;
+}
+
+.suzipo-field:focus {
+  background-color: var(--bg-page) !important;
+  border-color: var(--brand-yellow) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(255, 209, 0, 0.25) !important;
+}
+
+.suzipo-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-suzipo-cancel {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  text-decoration: none;
+  border: 1px solid var(--border-color);
+  transition: background-color 0.15s ease;
+}
+
+.btn-suzipo-cancel:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+.btn-suzipo-save {
+  padding: 10px 28px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  background-color: var(--brand-yellow);
+  color: #111827;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btn-suzipo-save:hover {
+  background-color: var(--brand-yellow-hover);
+}
+
+
+/* ============================
+   КАПСУЛЬНАЯ НАВИГАЦИЯ В ШАПКЕ
+   ============================ */
+.suzipo-nav-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 9999px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+}
+
+.suzipo-nav-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.suzipo-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 15px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.suzipo-nav-link:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-surface-hover);
+}
+
+.suzipo-nav-link.active {
+  background-color: var(--brand-yellow);
+  color: #111827;
+  font-weight: 600;
+}
+
+.suzipo-nav-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 210px;
+  padding: 6px 0;
+  border-radius: 14px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  z-index: 999;
+}
+
+.suzipo-nav-dropdown-link {
+  display: block;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: background-color 0.12s ease;
+}
+
+.suzipo-nav-dropdown-link:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+@media (max-width: 1024px) {
+  .suzipo-nav-capsule {
+    display: none;
+  }
+}
+
+/* =========================================================
+   СТИЛИ РЕЕСТРОВ, ВКЛАДОК И ТАБЛИЦ (ТОЧНЫЙ МАКЕТ FIGMA)
+   ========================================================= */
+:root {
+  --table-shell-bg: #EFEFEE;
+  --table-body-bg: #FFFFFE;
+  --table-head-text: #727270;
+  --table-row-text: #191818;
+  --table-row-border: rgba(206, 206, 205, 0.5);
+  --pill-btn-bg: #EBEBEA;
+}
+
+html.dark {
+  --table-shell-bg: #1E1E22;
+  --table-body-bg: #141416;
+  --table-head-text: #9CA3AF;
+  --table-row-text: #F9FAFB;
+  --table-row-border: #2E2E34;
+  --pill-btn-bg: #27272D;
+}
+
+.suzipo-tab-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #727270;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  white-space: normal;
+}
+
+html.dark .suzipo-tab-item {
+  color: #9CA3AF;
+}
+
+.suzipo-tab-item.active {
+  color: var(--text-primary);
+  border-bottom: 2px solid #FFD300;
+}
+
+/* Внешняя серая оболочка (Table: padding 4px, radius 16px) */
+.suzipo-table-shell {
+  width: 100%;
+  background-color: var(--table-shell-bg);
+  border-radius: 16px;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+/* Внутренний белый контейнер для строк (bodySlot1: radius 12px, overflow: hidden) */
+.suzipo-table-body-box {
+  width: 100%;
+  background-color: var(--table-body-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.suzipo-table-head,
+.suzipo-table-body {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 0;
+}
+
+.suzipo-table-head th {
+  color: var(--table-head-text);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 10px 8px 6px 8px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suzipo-table-head td {
+  padding: 4px 6px 10px 6px;
+}
+
+.suzipo-table-head input[type="text"] {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background-color: var(--table-body-bg) !important;
+  color: var(--table-row-text) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 5px 8px !important;
+  font-size: 12px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.suzipo-table-body tr td {
+  color: var(--table-row-text);
+  font-size: 13px;
+  padding: 11px 8px;
+  border-bottom: 1px solid var(--table-row-border);
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+.suzipo-table-body tr:last-child td {
+  border-bottom: none;
+}
+
+
+.suzipo-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  margin: 0;
+}
+
+.suzipo-table thead th {
+  background-color: transparent;
+  color: var(--table-head-text);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 10px 8px 6px 8px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suzipo-table thead td {
+  background-color: transparent !important;
+  padding: 4px 6px 10px 6px !important;
+}
+
+/* Внутренний белый контейнер для строк (bodySlot1: radius 12px) */
+.suzipo-table tbody {
+  background-color: var(--table-body-bg);
+}
+
+.suzipo-table tbody tr td {
+  background-color: var(--table-body-bg);
+  color: var(--table-row-text);
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--table-row-border);
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+/* Скругление углов внутреннего блока строк (как в Figma radius: 12px) */
+.suzipo-table tbody tr:first-child td:first-child { border-top-left-radius: 12px; }
+.suzipo-table tbody tr:first-child td:last-child  { border-top-right-radius: 12px; }
+.suzipo-table tbody tr:last-child td:first-child  { border-bottom-left-radius: 12px; }
+.suzipo-table tbody tr:last-child td:last-child   { border-bottom-right-radius: 12px; }
+.suzipo-table tbody tr:last-child td              { border-bottom: none; }
+
+/* Инпуты поиска в шапке таблицы */
+.suzipo-table thead input[type="text"] {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background-color: var(--table-body-bg) !important;
+  color: var(--table-row-text) !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+}
+
+/* Круглые кнопки действий в строках (32x32px, radius 16px) */
+.suzipo-action-circle {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 16px;
+  background-color: var(--pill-btn-bg);
+  color: var(--table-row-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.suzipo-action-circle:hover {
+  opacity: 0.8;
+}
+
+
+/* Поля поиска в шапке таблицы */
+.suzipo-table input[type="text"],
+.suzipo-table select {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  padding: 5px 8px !important;
+  font-size: 11px !important;
 }

@@ -1,22 +1,9 @@
 <x-layouts.app-with-sidebar>
-    <div class="max-w-full mx-auto p-6" style="font-family: system-ui, -apple-system, sans-serif; background-color: #fafafa; min-height: 100vh;" x-data="protocolsComponent()">
-        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 8px 14px; background-color: #f9fafb; font-size: 12px; color: #4b5563;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="color: #6b7280;">Учетная запись:</span>
-                <strong style="color: #111827; font-weight: 600;">{{ auth()->user()->name ?? auth()->user()->email ?? 'Гость' }}</strong>
-            </div>
-            <div style="width: 1px; height: 14px; background-color: #e5e7eb;"></div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="color: #6b7280;">Доступ (Роль):</span>
-                <span style="padding: 2px 8px; background-color: #e0e7ff; color: #4338ca; border-radius: 4px; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.03em;">
-                    {{ auth()->user()->roles->pluck('name')->implode(', ') ?: 'Обычный пользователь' }}
-                </span>
-            </div>
-        </div>
+    <div style="padding: 8px 0 32px 0;" x-data="protocolsComponent()">
 
-        <div style="margin-bottom: 24px;">
-            <h1 style="font-size: 22px; font-weight: 700; color: #111827; margin: 0 0 4px 0;">Реестр протоколов обучения</h1>
-            <p style="font-size: 13px; color: #6b7280; margin: 0;">Система управления заявками и протоколами обучения (СУЗиПО)</p>
+        <!-- Заголовок страницы -->
+        <div style="margin-bottom: 16px;">
+            <h1 style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin: 0;">Реестр протоколов обучения</h1>
         </div>
 
         @if(session('success'))
@@ -26,184 +13,269 @@
             x-transition:leave="transition ease-in duration-300"
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
-            style="padding: 12px 16px; background-color: #d1fae5; border: 1px solid #10b981; color: #065f46; border-radius: 6px; font-size: 13px; margin-bottom: 20px; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+            style="padding: 12px 16px; background-color: rgba(16, 185, 129, 0.12); border: 1px solid #10B981; color: #10B981; border-radius: 10px; font-size: 13px; margin-bottom: 20px; font-weight: 500; display: flex; align-items: center; gap: 8px;">
             ✅ {{ session('success') }}
         </div>
         @endif
-        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px; font-size: 13px; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; overflow-x: auto; white-space: nowrap;">
-            <span @click="switchTab('all')"
-                :style="activeTab === 'all' ? 'color: #1f2937; font-weight: 600; border-bottom: 2px solid #3b82f6; padding-bottom: 14px; margin-bottom: -14px; cursor: pointer;' : 'color: #6b7280; cursor: pointer; padding-bottom: 14px;'"
-                style="display: flex; align-items: center; gap: 6px;">
-                Все протоколы
-                <b style="background: #e5e7eb; color: #1f2937; padding: 1px 6px; border-radius: 4px; font-size: 11px;">{{ $totalCount }}</b>
-            </span>
 
-            <span @click="switchTab('1')"
-                :style="activeTab === '1' ? 'color: #1f2937; font-weight: 600; border-bottom: 2px solid #3b82f6; padding-bottom: 14px; margin-bottom: -14px; cursor: pointer;' : 'color: #6b7280; cursor: pointer; padding-bottom: 14px;'"
-                style="display: flex; align-items: center; gap: 6px;">
-                Активные
-                <b style="background: #d1fae5; color: #065f46; padding: 1px 6px; border-radius: 4px; font-size: 11px;">{{ $counts[1] ?? 0 }}</b>
-            </span>
+        <!-- Панель вкладок и кнопка выгрузки (строго НАД таблицей в одну строку) -->
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 22px; flex-wrap: wrap;">
+                <span @click="switchTab('all')" class="suzipo-tab-item" :class="{ 'active': activeTab === 'all' }">
+                    Все протоколы <span style="font-size: 11px; color: var(--text-secondary);">({{ $totalCount ?? 0 }})</span>
+                </span>
+                <span @click="switchTab('1')" class="suzipo-tab-item" :class="{ 'active': activeTab === '1' }">
+                    Активные <span style="font-size: 11px; color: var(--text-secondary);">({{ \Illuminate\Support\Arr::get($counts ?? [], 1, 0) }})</span>
+                </span>
+                <span @click="switchTab('0')" class="suzipo-tab-item" :class="{ 'active': activeTab === '0' }">
+                    Черновики <span style="font-size: 11px; color: var(--text-secondary);">({{ \Illuminate\Support\Arr::get($counts ?? [], 0, 0) }})</span>
+                </span>
+                <span @click="switchTab('4')" class="suzipo-tab-item" :class="{ 'active': activeTab === '4' }">
+                    Завершённые <span style="font-size: 11px; color: var(--text-secondary);">({{ \Illuminate\Support\Arr::get($counts ?? [], 4, 0) }})</span>
+                </span>
+                <span @click="switchTab('2')" class="suzipo-tab-item" :class="{ 'active': activeTab === '2' }">
+                    Просроченные <span style="font-size: 11px; color: var(--text-secondary);">({{ \Illuminate\Support\Arr::get($counts ?? [], 2, 0) }})</span>
+                </span>
+                <span @click="switchTab('3')" class="suzipo-tab-item" :class="{ 'active': activeTab === '3' }">
+                    Отменённые <span style="font-size: 11px; color: var(--text-secondary);">({{ \Illuminate\Support\Arr::get($counts ?? [], 3, 0) }})</span>
+                </span>
+            </div>
 
-            <span @click="switchTab('0')"
-                :style="activeTab === '0' ? 'color: #1f2937; font-weight: 600; border-bottom: 2px solid #3b82f6; padding-bottom: 14px; margin-bottom: -14px; cursor: pointer;' : 'color: #6b7280; cursor: pointer; padding-bottom: 14px;'"
-                style="display: flex; align-items: center; gap: 6px;">
-                Черновики
-                <b style="background: #fee2e2; color: #991b1b; padding: 1px 6px; border-radius: 4px; font-size: 11px;">{{ $counts[0] ?? 0 }}</b>
-            </span>
-
-            <span @click="switchTab('4')"
-                :style="activeTab === '4' ? 'color: #1f2937; font-weight: 600; border-bottom: 2px solid #3b82f6; padding-bottom: 14px; margin-bottom: -14px; cursor: pointer;' : 'color: #6b7280; cursor: pointer; padding-bottom: 14px;'"
-                style="display: flex; align-items: center; gap: 6px;">
-                Завершенные
-                <b style="background: #e5e7eb; color: #1f2937; padding: 1px 6px; border-radius: 4px; font-size: 11px;">{{ $counts[4] ?? 0 }}</b>
-            </span>
-
-            <span @click="switchTab('2')"
-                :style="activeTab === '2' ? 'color: #1f2937; font-weight: 600; border-bottom: 2px solid #3b82f6; padding-bottom: 14px; margin-bottom: -14px; cursor: pointer;' : 'color: #6b7280; cursor: pointer; padding-bottom: 14px;'"
-                style="display: flex; align-items: center; gap: 6px;">
-                Просроченные
-                <b style="background: #e5e7eb; color: #1f2937; padding: 1px 6px; border-radius: 4px; font-size: 11px;">{{ $counts[2] ?? 0 }}</b>
-            </span>
-
-            <span @click="switchTab('3')"
-                :style="activeTab === '3' ? 'color: #1f2937; font-weight: 600; border-bottom: 2px solid #3b82f6; padding-bottom: 14px; margin-bottom: -14px; cursor: pointer;' : 'color: #6b7280; cursor: pointer; padding-bottom: 14px;'"
-                style="display: flex; align-items: center; gap: 6px;">
-                Отмененные
-                <b style="background: #fee2e2; color: #991b1b; padding: 1px 6px; border-radius: 4px; font-size: 11px;">{{ $counts[3] ?? 0 }}</b>
-            </span>
-            <button type="button" @click="isDownloadModalOpen = true" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; font-weight: 500; color: #374151; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                📥 Загрузить отчет из БД
+            <button type="button" @click="isDownloadModalOpen = true"
+                    style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; font-size: 12px; font-weight: 500; color: var(--text-primary); cursor: pointer; margin-bottom: 8px;">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Загрузить отчёт из БД
             </button>
-            <div x-show="isDownloadModalOpen"
-                style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.3); z-index: 99999;"
-                x-cloak>
-                <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #ffffff; border-radius: 8px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); width: 100%; max-width: 520px; border: 1px solid #e5e7eb; display: flex; flex-direction: column; font-family: system-ui, -apple-system, sans-serif; font-size: 13px; color: #1f2937; box-sizing: border-box; overflow: hidden;">
-                    <div style="padding: 14px 20px; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; box-sizing: border-box;">
-                        <span style="font-weight: 700; font-size: 15px; color: #111827;">Выгрузка отчета из БД</span>
-                        <button type="button" @click="isDownloadModalOpen = false" style="margin-left: auto; border: none; background: none; font-size: 22px; color: #9ca3af; cursor: pointer; line-height: 1; padding: 0;" onmouseover="this.style.color='#4b5563'" onmouseout="this.style.color='#9ca3af'">&times;</button>
-                    </div>
-                    <form action="{{ route('protocols.export-excel', '') }}" method="GET" style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
-                        <input type="hidden" name="protocol_id" value="{{ $protocol->prot_id ?? $protocol->id ?? '' }}">
-                        <div>
-                            <label style="display: block; text-xs font-medium text-gray-700 mb-2; font-weight: 600; color: #374151;">Тип формируемого отчета:</label>
-                            <div style="display: flex; gap: 16px; background: #f9fafb; padding: 10px 12px; border-radius: 6px; border: 1px solid #e5e7eb;">
-                                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #4b5563;">
-                                    <input type="radio" name="report_type" value="standard" x-model="reportType" checked style="margin:0; text-indigo-600"> Протокол
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #4b5563;">
-                                    <input type="radio" name="report_type" value="eisot" x-model="reportType" style="margin:0; text-indigo-600"> Для ЕИСОТ
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #4b5563;">
-                                    <input type="radio" name="report_type" value="multimedia" x-model="reportType" style="margin:0; text-indigo-600"> Мультимедиа
-                                </label>
-                            </div>
+        </div>
+        <!-- Модальное окно выгрузки отчёта из БД -->
+        <div x-show="isDownloadModalOpen"
+            style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.55); z-index: 99999;"
+            x-cloak>
+            <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: var(--bg-page); border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25); width: 100%; max-width: 520px; border: 1px solid var(--border-color); display: flex; flex-direction: column; font-size: 13px; color: var(--text-primary); box-sizing: border-box; overflow: hidden;">
+                <div style="padding: 16px 20px; background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; box-sizing: border-box;">
+                    <span style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Выгрузка отчета из БД</span>
+                    <button type="button" @click="isDownloadModalOpen = false" style="margin-left: auto; border: none; background: none; font-size: 22px; color: var(--text-secondary); cursor: pointer; line-height: 1; padding: 0;">&times;</button>
+                </div>
+                <form action="{{ route('protocols.export-excel', '') }}" method="GET" style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+                    <input type="hidden" name="protocol_id" value="{{ $protocol->prot_id ?? $protocol->id ?? '' }}">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary); font-size: 12px;">Тип формируемого отчета:</label>
+                        <div style="display: flex; gap: 16px; background: var(--bg-surface); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-primary);">
+                                <input type="radio" name="report_type" value="standard" x-model="reportType" checked style="margin:0;"> Протокол
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-primary);">
+                                <input type="radio" name="report_type" value="eisot" x-model="reportType" style="margin:0;"> Для ЕИСОТ
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-primary);">
+                                <input type="radio" name="report_type" value="multimedia" x-model="reportType" style="margin:0;"> Мультимедиа
+                            </label>
                         </div>
+                    </div>
 
-                        <div style="display: flex; flex-direction: column; gap: 12px; border: 1px solid #e5e7eb; border-radius: 6px; padding: 14px; background-color: #fafafa;">
-                            <span style="display: block; font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Критерии фильтрации протоколов</span>
+                    <div style="display: flex; flex-direction: column; gap: 12px; border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; background-color: var(--bg-surface);">
+                        <span style="display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Критерии фильтрации протоколов</span>
 
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                                <div>
-                                    <label style="display:block; font-size: 11px; color:#6b7280; margin-bottom:4px; font-weight: 500;">Состояние</label>
-                                    <select x-model="filterStatus" @change="protocolId = ''" style="width: 100%; padding: 6px 10px; font-size: 12px; color:#111827; border: 1px solid #d1d5db; border-radius: 6px; background-color: #ffffff;">
-                                        <option value="1">В работе</option>
-                                        <option value="4">Утвержден / Завершен</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style="display:block; font-size: 11px; color:#6b7280; margin-bottom:4px; font-weight: 500;">Вид обучения</label>
-                                    <select x-model="filterType" @change="protocolId = ''" style="width: 100%; padding: 3px; padding: 6px 10px; font-size: 12px; color:#111827; border: 1px solid #d1d5db; border-radius: 6px; background-color: #ffffff;">
-                                        <option value="">Все виды обучения</option>
-                                        @foreach($popupLearningTypes as $type)
-                                        <option value="{{ $type->id }}">{{ $type->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                             <div>
-                                <label style="display:block; font-size: 11px; color:#6b7280; margin-bottom:4px; font-weight: 500;">Преподаватель курса</label>
-                                <select x-model="filterTeacher" @change="protocolId = ''" style="width: 100%; padding: 6px 10px; font-size: 12px; color:#111827; border: 1px solid #d1d5db; border-radius: 6px; background-color: #ffffff;">
-                                    <option value="">Все преподаватели</option>
-                                    @foreach($popupTeachers as $teacher)
-                                    <option value="{{ $teacher->id }}">{{ $teacher->fio }}</option>
+                                <label class="suzipo-label">Состояние</label>
+                                <select x-model="filterStatus" @change="protocolId = ''" class="suzipo-field" style="padding: 8px 10px !important; background-color: var(--bg-page) !important;">
+                                    <option value="1">В работе</option>
+                                    <option value="4">Утвержден / Завершен</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="suzipo-label">Вид обучения</label>
+                                <select x-model="filterType" @change="protocolId = ''" class="suzipo-field" style="padding: 8px 10px !important; background-color: var(--bg-page) !important;">
+                                    <option value="">Все виды обучения</option>
+                                    @foreach($popupLearningTypes as $type)
+                                    <option value="{{ $type->id }}">{{ $type->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
 
                         <div>
-                            <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">Выберите итоговый протокол: <span style="color: #dc2626;">*</span></label>
-                            <select name="protocol_id" x-model="protocolId" required style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; background: #ffffff; color: #111827; font-size: 13px; border-radius: 6px; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                                <option value="">— Нажмите для выбора записи —</option>
-                                <template x-for="p in filteredProtocols" :key="p.prot_id">
-                                    <option :value="p.prot_id" x-text="`Протокол № ${p.prot_num} (ID: ${p.prot_id})`"></option>
-                                </template>
+                            <label class="suzipo-label">Преподаватель курса</label>
+                            <select x-model="filterTeacher" @change="protocolId = ''" class="suzipo-field" style="padding: 8px 10px !important; background-color: var(--bg-page) !important;">
+                                <option value="">Все преподаватели</option>
+                                @foreach($popupTeachers as $teacher)
+                                <option value="{{ $teacher->id }}">{{ $teacher->fio }}</option>
+                                @endforeach
                             </select>
-
-                            <div x-show="filteredProtocols.length === 0" style="font-size: 12px; color: #dc2626; margin-top: 8px; text-align: center; font-weight: 500; padding: 6px; background: #fee2e2; border-radius: 6px;">
-                                ⚠️ Записи с такими параметрами отбора не найдены
-                            </div>
                         </div>
+                    </div>
 
-                        <div style="margin-top: 12px; padding-top: 16px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
-                            <button type="button" @click="isDownloadModalOpen = false" style="padding: 7px 16px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; font-weight: 500; cursor: pointer; color: #374151;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='#ffffff'">Отмена</button>
-                            <button type="submit" :disabled="!protocolId" style="padding: 7px 16px; border: none; border-radius: 6px; background: #3b82f6; color: #ffffff; font-weight: 500; cursor: pointer;" :style="!protocolId ? 'opacity: 0.5; cursor: not-allowed;' : ''" onmouseover="if(protocolId) this.style.backgroundColor='#2563eb'" onmouseout="if(protocolId) this.style.backgroundColor='#3b82f6'">Загрузить отчет</button>
+                    <div>
+                        <label class="suzipo-label" style="color: var(--text-primary); font-weight: 600;">Выберите итоговый протокол: <span style="color: #EF4444;">*</span></label>
+                        <select name="protocol_id" x-model="protocolId" required class="suzipo-field">
+                            <option value="">— Нажмите для выбора записи —</option>
+                            <template x-for="p in filteredProtocols" :key="p.prot_id">
+                                <option :value="p.prot_id" x-text="`Протокол № ${p.prot_num} (ID: ${p.prot_id})`"></option>
+                            </template>
+                        </select>
+
+                        <div x-show="filteredProtocols.length === 0" style="font-size: 12px; color: #EF4444; margin-top: 8px; text-align: center; font-weight: 500; padding: 8px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
+                            ⚠️ Записи с такими параметрами отбора не найдены
                         </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <div style="margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 12px;">
+                        <button type="button" @click="isDownloadModalOpen = false" class="btn-suzipo-cancel">Отмена</button>
+                        <button type="submit" :disabled="!protocolId" class="btn-suzipo-save" :style="!protocolId ? 'opacity: 0.5; cursor: not-allowed;' : ''">Загрузить отчет</button>
+                    </div>
+                </form>
             </div>
         </div>
-        <div style="overflow-x: auto; width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); box-sizing: border-box; margin-top: 20px;">
-            <table style="table-layout: fixed; width: 100%; min-width: 1450px; border-collapse: collapse; font-size: 12px; color: #374151;">
+        <!-- Адаптивная таблица реестра протоколов -->
+        <div class="suzipo-table-shell">
+            @php
+                $colGroupHtml = '
+                <colgroup>
+                    <col style="width: 7.5%;">
+                    <col style="width: 5.5%;">
+                    <col style="width: 6.5%;">
+                    <col style="width: 18%;">
+                    <col style="width: 6.5%;">
+                    <col style="width: 6.5%;">
+                    <col style="width: 10.5%;">
+                    <col style="width: 5.5%;">
+                    <col style="width: 6.5%;">
+                    <col style="width: 7.5%;">
+                    <col style="width: 9%;">
+                    <col style="width: 4%;">
+                    <col style="width: 9%;">
+                    <col style="width: 7.5%;">
+                </colgroup>';
+            @endphp
+
+            <!-- 1. Шапка таблицы на сером фоне -->
+            <table class="suzipo-table-head">
+                {!! $colGroupHtml !!}
                 <thead>
-                    <tr style="background-color: #ffffff; border-bottom: 1px solid #e5e7eb; color: #7c8594; font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">
-                        <th width="101" style="padding: 12px 8px; text-align: center;"></th>
-                        <!-- <th width="65" style="padding: 12px 8px; text-align: left;">ID</th> -->
-                        <th width="100" style="padding: 12px 8px; text-align: left;">Состояние</th>
-                        <th width="85" style="padding: 12px 8px; text-align: left;">№ Рег.</th>
-                        <th width="105" style="padding: 12px 8px; text-align: left;">Создан</th>
-                        <th style="padding: 12px 8px; text-align: left;">Курс / Квалификация</th>
-                        <th width="110" style="padding: 12px 8px; text-align: left;">Начало</th>
-                        <th width="110" style="padding: 12px 8px; text-align: left;">Окончание</th>
-                        <th width="160" style="padding: 12px 8px; text-align: left;">Создатель / Редактор</th>
-                        <th width="85" style="padding: 12px 8px; text-align: left;">№ Заяв.</th>
-                        <th width="105" style="padding: 12px 8px; text-align: left;">Дата Заяв.</th>
-                        <th width="110" style="padding: 12px 8px; text-align: left;">Квалификация</th>
-                        <th width="150" style="padding: 12px 8px; text-align: left;">Преподаватель</th>
-                        <th width="85" style="padding: 12px 8px; text-align: center;">Ауд.</th>
-                        <th width="130" style="padding: 12px 8px; text-align: left;">Куратор</th>
+                    <tr>
+                        <th>Состояние</th>
+                        <th>№ Рег.</th>
+                        <th>Создан</th>
+                        <th>Курс / Квалификация</th>
+                        <th>Начало</th>
+                        <th>Окончание</th>
+                        <th>Создатель / Редактор</th>
+                        <th>№ Заяв.</th>
+                        <th>Дата Заяв.</th>
+                        <th>Квалификация</th>
+                        <th>Преподаватель</th>
+                        <th style="text-align: center;">Ауд.</th>
+                        <th>Куратор</th>
+                        <th style="text-align: right; padding-right: 14px;">Действия</th>
                     </tr>
-                    <tr style="background-color: #ffffff; border-bottom: 1px solid #e5e7eb;">
+                    <tr>
                         @include('protocols.partials.search-filters')
                     </tr>
                 </thead>
-                <tbody id="table-body" style="background-color: #ffffff;">
-                    @include('protocols.partials.table-rows')
-                </tbody>
             </table>
+
+            <!-- 2. Внутренний белый скруглённый блок строк (bodySlot1: border-radius 12px) -->
+            <div class="suzipo-table-body-box">
+                <table class="suzipo-table-body">
+                    {!! $colGroupHtml !!}
+                    <tbody id="table-body">
+                        @include('protocols.partials.table-rows')
+                    </tbody>
+                </table>
+            </div>
+
+        @php
+            $curPage   = $protocols->currentPage();
+            $lastPage  = $protocols->lastPage();
+            $perPage   = $protocols->perPage();
+            $totalRows = $protocols->total();
+            $firstItem = $protocols->firstItem() ?? 0;
+            $lastItem  = $protocols->lastItem() ?? 0;
+
+            $pages = collect([1, 2, 3, $curPage - 1, $curPage, $curPage + 1, $lastPage - 1, $lastPage])
+                ->filter(fn($p) => $p >= 1 && $p <= $lastPage)
+                ->unique()
+                ->sort()
+                ->values();
+        @endphp
+        <div id="pagination-container" style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 10px 8px 10px 16px; min-height: 56px; gap: 16px; font-size: 14px; color: var(--table-head-text); box-sizing: border-box;">
+                <!-- Левая часть: Показывать [InputGroup 83x36] из 120 -->
+                <div style="display: flex; flex-direction: row; align-items: center; gap: 12px;">
+                    <span>Показывать</span>
+                    <div style="position: relative; width: 83px; height: 36px; display: inline-flex; align-items: center;">
+                        <select onchange="changePerPage(this.value)"
+                                style="appearance: none; -webkit-appearance: none; width: 83px; height: 36px; background-color: var(--table-body-bg); color: var(--table-row-text); border: none; border-radius: 8px; padding: 8px 28px 8px 12px; font-size: 14px; font-weight: 400; line-height: 20px; cursor: pointer; box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.06), 0px 1px 2px rgba(0, 0, 0, 0.06), 0px 2px 4px rgba(0, 0, 0, 0.04);">
+                            @foreach([10, 25, 50, 100] as $limit)
+                                @php
+                                    $rangeStart = $totalRows > 0 ? $firstItem : 1;
+                                    $rangeEnd   = $totalRows > 0 ? min($firstItem + $limit - 1, $totalRows) : $limit;
+                                @endphp
+                                <option value="{{ $limit }}" {{ $perPage === $limit ? 'selected' : '' }}>
+                                    {{ $rangeStart }}-{{ $rangeEnd }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"
+                             style="position: absolute; right: 10px; pointer-events: none; color: var(--table-row-text);">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </div>
+                    <span>из {{ number_format($totalRows, 0, '', ' ') }}</span>
+                </div>
+
+                <!-- Правая часть: < Назад  1  2  3 ... 10  11  Вперёд > -->
+                <div style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
+                    @if ($protocols->onFirstPage())
+                        <span style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; padding: 6px 12px; border-radius: 16px; font-size: 14px; font-weight: 500; color: var(--table-row-text); opacity: 0.5; cursor: not-allowed;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                            Назад
+                        </span>
+                    @else
+                        <a href="{{ $protocols->previousPageUrl() }}" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; padding: 6px 12px; border-radius: 16px; font-size: 14px; font-weight: 500; color: var(--table-row-text); text-decoration: none;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                            Назад
+                        </a>
+                    @endif
+
+                    <div style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
+                        @foreach($pages as $idx => $page)
+                            @if($idx > 0 && $page - $pages[$idx - 1] > 1)
+                                <span style="font-size: 14px; font-weight: 500; color: var(--table-head-text); padding: 0 2px;">...</span>
+                            @endif
+
+                            @if($page === $curPage)
+                                <span style="width: 32px; min-width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 16px; background-color: var(--pill-btn-bg); color: var(--table-row-text); font-size: 14px; font-weight: 500;">
+                                    {{ $page }}
+                                </span>
+                            @else
+                                <a href="{{ $protocols->url($page) }}" style="width: 32px; min-width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 16px; color: var(--table-row-text); font-size: 14px; font-weight: 500; text-decoration: none;">
+                                    {{ $page }}
+                                </a>
+                            @endif
+                        @endforeach
+                    </div>
+
+                    @if ($protocols->hasMorePages())
+                        <a href="{{ $protocols->nextPageUrl() }}" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; padding: 6px 12px; border-radius: 16px; font-size: 14px; font-weight: 500; color: var(--table-row-text); text-decoration: none;">
+                            Вперёд
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    @else
+                        <span style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; padding: 6px 12px; border-radius: 16px; font-size: 14px; font-weight: 500; color: var(--table-row-text); opacity: 0.5; cursor: not-allowed;">
+                            Вперёд
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                        </span>
+                    @endif
+                </div>
+            </div>
         </div>
-        <div id="pagination-container" style="margin-top: 15px; display: flex; justify-content: flex-end; align-items: center; gap: 8px; font-family: Arial, sans-serif; font-size: 12px;">
-            @if ($protocols->onFirstPage())
-            <span style="padding: 5px 10px; border: 1px solid #d1d5db; color: #9ca3af; background-color: #f3f4f6; cursor: not-allowed; border-radius: 3px; font-weight: bold;">&larr;</span>
-            @else
-            <a href="{{ $protocols->previousPageUrl() }}" style="padding: 5px 10px; border: 1px solid #a5a5a5; color: #111827; background-color: #ffffff; text-decoration: none; border-radius: 3px; font-weight: bold;">&larr;</a>
-            @endif
 
-            <span style="color: #4b5563; padding: 0 4px;">Страница {{ $protocols->currentPage() }}</span>
-
-            @if ($protocols->hasMorePages())
-
-            <a href="{{ $protocols->nextPageUrl() }}" style="padding: 5px 10px; border: 1px solid #a5a5a5; color: #111827; background-color: #ffffff; text-decoration: none; border-radius: 3px; font-weight: bold;">&rarr;</a>
-            @else
-            <span style="padding: 5px 10px; border: 1px solid #d1d5db; color: #9ca3af; background-color: #f3f4f6; cursor: not-allowed; border-radius: 3px; font-weight: bold;">&rarr;</span>
-            @endif
-        </div>
         @include('protocols.partials.edit-modal')
     </div>
 </x-layouts.app-with-sidebar>
-
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('protocolsComponent', () => ({
@@ -246,7 +318,7 @@
                     });
             },
 
-            allProtocols: @json($jsonProtocols),
+            allProtocols: @json($jsonProtocols ?? []),
 
             get filteredProtocols() {
                 return this.allProtocols.filter(p => {
@@ -297,4 +369,11 @@
             }
         }));
     });
+
+    function changePerPage(limit) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('per_page', limit);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    }
 </script>

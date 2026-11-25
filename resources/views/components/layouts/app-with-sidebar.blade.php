@@ -27,8 +27,9 @@
 <body class="antialiased min-h-screen flex flex-col">
 
     <!-- Верхняя адаптивная шапка (Top Header) -->
-    <header class="sticky top-0 z-40 h-16 px-6 flex items-center justify-between border-b transition-colors"
-            style="background-color: var(--bg-page); border-color: var(--border-color);">
+    <header class="sticky top-0 z-40 flex items-center justify-between border-b transition-colors"
+            style="min-height: 76px; padding: 12px 24px; background-color: var(--bg-page); border-color: var(--border-color);">
+
 
         <!-- Левая часть: Логотип РОСНЕФТЬ | СУЗиПО -->
                 <!-- Левая часть: Логотип -->
@@ -39,111 +40,112 @@
                 <img x-show="darkMode" x-cloak src="{{ asset('images/logo-dark.svg') }}" alt="РОСНЕФТЬ СУЗиПО" style="height: 42px; width: auto;">
             </a>
         </div>
-        <!-- Центральная капсула навигации (показывается только на внутренних страницах) -->
+                <!-- Центральная капсула навигации (показывается только на внутренних страницах) -->
         @if(!request()->routeIs('dashboard') && request()->path() !== '/')
-        <nav class="hidden lg:flex items-center px-2 py-1.5 rounded-full border space-x-1"
-             style="background-color: var(--bg-surface); border-color: var(--border-color);">
+        <nav class="suzipo-nav-capsule">
 
-            <a href="{{ route('dashboard') }}"
-               class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors"
-               style="color: var(--text-secondary);">
+            <a href="{{ route('dashboard') }}" class="suzipo-nav-link">
                 Главная
             </a>
 
             <!-- Заявки -->
-            <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+            <div class="suzipo-nav-item" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
                 <a href="{{ route('requests.index') }}"
-                   class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors inline-flex items-center gap-1"
-                   style="{{ request()->routeIs('requests.*') ? 'background-color: var(--brand-yellow); color: #111827; font-weight: 600;' : 'color: var(--text-primary);' }}">
+                   class="suzipo-nav-link {{ request()->routeIs('requests.*') ? 'active' : '' }}">
                     Заявки
                 </a>
-                <div x-show="open" x-cloak x-transition
-                     class="absolute left-0 mt-1 w-48 rounded-xl shadow-lg border py-1.5 z-50"
-                     style="background-color: var(--bg-surface); border-color: var(--border-color);">
-                    <a href="{{ route('requests.index') }}" class="block px-4 py-1.5 text-xs hover:opacity-80" style="color: var(--text-primary);">Все заявки</a>
+                <div x-show="open" x-cloak class="suzipo-nav-dropdown">
+                    <a href="{{ route('requests.index') }}" class="suzipo-nav-dropdown-link">Все заявки</a>
                     @if(auth()->user()->hasAnyRole(['urp', 'urp admin', 'ooo', 'ooo admin', 'ooo chief']))
-                    <a href="{{ route('requests.create') }}" class="block px-4 py-1.5 text-xs font-semibold" style="color: #D97706;">+ Создать заявку</a>
+                    <a href="{{ route('requests.create') }}" class="suzipo-nav-dropdown-link" style="color: #D97706; font-weight: 600;">+ Создать заявку</a>
                     @endif
-                    <div class="my-1 border-t" style="border-color: var(--border-color);"></div>
-                    <a href="{{ route('requests.index', ['status' => 'created']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">Создана</a>
-                    <a href="{{ route('requests.index', ['status' => 'sent']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">Отправлена</a>
-                    <a href="{{ route('requests.index', ['status' => 'in_progress']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">В работе</a>
-                    <a href="{{ route('requests.index', ['status' => 'urpedit']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">На доработке</a>
-                    <a href="{{ route('requests.index', ['status' => 'accepted']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">Принята</a>
-                    <a href="{{ route('requests.index', ['status' => 'rejected']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">Отклонена</a>
-                    <div class="my-1 border-t" style="border-color: var(--border-color);"></div>
-                    <a href="{{ route('requests.export-form') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Экспорт заявок</a>
+                    <div style="margin: 4px 0; border-top: 1px solid var(--border-color);"></div>
+                    <a href="{{ route('requests.index', ['status' => 'created']) }}" class="suzipo-nav-dropdown-link" style="color: var(--text-secondary);">Создана</a>
+                    <a href="{{ route('requests.index', ['status' => 'sent']) }}" class="suzipo-nav-dropdown-link" style="color: var(--text-secondary);">Отправлена</a>
+                    <a href="{{ route('requests.index', ['status' => 'in_progress']) }}" class="suzipo-nav-dropdown-link" style="color: var(--text-secondary);">В работе</a>
+                    <a href="{{ route('requests.index', ['status' => 'urpedit']) }}" class="suzipo-nav-dropdown-link" style="color: var(--text-secondary);">На доработке</a>
+                    <a href="{{ route('requests.index', ['status' => 'accepted']) }}" class="suzipo-nav-dropdown-link" style="color: var(--text-secondary);">Принята</a>
+                    <a href="{{ route('requests.index', ['status' => 'rejected']) }}" class="suzipo-nav-dropdown-link" style="color: var(--text-secondary);">Отклонена</a>
+                    <div style="margin: 4px 0; border-top: 1px solid var(--border-color);"></div>
+                    <a href="{{ route('requests.export-form') }}" class="suzipo-nav-dropdown-link">Экспорт заявок</a>
                 </div>
             </div>
 
             <!-- Протоколы -->
-            <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+            <div class="suzipo-nav-item" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
                 <a href="{{ route('protocols.index') }}"
-                   class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors inline-flex items-center gap-1"
-                   style="{{ request()->routeIs('protocols.*') ? 'background-color: var(--brand-yellow); color: #111827; font-weight: 600;' : 'color: var(--text-primary);' }}">
+                   class="suzipo-nav-link {{ request()->routeIs('protocols.*') ? 'active' : '' }}">
                     Протоколы
                 </a>
-                <div x-show="open" x-cloak x-transition
-                     class="absolute left-0 mt-1 w-44 rounded-xl shadow-lg border py-1.5 z-50"
-                     style="background-color: var(--bg-surface); border-color: var(--border-color);">
-                    <a href="{{ route('protocols.index', ['status' => 'draft']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Черновик</a>
-                    <a href="{{ route('protocols.index', ['status' => 'rejected']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Отвергнутые</a>
-                    <a href="{{ route('protocols.index', ['status' => 'pending']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">На утверждении</a>
-                    <a href="{{ route('protocols.index', ['status' => 'approved']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Принятые</a>
-                    <a href="{{ route('protocols.index', ['status' => 'trash']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">Корзина</a>
-                    <a href="{{ route('protocols.index', ['status' => 'archive']) }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">Архив</a>
+                <div x-show="open" x-cloak class="suzipo-nav-dropdown">
+                    <a href="{{ route('protocols.index', ['status' => 'draft']) }}" class="suzipo-nav-dropdown-link">Черновик</a>
+                    <a href="{{ route('protocols.index', ['status' => 'rejected']) }}" class="suzipo-nav-dropdown-link">Отвергнутые</a>
+                    <a href="{{ route('protocols.index', ['status' => 'pending']) }}" class="suzipo-nav-dropdown-link">На утверждении</a>
+                    <a href="{{ route('protocols.index', ['status' => 'approved']) }}" class="suzipo-nav-dropdown-link">Принятые</a>
+                    <a href="{{ route('protocols.index', ['status' => 'trash']) }}" class="suzipo-nav-dropdown-link" style="color: var(--text-secondary);">Корзина</a>
+                    <a href="{{ route('protocols.index', ['status' => 'archive']) }}" class="suzipo-nav-dropdown-link" style="color: var(--text-secondary);">Архив</a>
                 </div>
             </div>
 
-            <!-- Матрицы / Программы -->
+            <!-- Программы -->
             <a href="{{ route('matrices.index') }}"
-               class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors"
-               style="{{ request()->routeIs('matrices.*') ? 'background-color: var(--brand-yellow); color: #111827; font-weight: 600;' : 'color: var(--text-primary);' }}">
+               class="suzipo-nav-link {{ request()->routeIs('matrices.*') ? 'active' : '' }}">
                 Программы
             </a>
 
             <!-- Справочники -->
-            <a href="{{ route('directories.courses.index') }}"
-               class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors"
-               style="{{ request()->routeIs('directories.*') ? 'background-color: var(--brand-yellow); color: #111827; font-weight: 600;' : 'color: var(--text-primary);' }}">
-                Справочники
-            </a>
-            <!-- Отчёты (дропдаун) -->
-            <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-                <a href="{{ route('reports.training-journal') }}"
-                   class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors"
-                   style="{{ request()->routeIs('reports.*') ? 'background-color: var(--brand-yellow); color: #111827; font-weight: 600;' : 'color: var(--text-primary);' }}">
-                    Отчёты
+            <div class="suzipo-nav-item" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                <a href="{{ route('directories.index') }}"
+                   class="suzipo-nav-link {{ request()->routeIs('directories.*') || request()->routeIs('all-users-sap.*') ? 'active' : '' }}">
+                    Справочники
                 </a>
-                <div x-show="open" x-cloak x-transition
-                     class="absolute left-0 mt-1 w-56 rounded-xl shadow-lg border py-1.5 z-50"
-                     style="background-color: var(--bg-surface); border-color: var(--border-color);">
-                    <a href="{{ route('reports.auditorium-load') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Аудиторная нагрузка</a>
-                    <a href="{{ route('reports.training-journal') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Журнал обучения</a>
-                    <a href="{{ route('reports.certificate-register') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Журнал регистрации удостоверений</a>
-                    <a href="{{ route('reports.certificate-print') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Печать удостоверений</a>
+                <div x-show="open" x-cloak class="suzipo-nav-dropdown">
+                    <a href="{{ route('directories.index') }}" class="suzipo-nav-dropdown-link" style="font-weight: 600; color: #D97706;">Все справочники (Хаб)</a>
+                    <div style="margin: 4px 0; border-top: 1px solid var(--border-color);"></div>
+                    <a href="{{ route('directories.courses.index') }}" class="suzipo-nav-dropdown-link">Курсы</a>
+                    <a href="{{ route('directories.providers.index') }}" class="suzipo-nav-dropdown-link">Провайдеры (УЦ)</a>
+                    <a href="{{ route('all-users-sap.index') }}" class="suzipo-nav-dropdown-link">Сотрудники (SAP)</a>
+                    <a href="{{ route('directories.teachers.index') }}" class="suzipo-nav-dropdown-link">Преподаватели</a>
+                    <a href="{{ route('directories.curators.index') }}" class="suzipo-nav-dropdown-link">Кураторы</a>
+                    <a href="{{ route('directories.audiences.index') }}" class="suzipo-nav-dropdown-link">Аудитории</a>
+                    <a href="{{ route('directories.professions.index') }}" class="suzipo-nav-dropdown-link">Профессии</a>
+                    <a href="{{ route('directories.cities.index') }}" class="suzipo-nav-dropdown-link">Города</a>
                 </div>
             </div>
 
-            <!-- Ещё (Бронирование, Админка, Ошибки) -->
-            <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-                <button type="button"
-                        class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors inline-flex items-center gap-1"
-                        style="color: var(--text-secondary);">
-                    Ещё
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </button>
-                <div x-show="open" x-cloak x-transition
-                     class="absolute right-0 mt-1 w-52 rounded-xl shadow-lg border py-1.5 z-50"
-                     style="background-color: var(--bg-surface); border-color: var(--border-color);">
-                    <a href="{{ route('bookings.index') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Бронирование аудиторий</a>
-                    <div class="my-1 border-t" style="border-color: var(--border-color);"></div>
-                    <a href="{{ route('admin.users.index') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Пользователи</a>
-                    <a href="{{ route('admin.global-settings') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-primary);">Настройки</a>
-                    <div class="my-1 border-t" style="border-color: var(--border-color);"></div>
-                    <a href="{{ route('errors.index') }}" class="block px-4 py-1.5 text-xs" style="color: var(--text-secondary);">Журнал ошибок</a>
+
+            <!-- Отчёты -->
+            <div class="suzipo-nav-item" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                <a href="{{ route('reports.training-journal') }}"
+                   class="suzipo-nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                    Отчёты
+                </a>
+                <div x-show="open" x-cloak class="suzipo-nav-dropdown">
+                    <a href="{{ route('reports.auditorium-load') }}" class="suzipo-nav-dropdown-link">Аудиторная нагрузка</a>
+                    <a href="{{ route('reports.training-journal') }}" class="suzipo-nav-dropdown-link">Журнал обучения</a>
+                    <a href="{{ route('reports.certificate-register') }}" class="suzipo-nav-dropdown-link">Журнал регистрации удостоверений</a>
+                    <a href="{{ route('reports.certificate-print') }}" class="suzipo-nav-dropdown-link">Печать удостоверений</a>
                 </div>
             </div>
+
+            <!-- Ещё -->
+            <div class="suzipo-nav-item" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                <button type="button" class="suzipo-nav-link">
+                    Ещё
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open" x-cloak class="suzipo-nav-dropdown" style="left: auto; right: 0;">
+                    <a href="{{ route('bookings.index') }}" class="suzipo-nav-dropdown-link">Бронирование аудиторий</a>
+                    <div style="margin: 4px 0; border-top: 1px solid var(--border-color);"></div>
+                    <a href="{{ route('admin.users.index') }}" class="suzipo-nav-dropdown-link">Пользователи</a>
+                    <a href="{{ route('admin.global-settings') }}" class="suzipo-nav-dropdown-link">Настройки</a>
+                    <div style="margin: 4px 0; border-top: 1px solid var(--border-color);"></div>
+                    <a href="{{ route('errors.index') }}" class="suzipo-nav-dropdown-link" style="color: var(--text-secondary);">Журнал ошибок</a>
+                </div>
+            </div>
+
         </nav>
         @endif
 
@@ -235,9 +237,10 @@
         </div>
     </header>
     <!-- Основной контейнер контента -->
-    <main class="flex-1 w-full max-w-[1440px] mx-auto px-6 py-6">
+    <main class="flex-1 w-full mx-auto px-6 py-6" style="max-width: 100%; box-sizing: border-box;">
         {{ $slot }}
     </main>
+
 
     <!-- Лаконичный подвал -->
     <footer class="border-t py-4 px-6 mt-auto transition-colors"
