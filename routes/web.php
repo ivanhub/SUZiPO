@@ -92,14 +92,6 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    // Административная панель пользователей
-    Route::prefix('admin')->name('admin.')->group(function () {
-        //      Route::resource('users', UserController::class);
-        Route::get('users/export', [UserController::class, 'export'])->name('users.export');
-        Route::post('users/export-selected', [UserController::class, 'exportSelected'])->name('users.export-selected');
-        Route::resource('users', UserController::class)->middleware('permission:view_users|create_users|edit_users|delete_users');
-    });
-
     // Маршруты для email подтверждения
     Route::get('verify-email', [EmailVerificationPromptController::class, '__invoke'])->name('verification.notice');
     Route::get('verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
@@ -222,7 +214,7 @@ Route::resource('protocols', ProtocolController::class);
 Route::get('/protocols', [ProtocolController::class, 'index'])->name('protocols.index');
 Route::get('/protocols/{id}/json', [ProtocolController::class, 'getJson'])->name('protocols.json');
 Route::get('/protocols/{id}/report/create', [ProtocolController::class, 'createReport'])->name('protocols.report.create');
-Route::post('/protocols/export-excel', [ProtocolController::class, 'exportExcel'])->name('protocols.export-excel');
+//Route::post('/protocols/export-excel', [ProtocolController::class, 'exportExcel'])->name('protocols.export-excel');
 Route::post('/protocols/report/store', [ProtocolController::class, 'storeReport'])->name('protocols.report.store');
 
 // Поиск по номеру договора (Orders)
@@ -319,6 +311,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('technical-task', [AdminController::class, 'technicalTask'])->name('technical-task');
     Route::get('notifications', [AdminController::class, 'notifications'])->name('notifications');
     Route::get('global-settings', [AdminController::class, 'globalSettings'])->name('global-settings');
+    Route::resource('users', UserController::class)->middleware('permission:view_users|create_users|edit_users|delete_users');
 });
 
 // Ошибки

@@ -6,8 +6,8 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
+   <div class="w-full px-6">  <!-- ← Вместо max-w-7xl mx-auto -->
+        <div class="bg-white overflow-visible shadow-xl sm:rounded-lg p-6">  <!-- ← overflow-visible вместо overflow-hidden -->
 
                 @if(session('success'))
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
@@ -104,8 +104,8 @@
                     </div>
 
                     <!-- Таблица пользователей -->
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200" id="usersTable">
+		<div class="w-full">
+                        <table class="min-w-full divide-y divide-gray-200" id="usersTable" style="width: 100%;">
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-6 py-3 text-center">

@@ -49,7 +49,7 @@
                     </div>
 
                     <div style="display: grid; grid-template-columns: 180px 1fr; gap: 8px; padding: 4px 0;">
-                        <span style="color: #6b7280;">Наименование курса:</span>
+                        <span style="color: #6b7280;">Наименование ПО:</span>
                         <span style="font-weight: 600; color: #111827;" x-text="editData.demand?.course?.course || '—'"></span>
                     </div>
 

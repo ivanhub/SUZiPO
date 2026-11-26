@@ -65,8 +65,26 @@ class RequestController extends Controller
             ->withQueryString();
 
 
-        return view('requests.index', compact('requests'));
+    $providers = RequestsProvider::orderBy('name')->get();
+    $courses = RequestsCourse::orderBy('course')->get();
+    $users = \App\Models\User::orderBy('name')->get();
+//        return view('requests.index', compact('requests'));
+        return view('requests.index', compact('requests', 'providers', 'courses', 'users'));
     }
+
+private function getEnglishStatus(string $russianStatus): string
+{
+    $map = [
+        'Создана' => 'created',
+        'Отправлена' => 'sent',
+        'В работе' => 'in_progress',
+        'На доработке' => 'urpedit',
+        'Принята' => 'accepted',
+        'Отклонена' => 'rejected',
+    ];
+    
+    return $map[$russianStatus] ?? $russianStatus;
+}
 
 
     public function create(): View
@@ -78,8 +96,8 @@ class RequestController extends Controller
 
         // $userDept = auth()->user()->department; // 'УРП' или 'УЦ'
         //  $userDept = 'УЦ'; // для теста
-        // $isUrp = auth()->user()->hasAnyRole(['urp', 'urp admin']);
-        $isUrp = true;
+        $isUrp = auth()->user()->hasAnyRole(['urp', 'urp admin']);
+        //$isUrp = true;
         //if ($user->hasAnyRole(['urp', 'urp admin', 'admin']))  $isUrp = (mb_strtoupper($userDept) === 'УРП');
 
         $nextGlobalNumbers = [
@@ -228,8 +246,8 @@ class RequestController extends Controller
         //$userDept = 'УЦ';
         //$isUrp = (mb_strtoupper($userDept) === 'УРП');
         
-        // $isUrp = auth()->user()->hasAnyRole(['urp', 'urp admin']);
-        $isUrp = true;
+        $isUrp = auth()->user()->hasAnyRole(['urp', 'urp admin']);
+        //$isUrp = true;
         $isAdmin = auth()->user()->hasRole('admin');
 
         if ($isUrp) {

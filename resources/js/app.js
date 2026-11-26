@@ -26,21 +26,8 @@ Alpine.start();
 
 // Инициализация после загрузки DOM
 document.addEventListener("DOMContentLoaded", () => {
-
-  // const excludedRoutes = [
-  //   '/protocols',
-  // ];
-  // const currentPath = window.location.pathname;
-  // console.log(`Current path: ${currentPath}`)
-  // const isExcluded = excludedRoutes.some(route => {
-  //   return currentPath === route || currentPath.startsWith(route + '/');
-  // });
-  // if (isExcluded) {
-  //   console.log(`Flatpickr отключен для страницы: ${currentPath}`);
-  //   return;
-  // }
-
-  flatpickr("input[type='date']", {
+//  flatpickr("input[type='date']", {
+    flatpickr("input[type='date']:not(#issue_date)", {
     locale: "ru",       // Подключаем русский язык
   altInput: true,          // Включает отображение "дубликата" для пользователя
     altFormat: "d.m.Y",      // Формат, который видит пользователь: "23.09.2026"

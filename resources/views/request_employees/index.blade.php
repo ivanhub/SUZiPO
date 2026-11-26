@@ -1,10 +1,9 @@
 ﻿<x-layouts.app-with-sidebar>
     <div style="padding: 8px 0 32px 0;" x-data="{ addTab: 'single' }">
-        <!-- Хлебные крошки и круглая кнопка Назад -->
         <div class="suzipo-breadcrumbs">
             <a href="{{ route('requests.show', $trainingRequest->id) }}" class="suzipo-back-btn" title="Назад к заявке">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
             </a>
             <div style="font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
@@ -20,15 +19,15 @@
 
         <!-- Уведомления -->
         @if(session('success'))
-            <div style="padding: 12px 16px; background-color: rgba(16, 185, 129, 0.12); border: 1px solid #10B981; color: #10B981; border-radius: 10px; font-size: 13px; margin-bottom: 18px;">
-                ✅ {{ session('success') }}
-            </div>
+        <div style="padding: 12px 16px; background-color: rgba(16, 185, 129, 0.12); border: 1px solid #10B981; color: #10B981; border-radius: 10px; font-size: 13px; margin-bottom: 18px;">
+            ✅ {{ session('success') }}
+        </div>
         @endif
 
         @if(session('error'))
-            <div style="padding: 12px 16px; background-color: rgba(239, 68, 68, 0.12); border: 1px solid #EF4444; color: #EF4444; border-radius: 10px; font-size: 13px; margin-bottom: 18px;">
-                ⚠️ {{ session('error') }}
-            </div>
+        <div style="padding: 12px 16px; background-color: rgba(239, 68, 68, 0.12); border: 1px solid #EF4444; color: #EF4444; border-radius: 10px; font-size: 13px; margin-bottom: 18px;">
+            ⚠️ {{ session('error') }}
+        </div>
         @endif
 
         <!-- Заголовок страницы -->
@@ -39,7 +38,8 @@
             </p>
         </div>
 
-        <!-- Карточка добавления сотрудников с переключением режимов -->
+        @urp
+        <!-- Карточка добавления сотрудников для УРП (с переключением режимов) -->
         <div class="suzipo-card" style="padding: 18px 20px; margin-bottom: 24px; border: 1px solid var(--border-color);">
             <div style="display: flex; align-items: center; gap: 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 16px; flex-wrap: wrap;">
                 <span @click="addTab = 'single'" class="suzipo-tab-item" :class="{ 'active': addTab === 'single' }">
@@ -60,8 +60,8 @@
                     <div style="flex: 1; min-width: 240px; max-width: 380px;">
                         <label for="tab_number" class="suzipo-label">Табельный номер (SAP)</label>
                         <input type="text" name="tab_number" id="tab_number" value="{{ old('tab_number') }}"
-                               class="suzipo-field" style="background-color: var(--bg-page) !important;"
-                               placeholder="Например: 10000066">
+                            class="suzipo-field" style="background-color: var(--bg-page) !important;"
+                            placeholder="Например: 10000066">
                         @error('tab_number') <p style="color: #EF4444; font-size: 11px; margin-top: 4px;">{{ $message }}</p> @enderror
                     </div>
                     <button type="submit" class="btn-suzipo-save">
@@ -77,8 +77,8 @@
                     <div style="margin-bottom: 12px;">
                         <label for="tab_numbers" class="suzipo-label">Табельные номера (каждый с новой строки)</label>
                         <textarea name="tab_numbers" id="tab_numbers" rows="5"
-                                  class="suzipo-field" style="background-color: var(--bg-page) !important; font-family: monospace;"
-                                  placeholder="10000066&#10;10000069&#10;10000071"></textarea>
+                            class="suzipo-field" style="background-color: var(--bg-page) !important; font-family: monospace;"
+                            placeholder="10000066&#10;10000069&#10;10000071"></textarea>
                     </div>
                     <button type="submit" class="btn-suzipo-save">
                         + Добавить списком
@@ -94,17 +94,17 @@
                         <div class="suzipo-col-2">
                             <label for="manual_last_name" class="suzipo-label">Фамилия *</label>
                             <input type="text" name="last_name" id="manual_last_name" value="{{ old('last_name') }}"
-                                   class="suzipo-field" style="background-color: var(--bg-page) !important;" required>
+                                class="suzipo-field" style="background-color: var(--bg-page) !important;" required>
                         </div>
                         <div class="suzipo-col-2">
                             <label for="manual_first_name" class="suzipo-label">Имя *</label>
                             <input type="text" name="first_name" id="manual_first_name" value="{{ old('first_name') }}"
-                                   class="suzipo-field" style="background-color: var(--bg-page) !important;" required>
+                                class="suzipo-field" style="background-color: var(--bg-page) !important;" required>
                         </div>
                         <div class="suzipo-col-2">
                             <label for="manual_middle_name" class="suzipo-label">Отчество</label>
                             <input type="text" name="middle_name" id="manual_middle_name" value="{{ old('middle_name') }}"
-                                   class="suzipo-field" style="background-color: var(--bg-page) !important;">
+                                class="suzipo-field" style="background-color: var(--bg-page) !important;">
                         </div>
                     </div>
                     <button type="submit" class="btn-suzipo-save">
@@ -113,34 +113,84 @@
                 </form>
             </div>
         </div>
+        @endurp
+
+        @ooo
+        <!-- Форма ручного добавления сотрудника для ООО (в стиле Figma) -->
+        <div class="suzipo-card" style="padding: 18px 20px; margin-bottom: 24px; border: 1px solid var(--border-color);">
+            <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px;">
+                Ручной ввод сотрудника
+            </div>
+            <form action="{{ route('request-employees.store', $trainingRequest->id) }}" method="POST">
+                @csrf
+                <div class="suzipo-grid-6" style="margin-bottom: 14px;">
+                    <div class="suzipo-col-2">
+                        <label for="manual_full_name" class="suzipo-label">ФИО *</label>
+                        <input type="text" name="full_name" id="manual_full_name" value="{{ old('full_name') }}"
+                            class="suzipo-field" style="background-color: var(--bg-page) !important;"
+                            required placeholder="Фамилия Имя Отчество">
+                    </div>
+                    <div class="suzipo-col-2">
+                        <label for="manual_position" class="suzipo-label">Должность</label>
+                        <input type="text" name="position" id="manual_position" value="{{ old('position') }}"
+                            class="suzipo-field" style="background-color: var(--bg-page) !important;">
+                    </div>
+                    <div class="suzipo-col-2">
+                        <label for="manual_department" class="suzipo-label">Структурное подразделение</label>
+                        <input type="text" name="department" id="manual_department" value="{{ old('department') }}"
+                            class="suzipo-field" style="background-color: var(--bg-page) !important;">
+                    </div>
+                    <div class="suzipo-col-2">
+                        <label for="manual_birth_date" class="suzipo-label">Дата рождения</label>
+                        <input type="date" name="birth_date" id="manual_birth_date" value="{{ old('birth_date') }}"
+                            class="suzipo-field" style="background-color: var(--bg-page) !important;">
+                    </div>
+                    <div class="suzipo-col-2">
+                        <label for="manual_pfr" class="suzipo-label">СНИЛС</label>
+                        <input type="text" name="pfr_certificate" id="manual_pfr" value="{{ old('pfr_certificate') }}"
+                            class="suzipo-field" style="background-color: var(--bg-page) !important;"
+                            placeholder="000-000-000 00">
+                    </div>
+                    <div class="suzipo-col-2">
+                        <label for="manual_citizenship" class="suzipo-label">Гражданство</label>
+                        <input type="text" name="citizenship" id="manual_citizenship" value="{{ old('citizenship', 'Российская Федерация') }}"
+                            class="suzipo-field" style="background-color: var(--bg-page) !important;">
+                    </div>
+                </div>
+                <button type="submit" class="btn-suzipo-save">
+                    + Добавить сотрудника
+                </button>
+            </form>
+        </div>
+        @endooo
+
         <!-- Двухслойная таблица сотрудников заявки (Figma style) -->
         <div class="suzipo-table-shell" style="overflow-x: auto;">
             @php
-                $empColGroup = '
-                <colgroup>
-                    <col style="width: 44px;">
-                    <col style="width: 85px;">
-                    <col style="width: 190px;">
-                    <col style="width: 90px;">
-                    <col style="width: 55px;">
-                    <col style="width: 110px;">
-                    <col style="width: 165px;">
-                    <col style="width: 65px;">
-                    <col style="width: 155px;">
-                    <col style="width: 155px;">
-                    <col style="width: 75px;">
-                    <col style="width: 90px;">
-                    <col style="width: 100px;">
-                    <col style="width: 90px;">
-                    <col style="width: 90px;">
-                    <col style="width: 95px;">
-                    <col style="width: 90px;">
-                    <col style="width: 90px;">
-                    <col style="width: 84px;">
-                </colgroup>';
+            $empColGroup = '
+            <colgroup>
+                <col style="width: 44px;">
+                <col style="width: 85px;">
+                <col style="width: 190px;">
+                <col style="width: 90px;">
+                <col style="width: 55px;">
+                <col style="width: 110px;">
+                <col style="width: 165px;">
+                <col style="width: 65px;">
+                <col style="width: 155px;">
+                <col style="width: 155px;">
+                <col style="width: 75px;">
+                <col style="width: 90px;">
+                <col style="width: 100px;">
+                <col style="width: 90px;">
+                <col style="width: 90px;">
+                <col style="width: 95px;">
+                <col style="width: 90px;">
+                <col style="width: 90px;">
+                <col style="width: 84px;">
+            </colgroup>';
             @endphp
 
-            <!-- 1. Шапка таблицы на сером фоне -->
             <table class="suzipo-table-head" style="min-width: 1920px;">
                 {!! $empColGroup !!}
                 <thead>
@@ -168,124 +218,95 @@
                 </thead>
             </table>
 
-            <!-- 2. Внутренний скруглённый блок строк -->
             <div class="suzipo-table-body-box" style="min-width: 1920px;">
                 <table class="suzipo-table-body" style="min-width: 1920px;">
                     {!! $empColGroup !!}
                     <tbody>
                         @forelse($employees as $employee)
-                            @php
-                                $isAlertRow = in_array($employee->status, ['blocked', 'expired', 'dismissed']) || !$employee->user_sap_id;
-                                $isWarningRow = $employee->status === 'warning';
-                                $rowBg = $isAlertRow
-                                    ? 'rgba(239, 68, 68, 0.10)'
-                                    : ($isWarningRow ? 'rgba(245, 158, 11, 0.10)' : '');
-                            @endphp
-                            <tr style="{{ $rowBg ? 'background-color: ' . $rowBg . ';' : '' }}">
-                                <!-- Быстрая кнопка редактирования слева -->
-                                <td style="text-align: center;">
-                                    <button type="button"
-                                            class="suzipo-action-circle"
-                                            style="width: 28px; height: 28px; min-width: 28px;"
-                                            title="Редактировать"
-                                            data-id="{{ $employee->id }}"
-                                            data-request-id="{{ $trainingRequest->id }}"
-                                            data-start="{{ $employee->absence_start_date ? $employee->absence_start_date->format('Y-m-d') : '' }}"
-                                            data-end="{{ $employee->absence_end_date ? $employee->absence_end_date->format('Y-m-d') : '' }}"
-                                            data-absence-reason="{{ $employee->absence_reason ?? '' }}"
-                                            data-type="{{ $employee->absence_type }}"
-                                            data-distance="{{ $employee->distance_learning_date ? $employee->distance_learning_date->format('Y-m-d') : '' }}"
-                                            data-fulltime="{{ $employee->fulltime_learning_date ? $employee->fulltime_learning_date->format('Y-m-d') : '' }}"
-                                            data-note="{{ $employee->note }}"
-                                            data-doc-date="{{ $employee->document_issue_date ? $employee->document_issue_date->format('Y-m-d') : '' }}"
-                                            data-period="{{ $employee->reissue_period }}"
-                                            onclick="openEditModal(this)">
+                        @php
+                        $isAlertRow = in_array($employee->status, ['blocked', 'expired', 'dismissed']) || !$employee->user_sap_id;
+                        $isWarningRow = $employee->status === 'warning';
+                        $rowBg = $isAlertRow ? 'rgba(239, 68, 68, 0.10)' : ($isWarningRow ? 'rgba(245, 158, 11, 0.10)' : '');
+                        @endphp
+                        <tr style="{{ $rowBg ? 'background-color: ' . $rowBg . ';' : '' }}">
+                            <td style="text-align: center;">
+                                <button type="button" class="suzipo-action-circle" style="width: 28px; height: 28px; min-width: 28px;" title="Редактировать"
+                                    data-id="{{ $employee->id }}" data-request-id="{{ $trainingRequest->id }}"
+                                    data-start="{{ $employee->absence_start_date ? $employee->absence_start_date->format('Y-m-d') : '' }}"
+                                    data-end="{{ $employee->absence_end_date ? $employee->absence_end_date->format('Y-m-d') : '' }}"
+                                    data-absence-reason="{{ $employee->absence_reason ?? '' }}" data-type="{{ $employee->absence_type }}"
+                                    data-distance="{{ $employee->distance_learning_date ? $employee->distance_learning_date->format('Y-m-d') : '' }}"
+                                    data-fulltime="{{ $employee->fulltime_learning_date ? $employee->fulltime_learning_date->format('Y-m-d') : '' }}"
+                                    data-note="{{ $employee->note }}" data-doc-date="{{ $employee->document_issue_date ? $employee->document_issue_date->format('Y-m-d') : '' }}"
+                                    data-period="{{ $employee->reissue_period }}" onclick="openEditModal(this)">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                            </td>
+                            <td style="font-weight: 500;">{{ $employee->tab_number ?? '—' }}</td>
+                            <td style="font-weight: 500;" title="{{ $employee->full_name }}">
+                                {{ $employee->full_name ?? '—' }}
+                                @if(!$employee->user_sap_id)
+                                <span style="margin-left: 4px; padding: 1px 6px; background-color: rgba(239, 68, 68, 0.15); color: #EF4444; border-radius: 6px; font-size: 10px; font-weight: 700;">нет в SAP</span>
+                                @endif
+                                @if($employee->warning_message)
+                                <div style="font-size: 11px; color: #EF4444; margin-top: 2px;">{{ $employee->warning_message }}</div>
+                                @endif
+                            </td>
+                            <td style="color: var(--table-head-text);">{{ $employee->birth_date ? $employee->birth_date->format('d.m.Y') : '—' }}</td>
+                            <td style="color: var(--table-head-text);">@if($employee->gender == '1') муж. @elseif($employee->gender == '2') жен. @else — @endif</td>
+                            <td style="color: var(--table-head-text);" title="{{ $employee->pfr_certificate }}">{{ $employee->pfr_certificate ?? '—' }}</td>
+                            <td style="color: var(--table-head-text);" title="{{ $employee->position }}">{{ $employee->position ?? '—' }}</td>
+                            <td style="color: var(--table-head-text);">{{ $employee->rank ?? '—' }}</td>
+                            <td style="color: var(--table-head-text);" title="{{ $employee->level_4_name }}">{{ $employee->level_4_name ?? '—' }}</td>
+                            <td style="color: var(--table-head-text);" title="{{ $employee->level_3_name }}">{{ $employee->level_3_name ?? '—' }}</td>
+                            <td style="color: var(--table-head-text);">{{ $employee->duv_b ?? '—' }}</td>
+                            <td style="color: var(--table-head-text);">{{ $employee->mvz ?? '—' }}</td>
+                            <td style="color: var(--table-head-text);" title="{{ $employee->employee_category }}">{{ $employee->employee_category ?? '—' }}</td>
+                            <td style="color: var(--table-head-text);">{{ $employee->absence_start_date ? $employee->absence_start_date->format('d.m.Y') : '—' }}</td>
+                            <td style="color: var(--table-head-text);">{{ $employee->absence_end_date ? $employee->absence_end_date->format('d.m.Y') : '—' }}</td>
+                            <td style="color: var(--table-head-text);">{{ $employee->absence_type ?? '—' }}</td>
+                            <td style="color: var(--table-head-text);">{{ $employee->document_issue_date ? $employee->document_issue_date->format('d.m.Y') : '—' }}</td>
+                            <td style="color: var(--table-head-text);">{{ $employee->reissue_period ?? '—' }}</td>
+                            <td style="text-align: right;">
+                                <div style="display: inline-flex; align-items: center; gap: 4px;">
+                                    <button type="button" class="suzipo-action-circle" title="Редактировать"
+                                        data-id="{{ $employee->id }}" data-request-id="{{ $trainingRequest->id }}"
+                                        data-start="{{ $employee->absence_start_date ? $employee->absence_start_date->format('Y-m-d') : '' }}"
+                                        data-end="{{ $employee->absence_end_date ? $employee->absence_end_date->format('Y-m-d') : '' }}"
+                                        data-absence-reason="{{ $employee->absence_reason ?? '' }}" data-type="{{ $employee->absence_type }}"
+                                        data-distance="{{ $employee->distance_learning_date ? $employee->distance_learning_date->format('Y-m-d') : '' }}"
+                                        data-fulltime="{{ $employee->fulltime_learning_date ? $employee->fulltime_learning_date->format('Y-m-d') : '' }}"
+                                        data-note="{{ $employee->note }}" data-doc-date="{{ $employee->document_issue_date ? $employee->document_issue_date->format('Y-m-d') : '' }}"
+                                        data-period="{{ $employee->reissue_period }}" onclick="openEditModal(this)">
                                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                         </svg>
                                     </button>
-                                </td>
-
-                                <td style="font-weight: 500;">{{ $employee->tab_number ?? '—' }}</td>
-
-                                <td style="font-weight: 500;" title="{{ $employee->full_name }}">
-                                    {{ $employee->full_name ?? '—' }}
-                                    @if(!$employee->user_sap_id)
-                                        <span style="margin-left: 4px; padding: 1px 6px; background-color: rgba(239, 68, 68, 0.15); color: #EF4444; border-radius: 6px; font-size: 10px; font-weight: 700;">нет в SAP</span>
-                                    @endif
-                                    @if($employee->warning_message)
-                                        <div style="font-size: 11px; color: #EF4444; margin-top: 2px;">{{ $employee->warning_message }}</div>
-                                    @endif
-                                </td>
-
-                                <td style="color: var(--table-head-text);">{{ $employee->birth_date ? $employee->birth_date->format('d.m.Y') : '—' }}</td>
-
-                                <td style="color: var(--table-head-text);">
-                                    @if($employee->gender == '1') муж. @elseif($employee->gender == '2') жен. @else — @endif
-                                </td>
-
-                                <td style="color: var(--table-head-text);" title="{{ $employee->pfr_certificate }}">{{ $employee->pfr_certificate ?? '—' }}</td>
-                                <td style="color: var(--table-head-text);" title="{{ $employee->position }}">{{ $employee->position ?? '—' }}</td>
-                                <td style="color: var(--table-head-text);">{{ $employee->rank ?? '—' }}</td>
-                                <td style="color: var(--table-head-text);" title="{{ $employee->level_4_name }}">{{ $employee->level_4_name ?? '—' }}</td>
-                                <td style="color: var(--table-head-text);" title="{{ $employee->level_3_name }}">{{ $employee->level_3_name ?? '—' }}</td>
-                                <td style="color: var(--table-head-text);">{{ $employee->duv_b ?? '—' }}</td>
-                                <td style="color: var(--table-head-text);">{{ $employee->mvz ?? '—' }}</td>
-                                <td style="color: var(--table-head-text);" title="{{ $employee->employee_category }}">{{ $employee->employee_category ?? '—' }}</td>
-                                <td style="color: var(--table-head-text);">{{ $employee->absence_start_date ? $employee->absence_start_date->format('d.m.Y') : '—' }}</td>
-                                <td style="color: var(--table-head-text);">{{ $employee->absence_end_date ? $employee->absence_end_date->format('d.m.Y') : '—' }}</td>
-                                <td style="color: var(--table-head-text);">{{ $employee->absence_type ?? '—' }}</td>
-                                <td style="color: var(--table-head-text);">{{ $employee->document_issue_date ? $employee->document_issue_date->format('d.m.Y') : '—' }}</td>
-                                <td style="color: var(--table-head-text);">{{ $employee->reissue_period ?? '—' }}</td>
-
-                                <!-- Действия справа -->
-                                <td style="text-align: right;">
-                                    <div style="display: inline-flex; align-items: center; gap: 4px;">
-                                        <button type="button"
-                                                class="suzipo-action-circle"
-                                                title="Редактировать"
-                                                data-id="{{ $employee->id }}"
-                                                data-request-id="{{ $trainingRequest->id }}"
-                                                data-start="{{ $employee->absence_start_date ? $employee->absence_start_date->format('Y-m-d') : '' }}"
-                                                data-end="{{ $employee->absence_end_date ? $employee->absence_end_date->format('Y-m-d') : '' }}"
-                                                data-absence-reason="{{ $employee->absence_reason ?? '' }}"
-                                                data-type="{{ $employee->absence_type }}"
-                                                data-distance="{{ $employee->distance_learning_date ? $employee->distance_learning_date->format('Y-m-d') : '' }}"
-                                                data-fulltime="{{ $employee->fulltime_learning_date ? $employee->fulltime_learning_date->format('Y-m-d') : '' }}"
-                                                data-note="{{ $employee->note }}"
-                                                data-doc-date="{{ $employee->document_issue_date ? $employee->document_issue_date->format('Y-m-d') : '' }}"
-                                                data-period="{{ $employee->reissue_period }}"
-                                                onclick="openEditModal(this)">
-                                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                                            </svg>
-                                        </button>
-
-                                        <button type="button"
-                                                class="suzipo-action-circle"
-                                                style="background-color: rgba(239, 68, 68, 0.14); color: #EF4444;"
-                                                title="Удалить"
-                                                data-id="{{ $employee->id }}"
-                                                data-request-id="{{ $trainingRequest->id }}"
-                                                onclick="deleteEmployee(this)">
-                                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
+                                    <button type="button" class="suzipo-action-circle" style="background-color: rgba(239, 68, 68, 0.14); color: #EF4444;" title="Удалить"
+                                        data-id="{{ $employee->id }}" data-request-id="{{ $trainingRequest->id }}" onclick="deleteEmployee(this)">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
                         @empty
-                            <tr>
-                                <td colspan="19" style="padding: 28px; text-align: center; color: var(--table-head-text); font-size: 13px;">
-                                    Сотрудники не добавлены
-                                </td>
-                            </tr>
+                        <tr>
+                            <td colspan="19" style="padding: 28px; text-align: center; color: var(--table-head-text); font-size: 13px;">Сотрудники не добавлены</td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
+    </div>
+    </tbody>
+    </table>
+    </div>
+    </div>
     </div>
     <!-- Модальное окно редактирования сотрудника (светлая и тёмная темы) -->
     <div id="editModal" style="display: none; position: fixed; inset: 0; z-index: 99999; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.55); padding: 16px;" onclick="if(event.target === this) closeEditModal()">
@@ -441,8 +462,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             toggleDistanceFields();
             @if(session('success'))
-                const tabNumbersInput = document.getElementById('tab_numbers');
-                if (tabNumbersInput) tabNumbersInput.value = '';
+            const tabNumbersInput = document.getElementById('tab_numbers');
+            if (tabNumbersInput) tabNumbersInput.value = '';
             @endif
         });
     </script>

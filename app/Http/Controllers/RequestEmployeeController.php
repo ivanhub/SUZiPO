@@ -42,9 +42,12 @@ class RequestEmployeeController extends Controller
     $this->checkAccess($requestId); 
         $request->validate([
             'tab_number' => 'nullable|string|max:50',
-            'last_name' => 'nullable|string|max:255',
-            'first_name' => 'nullable|string|max:255',
-            'middle_name' => 'nullable|string|max:255',
+	'full_name' => 'nullable|string|max:500',
+        'position' => 'nullable|string|max:255',
+        'department' => 'nullable|string|max:255',
+        'birth_date' => 'nullable|date',
+        'pfr_certificate' => 'nullable|string|max:50',
+        'citizenship' => 'nullable|string|max:100',
         ]);
 
         $trainingRequest = TrainingRequestModel::with('course')->findOrFail($requestId);
@@ -83,11 +86,22 @@ class RequestEmployeeController extends Controller
     }
 
 
- elseif ($request->filled('last_name') || $request->filled('first_name')) {
-            // Ручной ввод
-            $data['last_name'] = $request->last_name;
-            $data['first_name'] = $request->first_name;
-            $data['middle_name'] = $request->middle_name;
+ elseif ($request->filled('full_name'))  {
+        // Ручной ввод — разбираем ФИО
+	$fullName = trim($request->full_name);
+        $nameParts = preg_split('/\s+/', $fullName);
+        
+        $data['last_name'] = $nameParts[0] ?? null;
+        $data['first_name'] = $nameParts[1] ?? null;
+        $data['middle_name'] = $nameParts[2] ?? null;
+        
+        // Новые поля
+        $data['position'] = $request->position;
+        $data['department'] = $request->department;
+        $data['birth_date'] = $request->birth_date;
+        $data['pfr_certificate'] = $request->pfr_certificate;
+        $data['citizenship'] = $request->citizenship;
+
         } else {
             return redirect()
                 ->back()
@@ -517,7 +531,7 @@ private function checkAccess(int $requestId): void
     
     // Если заявка в статусе "Создана" - только urp, urp admin, admin могут управлять сотрудниками
     if ($request->status === 'Создана' || $request->status === 'created') {
-        if (!$user->hasAnyRole(['urp', 'urp admin'])) {
+        if (!$user->hasAnyRole(['urp', 'urp admin', 'ooo'])) {
             abort(403, 'У вас нет прав на добавление сотрудников в заявку в статусе "Создана"');
         }
     }

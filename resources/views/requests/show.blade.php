@@ -46,6 +46,10 @@
 
             <!-- Кнопки действий -->
             <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+                <span class="suzipo-label">Дата создания:</span>
+                <div>
+                    <div class="suzipo-field" style="min-height: 38px;">{{ $request->issue_date ? $request->issue_date->format('d.m.Y') : '—' }}</div>
+                </div>
                 <a href="{{ route('request-employees.index', $request->id) }}"
                    style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; background-color: rgba(16, 185, 129, 0.14); color: #10B981; border: 1px solid #10B981; text-decoration: none;">
                     Сотрудники
@@ -56,6 +60,8 @@
                     Редактировать
                 </a>
                 @endif
+                <!-- Дата создания -->
+                
 
                 @if(auth()->user() && auth()->user()->hasAnyRole(['urp', 'urp admin', 'admin']) && $request->start_date && \Carbon\Carbon::parse($request->start_date)->diffInHours(now()) < 48 && $request->status !== 'Создана' && $request->status !== 'created' && $request->status !== 'urpedit')
                 <form action="{{ route('requests.request-unlock', $request->id) }}" method="POST" style="display: inline-flex; margin: 0;">
@@ -93,6 +99,11 @@
                 <span class="suzipo-label">Дата окончания</span>
                 <div class="suzipo-field" style="min-height: 38px;">{{ $request->end_date ? $request->end_date->format('d.m.Y') : '—' }}</div>
             </div>
+                    <!-- Наименование ПО -->
+                    <div>
+                        <span class="suzipo-label">Наименование ПО</span>
+                        <div class="suzipo-field" style="min-height: 38px;">{{ $request->course->course ?? '—' }}</div>
+                    </div>
 
             <div class="suzipo-col-1">
                 <span class="suzipo-label">Дата оформления</span>

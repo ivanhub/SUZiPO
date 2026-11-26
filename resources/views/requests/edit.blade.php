@@ -1,5 +1,6 @@
 ﻿<x-layouts.app-with-sidebar>
     <div style="padding: 8px 0 32px 0;">
+        <!-- Хлебные крошки и круглая кнопка Назад -->
         <div class="suzipo-breadcrumbs">
             <a href="{{ route('requests.index') }}" class="suzipo-back-btn" title="Назад к списку заявок">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -17,6 +18,7 @@
 
         <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px;">
             <h1 class="suzipo-form-title" style="margin-bottom: 0;">Редактирование заявки #{{ $request->id }}</h1>
+
             <label style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 10px; background-color: var(--bg-surface); border: 1px solid var(--border-color); cursor: pointer;">
                 <input type="checkbox" name="one_time" form="request-edit-form" value="1" {{ old('one_time', $request->one_time) ? 'checked' : '' }}
                        style="width: 16px; height: 16px; accent-color: #FFD100; cursor: pointer;">
@@ -29,7 +31,7 @@
             @method('PUT')
 
             <div class="suzipo-grid-6">
-                <!-- Ряд 1: Номер заявки и 3 даты -->
+                <!-- Ряд 1: Номер заявки и 3 даты (2 + 1 + 1 + 2 = 6 колонок) -->
                 <div class="suzipo-col-2">
                     <label class="suzipo-label">Номер заявки</label>
                     <input type="text" value="{{ $request->req_id ?? '—' }}" class="suzipo-field" style="opacity: 0.7; cursor: not-allowed;" readonly>
@@ -52,14 +54,14 @@
                 </div>
 
                 <div class="suzipo-col-2">
-                    <label for="issue_date" class="suzipo-label">Дата оформления</label>
+                    <label for="issue_date" class="suzipo-label">Дата создания</label>
                     <input type="date" name="issue_date" id="issue_date"
-                           value="{{ $request->issue_date ? $request->issue_date->format('Y-m-d') : old('issue_date', '') }}"
-                           class="suzipo-field">
+                           value="{{ $request->issue_date ? $request->issue_date->format('Y-m-d') : now()->format('Y-m-d') }}"
+                           class="suzipo-field" style="opacity: 0.7; cursor: not-allowed;" readonly>
                     @error('issue_date') <p style="color: #EF4444; font-size: 11px; margin-top: 4px;">{{ $message }}</p> @enderror
                 </div>
 
-                <!-- Ряд 2: Форма образования, ИТР/рабочие, С отрывом от производства -->
+                <!-- Ряд 2: Форма образования, ИТР/рабочие, С отрывом от производства (2 + 2 + 2 = 6 колонок) -->
                 <div class="suzipo-col-2">
                     <label for="education_form" class="suzipo-label">Форма образования</label>
                     <select name="education_form" id="education_form" class="suzipo-field">
@@ -93,152 +95,154 @@
                         <option value="без отрыва от производства с применением электронного обучения и дистанционных образовательных технологий" {{ old('production_break', $request->production_break) == 'без отрыва от производства с применением электронного обучения и дистанционных образовательных технологий' ? 'selected' : '' }}>Без отрыва от производства с применением ЭО и ДОТ</option>
                     </select>
                 </div>
-                <!-- Ряд 3: Учебное заведение (провайдер) и Наименование курса -->
-                <div x-data="editProviderSelector()" class="suzipo-col-3" style="z-index: 25;">
+                <!-- Ряд 3: Учебное заведение (провайдер) и Наименование ПО (3 + 3 колонки) -->
+                <div x-data="editProviderSelector()" class="suzipo-col-3" style="z-index: 30;">
                     <label class="suzipo-label">Учебное заведение (провайдер)</label>
                     <input type="hidden" name="provider_id" x-model="selectedId">
                     <input type="hidden" name="new_provider_name" x-model="newProviderName">
-                    <div style="position: relative;">
-                    <div @click="open = !open; if(!open) search = ''" class="suzipo-field" style="cursor: pointer; min-height: 40px; display: flex; align-items: center; justify-content: space-between;">
-                        <span x-text="selectedName || '--- Выберите или введите провайдера ---'"
-                              :style="!selectedName ? 'color: var(--text-secondary);' : 'color: var(--text-primary);'"></span>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--text-secondary); flex-shrink: 0;">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
 
-                    <div x-show="open" @click.away="open = false" x-cloak
-                         style="position: absolute; left: 0; right: 0; top: calc(100% + 4px); background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.18); max-height: 380px; z-index: 50; overflow: hidden;">
-                        <div style="display: flex; flex-direction: column; max-height: 380px;">
-                        <div style="padding: 8px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-surface);">
-                            <input type="text" x-model="search" placeholder="Поиск по провайдерам или введите новый..."
-                                   class="suzipo-field" style="background-color: var(--bg-page) !important; padding: 7px 10px !important;"
-                                   @click.stop @keydown.enter.prevent="addNewProvider()">
+                    <div style="position: relative;">
+                        <div @click="open = !open; if(!open) search = ''" class="suzipo-field" style="cursor: pointer; min-height: 40px; display: flex; align-items: center; justify-content: space-between;">
+                            <span x-text="selectedName || '--- Выберите или введите провайдера ---'"
+                                  :style="!selectedName ? 'color: var(--text-secondary);' : 'color: var(--text-primary);'"></span>
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--text-secondary); flex-shrink: 0;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                            </svg>
                         </div>
-                        <div style="overflow-y: auto; flex: 1;">
-                            <div x-show="search && !isExistingProvider" @click="addNewProvider()"
-                                 style="padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); background-color: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; gap: 6px;">
-                                <span style="font-weight: 700;">+</span>
-                                <span>Добавить нового провайдера: "<strong x-text="search"></strong>"</span>
-                            </div>
-                            <template x-for="provider in filteredProviders" :key="provider.id">
-                                <div @click="selectProvider(provider)"
-                                     style="padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); line-height: 1.4; color: var(--text-primary);"
-                                     :style="selectedId == provider.id ? 'background-color: rgba(255, 209, 0, 0.2); font-weight: 600;' : ''">
-                                    <span x-text="provider.name"></span>
+
+                        <div x-show="open" @click.away="open = false" x-cloak
+                             style="position: absolute; left: 0; right: 0; top: calc(100% + 4px); background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.18); max-height: 380px; z-index: 50; overflow: hidden;">
+                            <div style="display: flex; flex-direction: column; max-height: 380px;">
+                                <div style="padding: 8px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-surface);">
+                                    <input type="text" x-model="search" placeholder="Поиск по провайдерам или введите новый..."
+                                           class="suzipo-field" style="background-color: var(--bg-page) !important; padding: 7px 10px !important;"
+                                           @click.stop @keydown.enter.prevent="addNewProvider()">
                                 </div>
-                            </template>
-                            <div x-show="filteredProviders.length === 0 && !search" style="padding: 16px; font-size: 13px; color: var(--text-secondary); text-align: center;">
-                                Начните вводить название провайдера
+                                <div style="overflow-y: auto; flex: 1;">
+                                    <div x-show="search && !isExistingProvider" @click="addNewProvider()"
+                                         style="padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); background-color: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; gap: 6px;">
+                                        <span style="font-weight: 700;">+</span>
+                                        <span>Добавить нового провайдера: "<strong x-text="search"></strong>"</span>
+                                    </div>
+                                    <template x-for="provider in filteredProviders" :key="provider.id">
+                                        <div @click="selectProvider(provider)"
+                                             style="padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); line-height: 1.4; color: var(--text-primary);"
+                                             :style="selectedId == provider.id ? 'background-color: rgba(255, 209, 0, 0.2); font-weight: 600;' : ''">
+                                            <span x-text="provider.name"></span>
+                                        </div>
+                                    </template>
+                                    <div x-show="filteredProviders.length === 0 && !search" style="padding: 16px; font-size: 13px; color: var(--text-secondary); text-align: center;">
+                                        Начните вводить название провайдера
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    </div>
                     </div>
                 </div>
-                <!-- Наименование курса (тематика) -->
+                <!-- Наименование ПО (тематика) -->
                 <div x-data="editCourseSelector()" class="suzipo-col-3" style="z-index: 25;">
-                    <label class="suzipo-label">Наименование курса (тематика)</label>
+                    <label class="suzipo-label">Наименование ПО</label>
                     <input type="hidden" name="course_id" x-model="selectedId">
                     <input type="hidden" name="new_course_name" x-model="newCourseName">
                     <input type="hidden" name="matrix_num" x-model="selectedMatrixNum">
+
                     <div style="position: relative;">
-                    <div @click="open = !open; if(!open) search = ''" class="suzipo-field" style="cursor: pointer; min-height: 40px; display: flex; align-items: center; justify-content: space-between;">
-                        <span x-text="selectedName || message"
-                              :style="(!selectedName && !providerSelected) ? 'color: var(--text-secondary);' : 'color: var(--text-primary);'"></span>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--text-secondary); flex-shrink: 0;">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
+                        <div @click="open = !open; if(!open) search = ''" class="suzipo-field" style="cursor: pointer; min-height: 40px; display: flex; align-items: center; justify-content: space-between;">
+                            <span x-text="selectedName || message"
+                                  :style="(!selectedName && !providerSelected) ? 'color: var(--text-secondary);' : 'color: var(--text-primary);'"></span>
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--text-secondary); flex-shrink: 0;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
 
-                    <div x-show="open" @click.away="open = false" x-cloak
-                         style="position: absolute; left: 0; right: 0; top: calc(100% + 4px); background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.18); max-height: 380px; display: flex; flex-direction: column; z-index: 50; overflow: hidden;">
-
-                        <template x-if="!providerSelected && !loading">
-                            <div style="padding: 24px; text-align: center; font-weight: 600; color: var(--text-secondary);">
-                                Выберите учебное заведение
-                            </div>
-                        </template>
-
-                        <template x-if="loading">
-                            <div style="padding: 24px; text-align: center; color: var(--text-secondary);">
-                                Загрузка курсов...
-                            </div>
-                        </template>
-
-                        <template x-if="providerSelected && !loading && courses.length === 0">
-                            <div style="padding: 24px; text-align: center; color: var(--text-secondary);">
-                                Курсы не найдены
-                            </div>
-                        </template>
-
-                        <template x-if="providerSelected && !loading && courses.length > 0">
-                            <div style="display: flex; flex-direction: column; overflow: hidden;">
-                                <div style="padding: 8px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-surface);">
-                                    <input type="text" x-model="search" placeholder="Поиск по курсам или введите новый..."
-                                           class="suzipo-field" style="background-color: var(--bg-page) !important; padding: 7px 10px !important;"
-                                           @click.stop @keydown.enter.prevent="addNewCourse()">
+                        <div x-show="open" @click.away="open = false" x-cloak
+                             style="position: absolute; left: 0; right: 0; top: calc(100% + 4px); background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.18); max-height: 380px; z-index: 50; overflow: hidden;">
+                            <template x-if="!providerSelected && !loading">
+                                <div style="padding: 24px; text-align: center; font-weight: 600; color: var(--text-secondary);">
+                                    Выберите учебное заведение
                                 </div>
-                                <div style="overflow-y: auto; max-height: 300px;">
-                                    <div x-show="search && !isExistingCourse" @click="addNewCourse()"
-                                         style="padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); background-color: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; gap: 6px;">
-                                        <span style="font-weight: 700;">+</span>
-                                        <span>Добавить новый курс: "<strong x-text="search"></strong>"</span>
+                            </template>
+
+                            <template x-if="loading">
+                                <div style="padding: 24px; text-align: center; color: var(--text-secondary);">
+                                    Загрузка курсов...
+                                </div>
+                            </template>
+
+                            <template x-if="providerSelected && !loading && courses.length === 0">
+                                <div style="padding: 24px; text-align: center; color: var(--text-secondary);">
+                                    Курсы не найдены
+                                </div>
+                            </template>
+
+                            <template x-if="providerSelected && !loading && courses.length > 0">
+                                <div style="display: flex; flex-direction: column; max-height: 380px;">
+                                    <div style="padding: 8px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-surface);">
+                                        <input type="text" x-model="search" placeholder="Поиск по курсам или введите новый..."
+                                               class="suzipo-field" style="background-color: var(--bg-page) !important; padding: 7px 10px !important;"
+                                               @click.stop @keydown.enter.prevent="addNewCourse()">
                                     </div>
-                                    <template x-for="course in filteredCourses" :key="course">
-                                        <div @click="selectCourse(course)"
-                                             style="padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); line-height: 1.4; color: var(--text-primary);"
-                                             :style="selectedName === course ? 'background-color: rgba(255, 209, 0, 0.2); font-weight: 600;' : ''">
-                                            <span x-text="course"></span>
+                                    <div style="overflow-y: auto; max-height: 300px;">
+                                        <div x-show="search && !isExistingCourse" @click="addNewCourse()"
+                                             style="padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); background-color: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; gap: 6px;">
+                                            <span style="font-weight: 700;">+</span>
+                                            <span>Добавить новый курс: "<strong x-text="search"></strong>"</span>
                                         </div>
-                                    </template>
+                                        <template x-for="course in filteredCourses" :key="course">
+                                            <div @click="selectCourse(course)"
+                                                 style="padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); line-height: 1.4; color: var(--text-primary);"
+                                                 :style="selectedName === course ? 'background-color: rgba(255, 209, 0, 0.2); font-weight: 600;' : ''">
+                                                <span x-text="course"></span>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </div>
-                            </div>
-                        </template>
-                    </div>
+                            </template>
+                        </div>
                     </div>
                     <!-- Модальное окно выбора матрицы -->
                     <template x-teleport="body">
                         <div x-show="showMatrixModal" x-cloak
                              @click="showMatrixModal = false; open = false; $dispatch('close-provider-dropdown')"
-                             style="position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.55); padding: 16px;">
-                            <div @click.stop style="background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 16px; max-width: 440px; width: 100%; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.25); color: var(--text-primary);">
-                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                                    <h3 style="font-size: 16px; font-weight: 700; margin: 0;">Добавление нового курса</h3>
-                                    <button type="button" @click="showMatrixModal = false" style="background: none; border: none; font-size: 22px; color: var(--text-secondary); cursor: pointer;">&times;</button>
-                                </div>
-                                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">Выберите матрицу для добавления курса в справочник:</p>
-                                <div style="font-size: 13px; font-weight: 600; background-color: var(--bg-surface); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px;">
-                                    <span x-text="pendingCourseName"></span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; gap: 8px;">
-                                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background-color: var(--bg-surface);">
-                                        <input type="radio" name="matrix_select" value="matrix_courses" x-model="selectedMatrix">
-                                        <span style="font-size: 13px; font-weight: 500;">Matrix Courses</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background-color: var(--bg-surface);">
-                                        <input type="radio" name="matrix_select" value="matrix_dpo" x-model="selectedMatrix">
-                                        <span style="font-size: 13px; font-weight: 500;">Matrix DPO</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background-color: var(--bg-surface);">
-                                        <input type="radio" name="matrix_select" value="matrix_ot" x-model="selectedMatrix">
-                                        <span style="font-size: 13px; font-weight: 500;">Matrix OT</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background-color: var(--bg-surface);">
-                                        <input type="radio" name="matrix_select" value="matrix_po" x-model="selectedMatrix">
-                                        <span style="font-size: 13px; font-weight: 500;">Matrix PO</span>
-                                    </label>
-                                </div>
-                                <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
-                                    <button type="button" @click="showMatrixModal = false" class="btn-suzipo-cancel">Отмена</button>
-                                    <button type="button" @click="saveSelectedMatrix(); open = false; $dispatch('close-provider-dropdown')"
-                                            class="btn-suzipo-save" :disabled="!selectedMatrix">Сохранить</button>
+                             style="position: fixed; inset: 0; z-index: 99999; background-color: rgba(0, 0, 0, 0.55); padding: 16px;">
+                            <div style="display: flex; align-items: center; justify-content: center; min-height: 100%;">
+                                <div @click.stop style="background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 16px; max-width: 440px; width: 100%; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.25); color: var(--text-primary);">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                                        <h3 style="font-size: 16px; font-weight: 700; margin: 0;">Добавление нового курса</h3>
+                                        <button type="button" @click="showMatrixModal = false" style="background: none; border: none; font-size: 22px; color: var(--text-secondary); cursor: pointer;">&times;</button>
+                                    </div>
+                                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">Выберите матрицу для добавления курса в справочник:</p>
+                                    <div style="font-size: 13px; font-weight: 600; background-color: var(--bg-surface); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px;">
+                                        <span x-text="pendingCourseName"></span>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                                        <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background-color: var(--bg-surface);">
+                                            <input type="radio" name="matrix_select" value="matrix_courses" x-model="selectedMatrix">
+                                            <span style="font-size: 13px; font-weight: 500;">Matrix Courses</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background-color: var(--bg-surface);">
+                                            <input type="radio" name="matrix_select" value="matrix_dpo" x-model="selectedMatrix">
+                                            <span style="font-size: 13px; font-weight: 500;">Matrix DPO</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background-color: var(--bg-surface);">
+                                            <input type="radio" name="matrix_select" value="matrix_ot" x-model="selectedMatrix">
+                                            <span style="font-size: 13px; font-weight: 500;">Matrix OT</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background-color: var(--bg-surface);">
+                                            <input type="radio" name="matrix_select" value="matrix_po" x-model="selectedMatrix">
+                                            <span style="font-size: 13px; font-weight: 500;">Matrix PO</span>
+                                        </label>
+                                    </div>
+                                    <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                                        <button type="button" @click="showMatrixModal = false" class="btn-suzipo-cancel">Отмена</button>
+                                        <button type="button" @click="saveSelectedMatrix(); open = false; $dispatch('close-provider-dropdown')"
+                                                class="btn-suzipo-save" :disabled="!selectedMatrix">Сохранить</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </template>
 
-                    <!-- Информация о выбранном курсе -->
                     <div x-show="selectedName !== '' && selectedMatrixNum !== 5" x-cloak
                          style="margin-top: 10px; padding: 12px; background-color: var(--bg-surface); border-radius: 12px; border: 1px solid var(--border-color);">
                         <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase;">Информация о курсе</div>
@@ -266,88 +270,102 @@
                         </div>
                     </div>
                 </div>
-                <!-- Ряд 4: Страна, Город, Профессия -->
+                <!-- Ряд 4: Страна, Город, Профессия (2 + 2 + 2 колонки) -->
                 <div class="suzipo-col-2">
                     <label for="country" class="suzipo-label">Место проведения (страна)</label>
                     <input type="text" name="country" id="country" value="{{ old('country', $request->country) }}" class="suzipo-field">
                 </div>
 
                 <!-- Место проведения (город) -->
-                <div x-data="editCitySelector()" class="suzipo-col-2" style="position: relative; z-index: 20;">
+                <div x-data="editCitySelector()" class="suzipo-col-2" style="z-index: 20;">
                     <label class="suzipo-label">Место проведения (город)</label>
                     <input type="hidden" name="city_id" x-model="selectedId">
                     <input type="hidden" name="new_city_name" x-model="newCityName">
 
-                    <div @click="open = !open; if(!open) search = ''" class="suzipo-field" style="cursor: pointer; min-height: 40px; display: flex; align-items: center; justify-content: space-between;">
-                        <span x-text="selectedName || '--- Выберите или введите город ---'"
-                              :style="!selectedName ? 'color: var(--text-secondary);' : 'color: var(--text-primary);'"></span>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--text-secondary); flex-shrink: 0;">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
-
-                    <div x-show="open" @click.away="open = false" x-cloak
-                         style="position: absolute; left: 0; right: 0; top: calc(100% + 4px); background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.18); max-height: 360px; display: flex; flex-direction: column; z-index: 50; overflow: hidden;">
-                        <div style="padding: 8px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-surface);">
-                            <input type="text" x-model="search" placeholder="Поиск по городам или введите новый..."
-                                   class="suzipo-field" style="background-color: var(--bg-page) !important; padding: 7px 10px !important;"
-                                   @click.stop @keydown.enter.prevent="addNewCity()">
+                    <div style="position: relative;">
+                        <div @click="open = !open; if(!open) search = ''" class="suzipo-field" style="cursor: pointer; min-height: 40px; display: flex; align-items: center; justify-content: space-between;">
+                            <span x-text="selectedName || '--- Выберите или введите город ---'"
+                                  :style="!selectedName ? 'color: var(--text-secondary);' : 'color: var(--text-primary);'"></span>
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--text-secondary); flex-shrink: 0;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                            </svg>
                         </div>
-                        <div style="overflow-y: auto; flex: 1;">
-                            <div x-show="search && !isExistingCity" @click="addNewCity()"
-                                 style="padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); background-color: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; gap: 6px;">
-                                <span style="font-weight: 700;">+</span>
-                                <span>Добавить новый город: "<strong x-text="search"></strong>"</span>
-                            </div>
-                            <template x-for="city in filteredCities" :key="city.id">
-                                <div @click="selectCity(city)"
-                                     style="padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); color: var(--text-primary);"
-                                     :style="selectedId == city.id ? 'background-color: rgba(255, 209, 0, 0.2); font-weight: 600;' : ''">
-                                    <span x-text="city.name"></span>
+
+                        <div x-show="open" @click.away="open = false" x-cloak
+                             style="position: absolute; left: 0; right: 0; top: calc(100% + 4px); background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.18); max-height: 360px; z-index: 50; overflow: hidden;">
+                            <div style="display: flex; flex-direction: column; max-height: 360px;">
+                                <div style="padding: 8px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-surface);">
+                                    <input type="text" x-model="search" placeholder="Поиск по городам или введите новый..."
+                                           class="suzipo-field" style="background-color: var(--bg-page) !important; padding: 7px 10px !important;"
+                                           @click.stop @keydown.enter.prevent="addNewCity()">
                                 </div>
-                            </template>
+                                <div style="overflow-y: auto; flex: 1;">
+                                    <div x-show="search && !isExistingCity" @click="addNewCity()"
+                                         style="padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); background-color: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; gap: 6px;">
+                                        <span style="font-weight: 700;">+</span>
+                                        <span>Добавить новый город: "<strong x-text="search"></strong>"</span>
+                                    </div>
+                                    <template x-for="city in filteredCities" :key="city.id">
+                                        <div @click="selectCity(city)"
+                                             style="padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); color: var(--text-primary);"
+                                             :style="selectedId == city.id ? 'background-color: rgba(255, 209, 0, 0.2); font-weight: 600;' : ''">
+                                            <span x-text="city.name"></span>
+                                        </div>
+                                    </template>
+                                    <div x-show="filteredCities.length === 0 && !search" style="padding: 16px; font-size: 13px; color: var(--text-secondary); text-align: center;">
+                                        Начните вводить название города
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Профессия -->
-                <div x-data="editProfessionSelector()" class="suzipo-col-2" style="position: relative; z-index: 15;">
+                <div x-data="editProfessionSelector()" class="suzipo-col-2" style="z-index: 15;">
                     <label class="suzipo-label">Присваиваемая профессия</label>
                     <input type="hidden" name="profession_id" x-model="selectedId">
                     <input type="hidden" name="new_profession_name" x-model="newProfessionName">
 
-                    <div @click="open = !open; if(!open) search = ''" class="suzipo-field" style="cursor: pointer; min-height: 40px; display: flex; align-items: center; justify-content: space-between;">
-                        <span x-text="selectedName || '--- Выберите или введите профессию ---'"
-                              :style="!selectedName ? 'color: var(--text-secondary);' : 'color: var(--text-primary);'"></span>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--text-secondary); flex-shrink: 0;">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
-
-                    <div x-show="open" @click.away="open = false" x-cloak
-                         style="position: absolute; left: 0; right: 0; top: calc(100% + 4px); background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.18); max-height: 360px; display: flex; flex-direction: column; z-index: 50; overflow: hidden;">
-                        <div style="padding: 8px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-surface);">
-                            <input type="text" x-model="search" placeholder="Поиск по профессиям или введите новую..."
-                                   class="suzipo-field" style="background-color: var(--bg-page) !important; padding: 7px 10px !important;"
-                                   @click.stop @keydown.enter.prevent="addNewProfession()">
+                    <div style="position: relative;">
+                        <div @click="open = !open; if(!open) search = ''" class="suzipo-field" style="cursor: pointer; min-height: 40px; display: flex; align-items: center; justify-content: space-between;">
+                            <span x-text="selectedName || '--- Выберите или введите профессию ---'"
+                                  :style="!selectedName ? 'color: var(--text-secondary);' : 'color: var(--text-primary);'"></span>
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--text-secondary); flex-shrink: 0;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                            </svg>
                         </div>
-                        <div style="overflow-y: auto; flex: 1;">
-                            <div x-show="search && !isExistingProfession" @click="addNewProfession()"
-                                 style="padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); background-color: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; gap: 6px;">
-                                <span style="font-weight: 700;">+</span>
-                                <span>Добавить новую профессию: "<strong x-text="search"></strong>"</span>
-                            </div>
-                            <template x-for="profession in filteredProfessions" :key="profession.id">
-                                <div @click="selectProfession(profession)"
-                                     style="padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); color: var(--text-primary);"
-                                     :style="selectedId == profession.id ? 'background-color: rgba(255, 209, 0, 0.2); font-weight: 600;' : ''">
-                                    <span x-text="profession.name"></span>
+
+                        <div x-show="open" @click.away="open = false" x-cloak
+                             style="position: absolute; left: 0; right: 0; top: calc(100% + 4px); background-color: var(--bg-page); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.18); max-height: 360px; z-index: 50; overflow: hidden;">
+                            <div style="display: flex; flex-direction: column; max-height: 360px;">
+                                <div style="padding: 8px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-surface);">
+                                    <input type="text" x-model="search" placeholder="Поиск по профессиям или введите новую..."
+                                           class="suzipo-field" style="background-color: var(--bg-page) !important; padding: 7px 10px !important;"
+                                           @click.stop @keydown.enter.prevent="addNewProfession()">
                                 </div>
-                            </template>
+                                <div style="overflow-y: auto; flex: 1;">
+                                    <div x-show="search && !isExistingProfession" @click="addNewProfession()"
+                                         style="padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); background-color: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; gap: 6px;">
+                                        <span style="font-weight: 700;">+</span>
+                                        <span>Добавить новую профессию: "<strong x-text="search"></strong>"</span>
+                                    </div>
+                                    <template x-for="profession in filteredProfessions" :key="profession.id">
+                                        <div @click="selectProfession(profession)"
+                                             style="padding: 9px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); color: var(--text-primary);"
+                                             :style="selectedId == profession.id ? 'background-color: rgba(255, 209, 0, 0.2); font-weight: 600;' : ''">
+                                            <span x-text="profession.name"></span>
+                                        </div>
+                                    </template>
+                                    <div x-show="filteredProfessions.length === 0 && !search" style="padding: 16px; font-size: 13px; color: var(--text-secondary); text-align: center;">
+                                        Начните вводить название профессии
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <!-- Ряд 5: Причина, Ресурс, Вид обучения -->
+                <!-- Ряд 5: Причина, Ресурс, Вид обучения (2 + 2 + 2 колонки) -->
                 <div class="suzipo-col-2">
                     <label for="learn_reason_id" class="suzipo-label">Причина обучения</label>
                     <select name="learn_reason_id" id="learn_reason_id" class="suzipo-field">
@@ -378,7 +396,7 @@
                     </select>
                 </div>
 
-                <!-- Ряд 6: Вид мероприятия, Дисциплина, Себестоимость/Прибыль -->
+                <!-- Ряд 6: Вид мероприятия, Дисциплина, Себестоимость/Прибыль (2 + 2 + 2 колонки) -->
                 <div class="suzipo-col-2">
                     <label for="event_type_id" class="suzipo-label">Вид мероприятия</label>
                     <select name="event_type_id" id="event_type_id" class="suzipo-field">
@@ -408,6 +426,7 @@
                     </select>
                 </div>
             </div>
+            <!-- Блок назначенных ресурсов (аудитория, преподаватель, куратор, резерв) -->
             <div class="suzipo-section-title">Назначенные ресурсы</div>
             <div class="suzipo-grid-6">
                 <!-- Аудитория -->
@@ -518,6 +537,9 @@
             </div>
         </form>
     </div>
+</div>
+    </div>
+
 <script>
 
 function editProviderSelector() {
@@ -998,6 +1020,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.classList.add('text-red-500');
             } else {
                 option.disabled = false;
+                // Убираем пометку "ЗАНЯТ"
+//                option.textContent = option.textContent.replace(' - ЗАНЯТ', '');
 		option.textContent = option.textContent.replace(' - ЗАНЯТ', '').trim();
                 option.classList.remove('text-red-500');
             }
@@ -1064,5 +1088,5 @@ document.getElementById('audience_id').addEventListener('change', updateReserve)
 // Обновляем при загрузке
 updateReserve();
 </script>
-</x-layouts.app-with-sidebar>
 
+</x-layouts.app-with-sidebar>

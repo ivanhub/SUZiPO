@@ -34,6 +34,9 @@ class RequestEmployee extends Model
         'duv_b',
         'mvz',
         'employee_category',
+
+        'department',      
+        'citizenship',     
         
         // Дополнительные поля
         'absence_start_date',

@@ -50,9 +50,9 @@
                 </a>
                 <div x-show="open" x-cloak class="suzipo-nav-dropdown">
                     <a href="{{ route('requests.index') }}" class="suzipo-nav-dropdown-link">Все заявки</a>
-                    @urp
+                    @if(auth()->user()->hasAnyRole(['urp', 'urp admin', 'ooo', 'ooo admin', 'ooo chief']))
                     <a href="{{ route('requests.create') }}" class="suzipo-nav-dropdown-link" style="color: #D97706; font-weight: 600;">+ Создать заявку</a>
-                    @endurp
+                    @endif
                     <div style="margin: 4px 0; border-top: 1px solid var(--border-color);"></div>
                     <a href="{{ route('requests.index', ['status' => 'created']) }}" class="suzipo-nav-dropdown-link" style="color: var(--text-secondary);">Создана</a>
                     <a href="{{ route('requests.index', ['status' => 'sent']) }}" class="suzipo-nav-dropdown-link" style="color: var(--text-secondary);">Отправлена</a>
