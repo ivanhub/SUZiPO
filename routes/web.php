@@ -336,7 +336,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 
 
 // Route::resource('requests', RequestController::class);
-Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
+// Route::get('requests/export-form', [RequestController::class, 'exportForm'])->name('requests.export-form');
 // Route::get('/bookings', function () {
 //     return view('bookings.index');
 // })->name('bookings.index');

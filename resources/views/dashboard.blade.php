@@ -24,7 +24,7 @@
             </a>
 
             <!-- 3. Справочники -->
-            <a href="{{ route('directories.courses.index') }}" class="suzipo-card transition-all hover:opacity-90"
+            <a href="{{ route('directories.index') }}" class="suzipo-card transition-all hover:opacity-90"
                style="position: relative; display: block; height: 104px; padding: 18px 20px; text-decoration: none; overflow: hidden;">
                 <div class="font-semibold text-lg" style="color: var(--text-primary); position: relative; z-index: 2;">
                     Справочники

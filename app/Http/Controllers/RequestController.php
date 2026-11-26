@@ -464,8 +464,6 @@ private function getEnglishStatus(string $russianStatus): string
             $requestModel->update(['status' => 'in_progress']);
         }
 
-
-
         // Отправляем уведомление новому куратору
         if ($requestModel->curator_id) {
             $this->notifyCuratorAssigned($requestModel);
@@ -876,25 +874,19 @@ private function getEnglishStatus(string $russianStatus): string
         $subject = "Вас назначили куратором заявки #{$requestModel->id}";
 
         $message = "
-    <h2>Назначение куратором</h2>
-    <p><strong>Номер заявки:</strong> #{$requestModel->id}</p>
-    <p><strong>Курс:</strong> " . ($requestModel->course->course ?? '—') . "</p>
-    <p><strong>Дата начала:</strong> " . ($requestModel->start_date ? $requestModel->start_date->format('d.m.Y') : '—') . "</p>
-    <p><strong>Дата окончания:</strong> " . ($requestModel->end_date ? $requestModel->end_date->format('d.m.Y') : '—') . "</p>
-    <hr>
-    <p>Вы были назначены куратором данной группы.</p>
-";
+            <h2>Назначение куратором</h2>
+            <p><strong>Номер заявки:</strong> #{$requestModel->id}</p>
+            <p><strong>Курс:</strong> " . ($requestModel->course->course ?? '—') . "</p>
+            <p><strong>Дата начала:</strong> " . ($requestModel->start_date ? $requestModel->start_date->format('d.m.Y') : '—') . "</p>
+            <p><strong>Дата окончания:</strong> " . ($requestModel->end_date ? $requestModel->end_date->format('d.m.Y') : '—') . "</p>
+            <hr>
+            <p>Вы были назначены куратором данной группы.</p>
+        ";
         \Illuminate\Support\Facades\Mail::html($message, function ($mail) use ($curator, $subject) {
             $mail->to($curator->email)->subject($subject);
         });
     }
 
-    /**
-     * Показать историю изменений заявки
-     */
-    /**
-     * Показать историю изменений заявки
-     */
     public function history(RequestModel $request, \Illuminate\Http\Request $httpRequest): View
     {
         // Проверка доступа
@@ -936,7 +928,6 @@ private function getEnglishStatus(string $russianStatus): string
             'reissue_period' => 'Периодичность',
         ];
 
-        // Форматируем данные логов с помощью ваших бэкенд-функций перед отправкой в Blade
         $allActivities->getCollection()->transform(function ($activity) use ($employeeLabels) {
             $formattedChanges = [
                 'labels' => [],
@@ -948,7 +939,6 @@ private function getEnglishStatus(string $russianStatus): string
             $isEmployee = $activity->subject_type === \App\Models\RequestEmployee::class;
             $labelsSource = $isEmployee ? $employeeLabels : \App\Models\Request::getFieldLabels();
 
-            // Запоминаем ФИО сотрудника, если это лог сотрудника
             if ($isEmployee) {
                 $attrs = $changes['attributes'] ?? [];
                 $activity->employee_fio = trim(($attrs['last_name'] ?? '') . ' ' . ($attrs['first_name'] ?? '') . ' ' . ($attrs['middle_name'] ?? ''));
@@ -961,8 +951,6 @@ private function getEnglishStatus(string $russianStatus): string
 
                     $oldValue = $changes['old'][$field] ?? null;
 
-                    // Используем ваш метод форматирования значений из модели Request
-                    // (Для дат сотрудников добавим базовую обработку, если они приходят с таймзоной)
                     if ($isEmployee && in_array($field, ['absence_start_date', 'absence_end_date', 'document_issue_date'])) {
                         $formattedOld = $oldValue ? \Carbon\Carbon::parse($oldValue)->format('d.m.Y') : '—';
                         $formattedNew = $newValue ? \Carbon\Carbon::parse($newValue)->format('d.m.Y') : '—';

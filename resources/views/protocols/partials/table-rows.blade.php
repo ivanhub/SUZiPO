@@ -1,5 +1,5 @@
 @forelse($protocols as $protocol)
-<tr>
+<tr style="text-align: center;">
     <!-- Состояние -->
     <td>
         @if($protocol->prot_status == 1)
@@ -51,7 +51,7 @@
     </td>
 
     <!-- Создатель / Редактор -->
-    <td>
+    <td style="text-align: left;">
         <div style="font-weight: 500; color: var(--text-primary);">{{ $protocol->editor?->name ?? '—' }}</div>
         <div style="font-size: 11px; color: var(--text-secondary);">Ред: —</div>
     </td>
