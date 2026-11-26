@@ -1,4 +1,4 @@
-﻿<x-layouts.app-with-sidebar>
+<x-layouts.app-with-sidebar>
     <div style="padding: 8px 0 32px 0;" x-data="{ addTab: 'single' }">
         <div class="suzipo-breadcrumbs">
             <a href="{{ route('requests.show', $trainingRequest->id) }}" class="suzipo-back-btn" title="Назад к заявке">

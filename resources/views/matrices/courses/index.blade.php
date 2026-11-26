@@ -1,4 +1,4 @@
-﻿<x-layouts.app-with-sidebar>
+<x-layouts.app-with-sidebar>
     <div style="padding: 8px 0 32px 0;">
         <div class="suzipo-breadcrumbs">
             <a href="{{ url('/matrices') }}" class="suzipo-back-btn" title="Назад к матрицам">

@@ -1,4 +1,4 @@
-﻿<x-directory-table
+<x-directory-table
     title="Типы мероприятий"
     breadcrumb="Типы мероприятий"
     indexRoute="directories.events-type.index"

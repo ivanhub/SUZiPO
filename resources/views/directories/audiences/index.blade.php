@@ -1,4 +1,4 @@
-﻿<x-directory-table
+<x-directory-table
     title="Аудитории"
     breadcrumb="Аудитории"
     indexRoute="directories.audiences.index"

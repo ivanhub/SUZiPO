@@ -1,4 +1,4 @@
-﻿<x-directory-table
+<x-directory-table
     title="Причины обучения"
     breadcrumb="Причины обучения"
     indexRoute="directories.learn-reasons.index"

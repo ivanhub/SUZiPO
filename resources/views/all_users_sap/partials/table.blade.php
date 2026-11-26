@@ -1,4 +1,4 @@
-﻿<div id="tableContainer">
+<div id="tableContainer">
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200" style="table-layout: fixed;" id="requestsTable">
             <thead class="bg-gray-50">

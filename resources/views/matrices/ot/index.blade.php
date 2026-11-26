@@ -1,4 +1,4 @@
-﻿<x-layouts.app-with-sidebar>
+<x-layouts.app-with-sidebar>
     <div style="padding: 8px 0 32px 0;">
         <!-- Хлебные крошки и круглая кнопка Назад -->
         <div class="suzipo-breadcrumbs">

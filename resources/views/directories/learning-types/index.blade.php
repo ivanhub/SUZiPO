@@ -1,4 +1,4 @@
-﻿<x-directory-table
+<x-directory-table
     title="Виды обучения"
     breadcrumb="Виды обучения"
     indexRoute="directories.learning-types.index"

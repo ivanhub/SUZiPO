@@ -1,4 +1,4 @@
-﻿<x-directory-table
+<x-directory-table
     title="Кураторы"
     breadcrumb="Кураторы"
     indexRoute="directories.curators.index"

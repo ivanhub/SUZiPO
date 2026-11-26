@@ -1,4 +1,4 @@
-﻿<x-directory-table
+<x-directory-table
     title="Дисциплины"
     breadcrumb="Дисциплины"
     indexRoute="directories.disciplines.index"

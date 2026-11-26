@@ -1,4 +1,4 @@
-﻿<x-layouts.app-with-sidebar>
+<x-layouts.app-with-sidebar>
     <div class="max-w-4xl mx-auto py-12">
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200">

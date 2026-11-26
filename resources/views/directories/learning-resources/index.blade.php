@@ -1,4 +1,4 @@
-﻿<x-directory-table
+<x-directory-table
     title="Образовательные ресурсы"
     breadcrumb="Образовательные ресурсы"
     indexRoute="directories.learning-resources.index"

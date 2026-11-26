@@ -1,4 +1,4 @@
-﻿<x-directory-table
+<x-directory-table
     title="Преподаватели"
     breadcrumb="Преподаватели"
     indexRoute="directories.teachers.index"
