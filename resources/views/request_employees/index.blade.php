@@ -48,9 +48,6 @@
                 <span @click="addTab = 'bulk'" class="suzipo-tab-item" :class="{ 'active': addTab === 'bulk' }">
                     Пакетное добавление (список)
                 </span>
-                <span @click="addTab = 'manual'" class="suzipo-tab-item" :class="{ 'active': addTab === 'manual' }">
-                    Ручной ввод ФИО
-                </span>
             </div>
 
             <!-- Вкладка 1: По табельному номеру -->
@@ -87,7 +84,7 @@
             </div>
 
             <!-- Вкладка 3: Ручной ввод сотрудника -->
-            <div x-show="addTab === 'manual'" x-cloak>
+<!--            <div x-show="addTab === 'manual'" x-cloak>
                 <form action="{{ route('request-employees.store', $trainingRequest->id) }}" method="POST">
                     @csrf
                     <div class="suzipo-grid-6" style="margin-bottom: 14px;">
@@ -112,6 +109,7 @@
                     </button>
                 </form>
             </div>
+-->
         </div>
         @endurp
 
@@ -147,9 +145,13 @@
                     </div>
                     <div class="suzipo-col-2">
                         <label for="manual_pfr" class="suzipo-label">СНИЛС</label>
-                        <input type="text" name="pfr_certificate" id="manual_pfr" value="{{ old('pfr_certificate') }}"
-                            class="suzipo-field" style="background-color: var(--bg-page) !important;"
-                            placeholder="000-000-000 00">
+<input type="text" name="pfr_certificate" id="manual_pfr" value="{{ old('pfr_certificate') }}"
+       class="suzipo-field" style="background-color: var(--bg-page) !important;"
+       inputmode="numeric" maxlength="14"
+       pattern="(\d{3}-\d{3}-\d{3}\s\d{2}|\d{11})"
+       title="Введите СНИЛС в формате 000-000-000 00 или 11 цифр без разделителей"
+       placeholder="000-000-000 00">
+
                     </div>
                     <div class="suzipo-col-2">
                         <label for="manual_citizenship" class="suzipo-label">Гражданство</label>
